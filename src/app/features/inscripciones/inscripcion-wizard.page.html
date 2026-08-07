@@ -216,10 +216,10 @@
             <div class="field">
               <label for="w-metodo">Método de pago</label>
               <select id="w-metodo" class="ui-select" [ngModel]="pago().metodo" (ngModelChange)="patchPago({ metodo: $event })">
-                <option value="yape">Yape (926 266 295)</option>
-                <option value="plin">Plin</option>
-                <option value="transferencia">Transferencia</option>
-                <option value="efectivo">Efectivo</option>
+                <option value="YAPE">Yape (926 266 295)</option>
+                <option value="PLIN">Plin</option>
+                <option value="TRANSFERENCIA">Transferencia</option>
+                <option value="EFECTIVO">Efectivo</option>
               </select>
             </div>
             <div class="field">

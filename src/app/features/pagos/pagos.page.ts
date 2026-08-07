@@ -1,7 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Pago, PagoEstado } from '../../core/models';
+import { Pago, PagoEstado, PagoView } from '../../core/models';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -10,14 +10,28 @@ import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.c
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
-import { KpiBoardComponent } from '../../shared/ui/kpi-board.component';
-import { KpiItem } from '../../shared/ui/kpi-board.types';
 import { ModalComponent } from '../../shared/ui/modal.component';
 
 type EstadoFiltro = 'todos' | PagoEstado;
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const PAGE_SIZE = 5;
+
+function toPagoEntity(pago: PagoView, estado: PagoEstado): Pago {
+  return {
+    id: pago.id,
+    inscripcionId: pago.inscripcionId,
+    monto: pago.monto,
+    metodoPago: pago.metodoPago,
+    numeroOperacion: pago.numeroOperacion,
+    comprobante: pago.comprobante,
+    estado,
+    fechaPago: pago.fechaPago,
+    observaciones: pago.observaciones,
+    activo: pago.activo,
+    createdAt: pago.createdAt,
+  };
+}
 
 @Component({
   selector: 'app-pagos-page',
@@ -30,7 +44,6 @@ const PAGE_SIZE = 5;
     EmptyStateComponent,
     InputComponent,
     ModalComponent,
-    KpiBoardComponent,
   ],
   styleUrl: './pagos.page.css',
   templateUrl: './pagos.page.html',
@@ -47,23 +60,22 @@ export class PagosPage {
   readonly busqueda = signal('');
   readonly estadoFiltro = signal<EstadoFiltro>('todos');
   readonly page = signal(1);
-  readonly selected = signal<Pago | null>(null);
+  readonly selected = signal<PagoView | null>(null);
 
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
     { key: 'todos', label: 'Todos' },
-    { key: 'pendiente', label: 'Pendientes' },
-    { key: 'verificado', label: 'Verificados' },
-    { key: 'rechazado', label: 'Rechazados' },
+    { key: 'PENDIENTE', label: 'Pendientes' },
+    { key: 'VERIFICADO', label: 'Verificados' },
+    { key: 'RECHAZADO', label: 'Rechazados' },
   ];
 
   readonly overview = computed(() => {
-    const list = this.store.pagos();
-    const pendientes = list.filter((p) => p.estado === 'pendiente').length;
-    const verificados = list.filter((p) => p.estado === 'verificado');
-    const rechazados = list.filter((p) => p.estado === 'rechazado').length;
+    const list = this.store.pagosView();
+    const pendientes = list.filter((p) => p.estado === 'PENDIENTE').length;
+    const verificados = list.filter((p) => p.estado === 'VERIFICADO');
+    const rechazados = list.filter((p) => p.estado === 'RECHAZADO').length;
     const ingresos = verificados.reduce((sum, p) => sum + p.monto, 0);
     const total = list.length;
-    const pct = (n: number) => (total === 0 ? 0 : Math.round((n / total) * 100));
 
     return {
       total,
@@ -71,63 +83,21 @@ export class PagosPage {
       verificados: verificados.length,
       rechazados,
       ingresos,
-      pctVerificados: pct(verificados.length),
     };
-  });
-
-  readonly kpis = computed((): KpiItem[] => {
-    const o = this.overview();
-    const ingresos = new Intl.NumberFormat('es-PE', {
-      style: 'currency',
-      currency: 'PEN',
-      maximumFractionDigits: 0,
-    }).format(o.ingresos);
-
-    return [
-      {
-        label: 'Pagos',
-        value: o.total,
-        hint: 'Registrados en temporada',
-        icon: 'creditCard',
-        tone: 'ink',
-      },
-      {
-        label: 'Pendientes',
-        value: o.pendientes,
-        hint: o.pendientes > 0 ? 'Por verificar' : 'Cola limpia',
-        icon: 'clock',
-        tone: 'warn',
-      },
-      {
-        label: 'Verificados',
-        value: o.verificados,
-        hint: `${o.pctVerificados}% del total`,
-        icon: 'circle-check',
-        tone: 'ok',
-      },
-      {
-        label: 'Ingresos',
-        value: ingresos,
-        hint: 'Solo verificados',
-        icon: 'wallet',
-        tone: 'gold',
-        money: true,
-      },
-    ];
   });
 
   readonly filtered = computed(() => {
     const q = this.busqueda().toLowerCase().trim();
     const estado = this.estadoFiltro();
-    return this.store.pagos().filter((pago) => {
+    return this.store.pagosView().filter((pago) => {
       const matchEst = estado === 'todos' || pago.estado === estado;
       const matchQ =
         !q ||
-        pago.grupo.toLowerCase().includes(q) ||
+        pago.nombreGrupo.toLowerCase().includes(q) ||
         pago.codigo.toLowerCase().includes(q) ||
-        pago.responsable.toLowerCase().includes(q) ||
+        pago.responsableNombre.toLowerCase().includes(q) ||
         (pago.numeroOperacion?.toLowerCase().includes(q) ?? false) ||
-        statusLabel(pago.metodo).toLowerCase().includes(q);
+        statusLabel(pago.metodoPago).toLowerCase().includes(q);
       return matchEst && matchQ;
     });
   });
@@ -165,7 +135,7 @@ export class PagosPage {
   readonly modalDescription = computed(() => {
     const pago = this.selected();
     if (!pago) return null;
-    return `${pago.codigo} · ${statusLabel(pago.metodo)}`;
+    return `${pago.codigo} · ${statusLabel(pago.metodoPago)}`;
   });
 
   constructor() {
@@ -177,8 +147,8 @@ export class PagosPage {
   }
 
   cuentaEstado(key: EstadoFiltro): number {
-    if (key === 'todos') return this.store.pagos().length;
-    return this.store.pagos().filter((p) => p.estado === key).length;
+    if (key === 'todos') return this.store.pagosView().length;
+    return this.store.pagosView().filter((p) => p.estado === key).length;
   }
 
   formatFecha(fecha: string): string {
@@ -189,13 +159,13 @@ export class PagosPage {
   }
 
   metodoIcon(metodo: string): string {
-    switch (metodo) {
-      case 'yape':
-      case 'plin':
+    switch (metodo.toUpperCase()) {
+      case 'YAPE':
+      case 'PLIN':
         return 'phone';
-      case 'transferencia':
+      case 'TRANSFERENCIA':
         return 'creditCard';
-      case 'efectivo':
+      case 'EFECTIVO':
         return 'wallet';
       default:
         return 'wallet';
@@ -216,7 +186,7 @@ export class PagosPage {
     this.estadoFiltro.set('todos');
   }
 
-  viewComprobante(pago: Pago): void {
+  viewComprobante(pago: PagoView): void {
     this.selected.set(pago);
   }
 
@@ -224,31 +194,31 @@ export class PagosPage {
     this.selected.set(null);
   }
 
-  async accept(pago: Pago): Promise<void> {
+  async accept(pago: PagoView): Promise<void> {
     const ok = await this.confirm.ask({
       title: 'Aceptar pago',
-      description: `¿Confirmar el pago de «${pago.grupo}» por ${pago.monto}?`,
+      description: `¿Confirmar el pago de «${pago.nombreGrupo}» por ${pago.monto}?`,
       confirmLabel: 'Aceptar',
     });
     if (!ok) return;
-    this.store.updatePago({ ...pago, estado: 'verificado' });
+    this.store.updatePago(toPagoEntity(pago, 'VERIFICADO'));
     if (this.selected()?.id === pago.id) {
-      this.selected.set({ ...pago, estado: 'verificado' });
+      this.selected.set({ ...pago, estado: 'VERIFICADO' });
     }
     this.toast.success('Pago verificado', pago.codigo);
   }
 
-  async reject(pago: Pago): Promise<void> {
+  async reject(pago: PagoView): Promise<void> {
     const ok = await this.confirm.ask({
       title: 'Rechazar pago',
-      description: `¿Rechazar el pago de «${pago.grupo}»?`,
+      description: `¿Rechazar el pago de «${pago.nombreGrupo}»?`,
       confirmLabel: 'Rechazar',
       tone: 'danger',
     });
     if (!ok) return;
-    this.store.updatePago({ ...pago, estado: 'rechazado' });
+    this.store.updatePago(toPagoEntity(pago, 'RECHAZADO'));
     if (this.selected()?.id === pago.id) {
-      this.selected.set({ ...pago, estado: 'rechazado' });
+      this.selected.set({ ...pago, estado: 'RECHAZADO' });
     }
     this.toast.warning('Pago rechazado', pago.codigo);
   }

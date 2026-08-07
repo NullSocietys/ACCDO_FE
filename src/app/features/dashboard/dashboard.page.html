@@ -3,8 +3,8 @@
     <div class="skel">
       <app-skeleton variant="card" [height]="120" />
       <div class="skel__kpis">
-        @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
-          <app-skeleton variant="card" [height]="112" />
+        @for (_ of [1, 2, 3]; track $index) {
+          <app-skeleton variant="card" [height]="72" />
         }
       </div>
     </div>
@@ -34,16 +34,14 @@
         </dl>
         <div class="mast__actions">
           <a routerLink="/inscripciones/nueva">
-            <app-button icon="plus">Nueva inscripción</app-button>
+            <app-button icon="plus" [fullWidth]="true">Nueva inscripción</app-button>
           </a>
           <a routerLink="/eventos">
-            <app-button variant="outline" icon="calendar">Eventos</app-button>
+            <app-button variant="outline" icon="calendar" [fullWidth]="true">Eventos</app-button>
           </a>
         </div>
       </div>
     </header>
-
-    <app-kpi-board label="Indicadores de temporada" [items]="kpis()" [columns]="3" />
 
     @if (overview().pendientes > 0) {
       <aside class="strip" role="status">
@@ -142,9 +140,9 @@
                 <article class="feed" role="listitem">
                   <span class="feed__index">{{ rowIndex(i) }}</span>
                   <div class="feed__body">
-                    <h3>{{ ins.grupo }}</h3>
+                    <h3>{{ ins.nombreGrupo }}</h3>
                     <p>
-                      <span class="feed__cat">{{ ins.categoria }}</span>
+                      <span class="feed__cat">{{ ins.categoriaNombre }}</span>
                       · {{ ins.codigo }}
                     </p>
                   </div>
@@ -168,7 +166,7 @@
           } @else {
             <div class="folio__list" role="list">
               @for (ev of upcomingEventos(); track ev.id) {
-                <article class="agenda" role="listitem" [class.is-activo]="ev.estado === 'activo'">
+                <article class="agenda" role="listitem" [class.is-activo]="ev.estado === 'ACTIVO'">
                   <div class="agenda__date" aria-hidden="true">
                     <span class="agenda__day">{{ dayOf(ev.fecha) }}</span>
                     <span class="agenda__mon">{{ monthOf(ev.fecha) }}</span>

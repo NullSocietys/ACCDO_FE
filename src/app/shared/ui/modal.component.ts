@@ -10,6 +10,8 @@ import { ButtonComponent } from './button.component';
 export class ModalComponent {
   readonly open = input(false);
   readonly title = input('Modal');
+  /** Micro-label above the title (Swiss folio mark). */
+  readonly label = input('Panel');
   readonly description = input<string | null>(null);
   readonly size = input<'md' | 'lg' | 'xl'>('md');
   readonly showFooter = input(true);

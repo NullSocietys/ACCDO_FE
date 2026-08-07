@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CATEGORIAS } from '../../core/data/mock-data';
-import { Modalidad, Sexo } from '../../core/models';
+import { Sexo } from '../../core/models';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
@@ -29,7 +29,7 @@ interface MemberPair {
 interface GroupCard {
   key: string;
   grupo: string;
-  modalidad: Modalidad;
+  modalidad: string;
   eventoNombre: string;
   encargado: string;
   codigo: string;
@@ -63,30 +63,28 @@ export class ParticipantesPage {
   readonly selectedGroup = signal<GroupCard | null>(null);
 
   readonly groups = computed((): GroupCard[] => {
-    const insById = new Map(this.store.inscripciones().map((i) => [i.id, i]));
     const map = new Map<string, GroupCard>();
 
-    for (const p of this.store.participantes()) {
-      const ins = insById.get(p.inscripcionId);
-      const key = p.inscripcionId || `${p.grupo}|${p.categoria}`;
+    for (const p of this.store.participantesView()) {
+      const key = p.inscripcionId;
       let card = map.get(key);
       if (!card) {
         card = {
           key,
-          grupo: p.grupo,
-          modalidad: p.categoria,
-          eventoNombre: ins?.eventoNombre ?? 'Sin evento',
-          encargado: ins?.responsable ?? 'Sin encargado',
-          codigo: ins?.codigo ?? '—',
-          estado: ins?.estado ?? 'borrador',
+          grupo: p.nombreGrupo,
+          modalidad: p.categoriaNombre,
+          eventoNombre: p.eventoNombre,
+          encargado: p.responsableNombre,
+          codigo: p.codigoInscripcion,
+          estado: p.estadoInscripcion,
           members: [],
         };
         map.set(key, card);
       }
       card.members.push({
         id: p.id,
-        nombreCompleto: `${p.nombre} ${p.apellido}`,
-        iniciales: `${p.nombre.charAt(0)}${p.apellido.charAt(0)}`.toUpperCase(),
+        nombreCompleto: `${p.nombres} ${p.apellidos}`,
+        iniciales: `${p.nombres.charAt(0)}${p.apellidos.charAt(0)}`.toUpperCase(),
         dni: p.dni,
         edad: p.edad,
         sexo: p.sexo,
@@ -181,12 +179,9 @@ export class ParticipantesPage {
     ];
   });
 
-  isPairModalidad(modalidad: Modalidad): boolean {
-    return (
-      modalidad.includes('Pareja') ||
-      modalidad.includes('Dúos') ||
-      modalidad.includes('Ballet')
-    );
+  isPairModalidad(modalidad: string): boolean {
+    const m = modalidad.toUpperCase();
+    return m.includes('PAREJA') || m.includes('DUOS') || m.includes('BALLET');
   }
 
   toPairs(members: MemberItem[]): MemberPair[] {

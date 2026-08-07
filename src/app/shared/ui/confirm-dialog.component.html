@@ -1,5 +1,6 @@
 <app-modal
   [open]="confirm.open()"
+  label="Confirmación"
   [title]="confirm.options().title"
   [description]="confirm.options().description ?? null"
   (closed)="confirm.resolve(false)"

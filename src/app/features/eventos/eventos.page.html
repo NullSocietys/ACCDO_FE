@@ -18,11 +18,13 @@
           <dd>{{ overview().activos }}</dd>
         </div>
         <div class="mast__pulse--gold">
-          <dt>Próx.</dt>
-          <dd>{{ overview().proximos }}</dd>
+          <dt>Grupos</dt>
+          <dd>{{ overview().grupos }}</dd>
         </div>
       </dl>
-      <app-button icon="plus" (clicked)="openCreate()">Nuevo evento</app-button>
+      <div class="mast__cta">
+        <app-button icon="plus" [fullWidth]="true" (clicked)="openCreate()">Nuevo evento</app-button>
+      </div>
     </div>
   </header>
 
@@ -35,8 +37,6 @@
       (actioned)="openCreate()"
     />
   } @else {
-    <app-kpi-board label="Resumen de la temporada" [items]="kpis()" [columns]="4" />
-
     @if (featured(); as ev) {
       <section class="live" aria-label="Evento activo">
         <div class="live__date" aria-hidden="true">
@@ -134,9 +134,9 @@
             <article
               class="row"
               role="listitem"
-              [class.is-activo]="evento.estado === 'activo'"
-              [class.is-cancelado]="evento.estado === 'cancelado'"
-              [class.is-proximo]="evento.estado === 'proximo'"
+              [class.is-activo]="evento.estado === 'ACTIVO'"
+              [class.is-cancelado]="evento.estado === 'CANCELADO'"
+              [class.is-proximo]="evento.estado === 'PROXIMO'"
             >
               <span class="row__index">{{ rowIndex(i) }}</span>
 
@@ -206,6 +206,7 @@
 
 <app-modal
   [open]="modalOpen()"
+  label="Evento"
   [title]="editingId() ? 'Editar evento' : 'Nuevo evento'"
   description="Datos del concurso en el calendario de temporada."
   (closed)="modalOpen.set(false)"
@@ -267,10 +268,10 @@
           [ngModel]="form().estado"
           (ngModelChange)="patch({ estado: $event })"
         >
-          <option value="activo">Activo</option>
-          <option value="proximo">Próximo</option>
-          <option value="finalizado">Finalizado</option>
-          <option value="cancelado">Cancelado</option>
+          <option value="ACTIVO">Activo</option>
+          <option value="PROXIMO">Próximo</option>
+          <option value="FINALIZADO">Finalizado</option>
+          <option value="CANCELADO">Cancelado</option>
         </select>
       </div>
     </div>

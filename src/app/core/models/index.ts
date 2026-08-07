@@ -1,39 +1,27 @@
-export type EventoEstado = 'activo' | 'proximo' | 'finalizado' | 'cancelado';
-export type InscripcionEstado = 'pendiente' | 'confirmada' | 'rechazada' | 'borrador';
-export type PagoEstado = 'pendiente' | 'verificado' | 'rechazado';
-export type PagoMetodo = 'yape' | 'plin' | 'transferencia' | 'efectivo';
+/** Modelos alineados al esquema PostgreSQL (Caporales / Chicote de Oro). */
+
 export type Sexo = 'M' | 'F';
 
-/** Modalidades oficiales de competencia (Artículo 01 / 02). */
-export type Modalidad =
-  | 'Unipersonal – Macho Caporal'
-  | 'Unipersonal – Caporalita de Oro'
-  | 'Pareja (Libre)'
-  | 'Dúos Machos y Caporalitas'
-  | 'Tropas Machos y Caporalitas'
-  | 'Ballet (Libre)';
+/** eventos.estado */
+export type EventoEstado = 'ACTIVO' | 'PROXIMO' | 'FINALIZADO' | 'CANCELADO';
 
-/** @deprecated Prefer Modalidad; se mantiene como alias de compatibilidad. */
-export type Categoria = Modalidad;
+/** inscripciones.estado */
+export type InscripcionEstado = 'PENDIENTE' | 'CONFIRMADA' | 'RECHAZADA';
 
-export interface ModalidadTarifa {
-  codigo: string;
-  modalidad: Modalidad;
-  costo: number;
-}
+/** pagos.estado */
+export type PagoEstado = 'PENDIENTE' | 'VERIFICADO' | 'RECHAZADO';
 
-export interface PremioModalidad {
-  modalidad: Modalidad;
-  primero: string;
-  segundo: string;
-  tercero: string;
-}
+/** pagos.metodo_pago */
+export type PagoMetodo = 'YAPE' | 'PLIN' | 'TRANSFERENCIA' | 'EFECTIVO';
 
-export interface CriterioCalificacion {
-  clave: 'presentacion' | 'coreografia' | 'armonia' | 'mensaje' | 'expresion';
+export interface Usuario {
+  id: string;
   nombre: string;
-  puntos: number;
-  descripcion: string;
+  correo: string;
+  /** Solo mock; nunca se expone en UI. */
+  password: string;
+  activo: boolean;
+  createdAt: string;
 }
 
 export interface Evento {
@@ -44,70 +32,85 @@ export interface Evento {
   hora: string;
   lugar: string;
   estado: EventoEstado;
+  activo: boolean;
+  createdAt: string;
 }
 
-export interface Participante {
+export interface Categoria {
   id: string;
   nombre: string;
-  apellido: string;
+  precio: number;
+  minIntegrantes: number;
+  maxIntegrantes: number;
+  activo: boolean;
+}
+
+export interface Responsable {
+  id: string;
+  nombres: string;
+  apellidos: string;
   dni: string;
-  edad: number;
-  sexo: Sexo;
-  grupo: string;
-  categoria: Modalidad;
-  inscripcionId: string;
+  telefono: string;
+  correo: string;
+  departamento: string;
+  provincia: string;
+  distrito: string;
+  activo: boolean;
+  createdAt: string;
 }
 
 export interface Inscripcion {
   id: string;
   codigo: string;
-  grupo: string;
-  academia: string;
-  categoria: Modalidad;
-  responsable: string;
-  cantidadIntegrantes: number;
-  estado: InscripcionEstado;
-  monto: number;
-  fecha: string;
-  hora: string;
   eventoId: string;
-  eventoNombre: string;
-  dniResponsable?: string;
-  telefono?: string;
-  correo?: string;
-  departamento?: string;
-  provincia?: string;
-  distrito?: string;
+  categoriaId: string;
+  usuarioId: string | null;
+  institucion: string;
+  responsableId: string;
+  academia: string;
+  nombreGrupo: string;
+  cantidadIntegrantes: number;
+  total: number;
+  estado: InscripcionEstado;
+  observaciones: string;
+  activo: boolean;
+  createdAt: string;
+}
+
+export interface Participante {
+  id: string;
+  inscripcionId: string;
+  nombres: string;
+  apellidos: string;
+  dni: string;
+  edad: number;
+  sexo: Sexo;
+  activo: boolean;
+  createdAt: string;
 }
 
 export interface Pago {
   id: string;
-  codigo: string;
-  grupo: string;
-  responsable: string;
-  monto: number;
-  metodo: PagoMetodo;
-  estado: PagoEstado;
-  fecha: string;
-  numeroOperacion?: string;
-  comprobanteUrl?: string;
   inscripcionId: string;
+  monto: number;
+  metodoPago: PagoMetodo;
+  numeroOperacion: string;
+  comprobante: string;
+  estado: PagoEstado;
+  fechaPago: string;
+  observaciones: string;
+  activo: boolean;
+  createdAt: string;
 }
 
 export interface Resultado {
   id: string;
-  eventoId: string;
-  grupo: string;
-  categoria: Modalidad;
-  /** Enteros 0–5 por criterio; total máximo 25. */
-  presentacion: number;
-  coreografia: number;
-  armonia: number;
-  mensaje: number;
-  expresion: number;
-  puntaje: number;
+  inscripcionId: string;
   puesto: number;
+  puntaje: number;
   observaciones: string;
+  activo: boolean;
+  createdAt: string;
 }
 
 export interface Configuracion {
@@ -140,3 +143,58 @@ export interface ChartBar {
   label: string;
   value: number;
 }
+
+/** Premios por modalidad (contenido de bases, no tabla SQL). */
+export interface PremioCategoria {
+  categoriaId: string;
+  categoriaNombre: string;
+  primero: string;
+  segundo: string;
+  tercero: string;
+}
+
+export interface CriterioCalificacion {
+  clave: 'presentacion' | 'coreografia' | 'armonia' | 'mensaje' | 'expresion';
+  nombre: string;
+  puntos: number;
+  descripcion: string;
+}
+
+/** Vistas denormalizadas para UI (joins en cliente). */
+export interface InscripcionView extends Inscripcion {
+  eventoNombre: string;
+  categoriaNombre: string;
+  categoriaPrecio: number;
+  responsableNombre: string;
+  responsableDni: string;
+  responsableTelefono: string;
+  responsableCorreo: string;
+}
+
+export interface PagoView extends Pago {
+  codigo: string;
+  nombreGrupo: string;
+  responsableNombre: string;
+}
+
+export interface ParticipanteView extends Participante {
+  nombreGrupo: string;
+  categoriaNombre: string;
+  eventoNombre: string;
+  responsableNombre: string;
+  codigoInscripcion: string;
+  estadoInscripcion: InscripcionEstado;
+}
+
+export interface ResultadoView extends Resultado {
+  nombreGrupo: string;
+  categoriaNombre: string;
+  eventoId: string;
+  eventoNombre: string;
+  codigoInscripcion: string;
+}
+
+/** @deprecated Usar Categoria.nombre / categoriaId */
+export type Modalidad = string;
+/** @deprecated Alias histórico */
+export type CategoriaNombre = string;

@@ -114,10 +114,20 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
+  justify-content: stretch;
 }
 
 .mast__actions > a {
   text-decoration: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+}
+
+.mast__actions > a > app-button {
+  width: 100%;
+  flex: 1;
 }
 
 /* —— Alert strip —— */

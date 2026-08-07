@@ -2,10 +2,10 @@
   <div class="page-header">
     <div class="page-header__meta">
       <h1>Resultados</h1>
-      <p>Calificación oficial: enteros de 0 a 25 puntos (5 criterios × 5).</p>
+      <p>Puestos y puntajes oficiales por inscripción del evento.</p>
     </div>
     <div class="page-actions">
-      <app-button icon="plus" (clicked)="modalOpen.set(true)">Registrar resultados</app-button>
+      <app-button icon="plus" (clicked)="openCreate()">Registrar resultados</app-button>
     </div>
   </div>
 
@@ -32,7 +32,7 @@
         title="Sin resultados"
         description="No hay resultados registrados para este evento."
         actionLabel="Registrar resultados"
-        (actioned)="modalOpen.set(true)"
+        (actioned)="openCreate()"
       />
     } @else {
       <div class="table-wrap">
@@ -42,12 +42,8 @@
               <th>Puesto</th>
               <th>Grupo</th>
               <th>Modalidad</th>
-              <th>Pres.</th>
-              <th>Coreo.</th>
-              <th>Armonía</th>
-              <th>Mensaje</th>
-              <th>Expr.</th>
-              <th>Total</th>
+              <th>Código</th>
+              <th>Puntaje</th>
               <th>Observaciones</th>
             </tr>
           </thead>
@@ -55,14 +51,10 @@
             @for (r of filtered(); track r.id) {
               <tr>
                 <td class="mono">{{ r.puesto }}°</td>
-                <td style="font-weight: 600">{{ r.grupo }}</td>
-                <td>{{ r.categoria }}</td>
-                <td class="mono">{{ r.presentacion }}</td>
-                <td class="mono">{{ r.coreografia }}</td>
-                <td class="mono">{{ r.armonia }}</td>
-                <td class="mono">{{ r.mensaje }}</td>
-                <td class="mono">{{ r.expresion }}</td>
-                <td class="mono" style="font-weight: 700">{{ r.puntaje }}/25</td>
+                <td style="font-weight: 600">{{ r.nombreGrupo }}</td>
+                <td>{{ r.categoriaNombre }}</td>
+                <td class="mono">{{ r.codigoInscripcion }}</td>
+                <td class="mono" style="font-weight: 700">{{ r.puntaje }}</td>
                 <td>{{ r.observaciones }}</td>
               </tr>
             }
@@ -75,44 +67,27 @@
 
 <app-modal
   [open]="modalOpen()"
+  label="Resultado"
   title="Registrar resultado"
-  description="Asigne enteros de 0 a 5 por cada criterio (máximo 25)."
+  description="Seleccione la inscripción y asigne puesto, puntaje y observaciones."
   (closed)="modalOpen.set(false)"
 >
   <div class="form-grid">
-    <div class="field">
-      <label for="r-grupo">Grupo</label>
-      <app-input controlId="r-grupo" [value]="form().grupo" (valueChange)="patch({ grupo: $event })" />
-    </div>
-    <div class="field">
-      <label for="r-cat">Modalidad</label>
+    <div class="field form-span-2">
+      <label for="r-ins">Inscripción</label>
       <select
-        id="r-cat"
+        id="r-ins"
         class="ui-select"
-        [ngModel]="form().categoria"
-        (ngModelChange)="patch({ categoria: $event })"
+        [ngModel]="form().inscripcionId"
+        (ngModelChange)="patch({ inscripcionId: $event })"
       >
-        @for (mod of modalidades; track mod) {
-          <option [value]="mod">{{ mod }}</option>
+        <option value="">Seleccionar inscripción</option>
+        @for (ins of inscripcionesDelEvento(); track ins.id) {
+          <option [value]="ins.id">
+            {{ ins.nombreGrupo }} · {{ ins.categoriaNombre }} ({{ ins.codigo }})
+          </option>
         }
       </select>
-    </div>
-
-    @for (c of criterios; track c.clave) {
-      <div class="field">
-        <label [attr.for]="'r-' + c.clave">{{ c.nombre }} (0–5)</label>
-        <app-input
-          [controlId]="'r-' + c.clave"
-          type="number"
-          [value]="'' + form()[c.clave]"
-          (valueChange)="patchCriterio(c.clave, $event)"
-        />
-      </div>
-    }
-
-    <div class="field">
-      <label>Total</label>
-      <div class="score-total">{{ puntajeTotal() }} / 25</div>
     </div>
     <div class="field">
       <label for="r-puesto">Puesto</label>
@@ -121,6 +96,15 @@
         type="number"
         [value]="'' + form().puesto"
         (valueChange)="patch({ puesto: +$event || 0 })"
+      />
+    </div>
+    <div class="field">
+      <label for="r-puntaje">Puntaje</label>
+      <app-input
+        controlId="r-puntaje"
+        type="number"
+        [value]="'' + form().puntaje"
+        (valueChange)="patch({ puntaje: +$event || 0 })"
       />
     </div>
     <div class="field form-span-2">

@@ -10,19 +10,22 @@
       (click)="$event.stopPropagation()"
     >
       <div class="header">
-        <div>
+        <div class="header__text">
+          <span class="header__k">{{ label() }}</span>
           <h2 [id]="titleId">{{ title() }}</h2>
           @if (description()) {
             <p>{{ description() }}</p>
           }
         </div>
-        <app-button
-          variant="ghost"
-          size="icon"
-          icon="x"
-          ariaLabel="Cerrar"
-          (clicked)="closed.emit()"
-        />
+        <div class="header__close">
+          <app-button
+            variant="ghost"
+            size="icon"
+            icon="x"
+            ariaLabel="Cerrar"
+            (clicked)="closed.emit()"
+          />
+        </div>
       </div>
       <div class="body">
         <ng-content />

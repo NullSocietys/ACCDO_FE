@@ -4,12 +4,20 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   CATEGORIAS,
+  CATEGORIAS_DB,
   DEPARTAMENTOS,
   DISTRITOS,
   MONTOS_POR_CATEGORIA,
   PROVINCIAS,
 } from '../../core/data/mock-data';
-import { Categoria, Inscripcion, Pago, Participante, PagoMetodo, Sexo } from '../../core/models';
+import {
+  Inscripcion,
+  Pago,
+  PagoMetodo,
+  Participante,
+  Responsable,
+  Sexo,
+} from '../../core/models';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
 import { IconComponent } from '../../shared/icons/icon.component';
@@ -61,7 +69,7 @@ export class InscripcionWizardPage {
 
   readonly step1 = signal({
     eventoId: '',
-    categoria: '' as Categoria | '',
+    categoria: '',
     grupo: '',
     academia: '',
     cantidadIntegrantes: 0,
@@ -79,21 +87,22 @@ export class InscripcionWizardPage {
   });
 
   readonly participantes = signal<WizardParticipante[]>([
-    { nombre: '', apellido: '', dni: '', edad: null, sexo: '' }]);
+    { nombre: '', apellido: '', dni: '', edad: null, sexo: '' },
+  ]);
 
   readonly pago = signal({
-    metodo: 'yape' as PagoMetodo,
+    metodo: 'YAPE' as PagoMetodo,
     numeroOperacion: '',
     comprobanteNombre: '',
   });
 
   readonly eventosActivos = computed(() =>
-    this.store.eventos().filter((e) => e.estado === 'activo' || e.estado === 'proximo'),
+    this.store.eventos().filter((e) => e.estado === 'ACTIVO' || e.estado === 'PROXIMO'),
   );
 
   readonly monto = computed(() => {
     const cat = this.step1().categoria;
-    return cat ? MONTOS_POR_CATEGORIA[cat] ?? 0 : 0;
+    return cat ? (MONTOS_POR_CATEGORIA[cat] ?? 0) : 0;
   });
 
   readonly eventoNombre = computed(() => {
@@ -102,7 +111,9 @@ export class InscripcionWizardPage {
   });
 
   readonly provincias = computed(() => PROVINCIAS[this.step2().departamento] ?? []);
-  readonly distritos = computed(() => DISTRITOS[this.step2().provincia] ?? DISTRITOS[this.step2().departamento] ?? []);
+  readonly distritos = computed(
+    () => DISTRITOS[this.step2().provincia] ?? DISTRITOS[this.step2().departamento] ?? [],
+  );
 
   patch1(partial: Partial<ReturnType<typeof this.step1>>): void {
     this.step1.update((s) => ({ ...s, ...partial }));
@@ -117,7 +128,7 @@ export class InscripcionWizardPage {
   }
 
   onCategoria(cat: string): void {
-    this.patch1({ categoria: cat as Categoria });
+    this.patch1({ categoria: cat });
   }
 
   onDepartamento(dep: string): void {
@@ -131,7 +142,8 @@ export class InscripcionWizardPage {
   addParticipante(): void {
     this.participantes.update((list) => [
       ...list,
-      { nombre: '', apellido: '', dni: '', edad: null, sexo: '' }]);
+      { nombre: '', apellido: '', dni: '', edad: null, sexo: '' },
+    ]);
   }
 
   updateParticipante(index: number, partial: Partial<WizardParticipante>): void {
@@ -175,7 +187,10 @@ export class InscripcionWizardPage {
     }
     if (n === 3) {
       const list = this.participantes();
-      if (list.length === 0 || list.some((p) => !p.nombre || !p.apellido || !p.dni || !p.edad || !p.sexo)) {
+      if (
+        list.length === 0 ||
+        list.some((p) => !p.nombre || !p.apellido || !p.dni || !p.edad || !p.sexo)
+      ) {
         this.toast.warning('Complete la nómina de participantes');
         return false;
       }
@@ -185,66 +200,82 @@ export class InscripcionWizardPage {
 
   submit(): void {
     if (!this.validateStep(4)) return;
-    if (!this.pago().numeroOperacion && this.pago().metodo !== 'efectivo') {
+    if (!this.pago().numeroOperacion && this.pago().metodo !== 'EFECTIVO') {
       this.toast.warning('Ingrese el número de operación');
       return;
     }
     this.saving.set(true);
     window.setTimeout(() => {
+      const now = new Date().toISOString();
       const codigo = `CDO-2026-${String(this.store.inscripciones().length + 1).padStart(3, '0')}`;
       const id = crypto.randomUUID();
       const s1 = this.step1();
       const s2 = this.step2();
-      const inscripcion: Inscripcion = {
-        id,
-        codigo,
-        grupo: s1.grupo,
-        academia: s1.academia,
-        categoria: s1.categoria as Categoria,
-        responsable: `${s2.nombres} ${s2.apellidos}`.trim(),
-        cantidadIntegrantes: s1.cantidadIntegrantes,
-        estado: 'pendiente',
-        monto: this.monto(),
-        fecha: new Date().toISOString().slice(0, 10),
-        hora: new Date().toLocaleTimeString('es-PE', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        }),
-        eventoId: s1.eventoId,
-        eventoNombre: this.eventoNombre(),
-        dniResponsable: s2.dni,
+      const categoriaId =
+        CATEGORIAS_DB.find((c) => c.nombre === s1.categoria)?.id ??
+        this.store.categorias().find((c) => c.nombre === s1.categoria)?.id ??
+        '';
+      const responsableId = crypto.randomUUID();
+
+      const responsable: Responsable = {
+        id: responsableId,
+        nombres: s2.nombres,
+        apellidos: s2.apellidos,
+        dni: s2.dni,
         telefono: s2.telefono,
         correo: s2.correo,
         departamento: s2.departamento,
         provincia: s2.provincia,
         distrito: s2.distrito,
+        activo: true,
+        createdAt: now,
       };
+
+      const inscripcion: Inscripcion = {
+        id,
+        codigo,
+        eventoId: s1.eventoId,
+        categoriaId,
+        usuarioId: null,
+        institucion: s1.academia,
+        responsableId,
+        academia: s1.academia,
+        nombreGrupo: s1.grupo,
+        cantidadIntegrantes: s1.cantidadIntegrantes,
+        total: this.monto(),
+        estado: 'PENDIENTE',
+        observaciones: '',
+        activo: true,
+        createdAt: now,
+      };
+
       const participantes: Participante[] = this.participantes().map((p) => ({
         id: crypto.randomUUID(),
-        nombre: p.nombre,
-        apellido: p.apellido,
+        inscripcionId: id,
+        nombres: p.nombre,
+        apellidos: p.apellido,
         dni: p.dni,
         edad: p.edad ?? 0,
         sexo: p.sexo as Sexo,
-        grupo: s1.grupo,
-        categoria: s1.categoria as Categoria,
-        inscripcionId: id,
+        activo: true,
+        createdAt: now,
       }));
+
       const pago: Pago = {
         id: crypto.randomUUID(),
-        codigo,
-        grupo: s1.grupo,
-        responsable: inscripcion.responsable,
-        monto: this.monto(),
-        metodo: this.pago().metodo,
-        estado: 'pendiente',
-        fecha: inscripcion.fecha,
-        numeroOperacion: this.pago().numeroOperacion,
-        comprobanteUrl: this.pago().comprobanteNombre ? '#' : undefined,
         inscripcionId: id,
+        monto: this.monto(),
+        metodoPago: this.pago().metodo,
+        numeroOperacion: this.pago().numeroOperacion,
+        comprobante: this.pago().comprobanteNombre || '',
+        estado: 'PENDIENTE',
+        fechaPago: now.slice(0, 10),
+        observaciones: '',
+        activo: true,
+        createdAt: now,
       };
-      this.store.addInscripcion(inscripcion, participantes, pago);
+
+      this.store.addInscripcion(inscripcion, participantes, pago, responsable);
       this.resultCodigo.set(codigo);
       this.saving.set(false);
       this.success.set(true);

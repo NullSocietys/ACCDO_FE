@@ -4,17 +4,7 @@ import { RouterLink } from '@angular/router';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
-import { KpiBoardComponent } from '../../shared/ui/kpi-board.component';
-import { KpiItem, KpiTone } from '../../shared/ui/kpi-board.types';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
-
-const TONE_MAP: Record<string, KpiTone> = {
-  gold: 'gold',
-  dark: 'ink',
-  success: 'ok',
-  warning: 'warn',
-  info: 'info',
-};
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
@@ -26,7 +16,6 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
     BadgeComponent,
     ButtonComponent,
     SkeletonComponent,
-    KpiBoardComponent,
   ],
   styleUrl: './dashboard.page.css',
   templateUrl: './dashboard.page.html',
@@ -38,12 +27,12 @@ export class DashboardPage {
   readonly statusLabel = statusLabel;
 
   readonly overview = computed(() => {
-    const ins = this.store.inscripciones().filter((i) => i.estado !== 'rechazada');
-    const pagos = this.store.pagos();
-    const pendientes = pagos.filter((p) => p.estado === 'pendiente').length;
-    const verificados = pagos.filter((p) => p.estado === 'verificado');
+    const ins = this.store.inscripcionesView().filter((i) => i.estado !== 'RECHAZADA');
+    const pagos = this.store.pagosView();
+    const pendientes = pagos.filter((p) => p.estado === 'PENDIENTE').length;
+    const verificados = pagos.filter((p) => p.estado === 'VERIFICADO');
     const ingresos = verificados.reduce((sum, p) => sum + p.monto, 0);
-    const activos = this.store.eventos().filter((e) => e.estado === 'activo').length;
+    const activos = this.store.eventos().filter((e) => e.estado === 'ACTIVO').length;
     return {
       grupos: ins.length,
       pendientes,
@@ -54,20 +43,9 @@ export class DashboardPage {
   });
 
   readonly featured = computed(() => {
-    const activos = this.store.eventos().filter((e) => e.estado === 'activo');
+    const activos = this.store.eventos().filter((e) => e.estado === 'ACTIVO' && e.activo);
     return activos[0] ?? null;
   });
-
-  readonly kpis = computed((): KpiItem[] =>
-    this.store.stats.map((stat) => ({
-      label: stat.label,
-      value: stat.value,
-      hint: stat.change,
-      icon: stat.icon,
-      tone: TONE_MAP[stat.tone] ?? 'ink',
-      money: stat.label.toLowerCase().includes('ingreso'),
-    })),
-  );
 
   readonly chartTotal = computed(() => this.store.chart.reduce((sum, c) => sum + c.value, 0));
 
@@ -93,12 +71,12 @@ export class DashboardPage {
     return `Inscripciones por modalidad. Total ${this.chartTotal()} grupos. Líder: ${peak?.label ?? '—'} con ${peak?.value ?? 0}.`;
   });
 
-  readonly latestInscripciones = computed(() => this.store.inscripciones().slice(0, 5));
+  readonly latestInscripciones = computed(() => this.store.inscripcionesView().slice(0, 5));
 
   readonly upcomingEventos = computed(() =>
     this.store
       .eventos()
-      .filter((e) => e.estado === 'activo' || e.estado === 'proximo')
+      .filter((e) => e.estado === 'ACTIVO' || e.estado === 'PROXIMO')
       .slice(0, 4),
   );
 

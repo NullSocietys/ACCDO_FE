@@ -2,56 +2,98 @@
   position: fixed;
   inset: 0;
   z-index: 80;
-  background: rgba(12, 10, 9, 0.48);
-  backdrop-filter: blur(4px);
+  background: rgba(12, 10, 9, 0.52);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  animation: fade-up 0.2s ease;
+  animation: fade-up 0.18s ease;
 }
+
 .dialog {
-  background: white;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xl);
+  background: var(--color-card, #fff);
+  border-radius: 0;
+  box-shadow: none;
   width: min(560px, 100%);
   max-height: min(90vh, 900px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-strong, var(--color-border));
 }
+
 .dialog.lg {
   width: min(760px, 100%);
 }
+
 .dialog.xl {
   width: min(960px, 100%);
 }
+
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  padding: 20px 22px 12px;
+  gap: 16px;
+  padding: 20px 22px 16px;
   border-bottom: 1px solid var(--color-border);
 }
-.header h2 {
-  font-size: 1.45rem;
+
+.header__text {
+  min-width: 0;
+  flex: 1;
 }
+
+.header__k {
+  display: block;
+  margin: 0 0 6px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 550;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--color-primary);
+}
+
 .header p {
-  margin-top: 4px;
+  margin: 6px 0 0;
   color: var(--color-muted-foreground);
   font-size: 13px;
+  line-height: 1.4;
 }
+
+.header__close {
+  flex-shrink: 0;
+  margin-top: -2px;
+}
+
 .body {
-  padding: 18px 22px;
+  padding: 20px 22px;
   overflow: auto;
 }
+
 .footer {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
-  padding: 14px 22px 20px;
+  padding: 14px 22px 18px;
   border-top: 1px solid var(--color-border);
-  background: #fcfcfb;
+  background: var(--color-muted, #fafaf9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    animation: none;
+  }
 }

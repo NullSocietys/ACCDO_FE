@@ -390,10 +390,10 @@
 .row__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 8px;
   justify-content: flex-end;
-  align-items: flex-start;
-  padding-top: 2px;
+  align-items: center;
+  padding-top: 0;
 }
 
 /* —— Pager —— */

@@ -4,30 +4,41 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 48px 24px;
-  gap: 10px;
+  padding: 56px 24px;
+  gap: 8px;
   color: var(--color-muted-foreground);
+  border: 1px dashed var(--color-border);
+  background: transparent;
 }
+
 .icon-wrap {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  background: linear-gradient(145deg, var(--color-accent-soft), #fef3c7);
-  color: var(--gold-700);
+  width: 40px;
+  height: 40px;
+  border-radius: 0;
+  background: transparent;
+  color: var(--stone-600);
   display: grid;
   place-items: center;
-  margin-bottom: 6px;
-  border: 1px solid var(--color-accent-border);
-  box-shadow: 0 4px 12px rgba(161, 98, 7, 0.1);
+  margin-bottom: 4px;
+  border: 1px solid var(--color-border);
+  box-shadow: none;
 }
+
 h3 {
-  font-size: 1.35rem;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
   color: var(--color-primary);
 }
+
 p {
-  max-width: 36ch;
+  margin: 0;
+  max-width: 38ch;
   font-size: 13px;
+  line-height: 1.45;
 }
+
 .action {
-  margin-top: 10px;
+  margin-top: 12px;
 }

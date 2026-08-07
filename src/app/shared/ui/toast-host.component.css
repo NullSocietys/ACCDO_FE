@@ -8,61 +8,108 @@
   gap: 8px;
   width: min(360px, calc(100vw - 24px));
 }
+
 .toast {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  padding: 14px 14px 14px 16px;
-  border-radius: var(--radius-lg);
-  background: white;
+  padding: 14px 12px 14px 14px;
+  border-radius: 0;
+  background: var(--color-card, #fff);
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-lg);
-  animation: toast-in 0.25s ease;
+  border-left: 3px solid var(--toast-rail, var(--stone-700));
+  box-shadow: none;
+  animation: toast-in 0.2s ease;
 }
+
 .icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 0;
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--color-border);
 }
+
+.success {
+  --toast-rail: var(--color-success);
+}
+
 .success .icon {
-  background: var(--color-success-soft);
   color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 30%, var(--color-border));
 }
+
+.error {
+  --toast-rail: var(--color-destructive);
+}
+
 .error .icon {
-  background: var(--color-destructive-soft);
   color: var(--color-destructive);
+  border-color: color-mix(in srgb, var(--color-destructive) 30%, var(--color-border));
 }
+
+.warning {
+  --toast-rail: var(--gold-600);
+}
+
 .warning .icon {
-  background: var(--color-warning-soft);
-  color: var(--color-warning);
+  color: var(--gold-700);
+  border-color: var(--color-warning-border);
 }
+
+.info {
+  --toast-rail: var(--color-info);
+}
+
 .info .icon {
-  background: var(--color-info-soft);
   color: var(--color-info);
+  border-color: color-mix(in srgb, var(--color-info) 30%, var(--color-border));
 }
+
 .title {
   font-weight: 600;
   font-size: 13px;
+  letter-spacing: -0.01em;
   color: var(--color-foreground);
 }
+
 .desc {
   font-size: 12px;
   color: var(--color-muted-foreground);
   margin-top: 2px;
+  line-height: 1.4;
 }
+
 .close {
   margin-left: auto;
   border: none;
   background: transparent;
   color: var(--color-muted-foreground);
   cursor: pointer;
-  padding: 2px;
-  border-radius: 6px;
+  padding: 4px;
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
 }
+
 .close:hover {
   background: var(--color-muted);
   color: var(--color-foreground);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
 }

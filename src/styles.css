@@ -101,15 +101,16 @@
   --space-2xl: 2.5rem;
   --space-3xl: 3.5rem;
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* Swiss Minimal — sharp geometry, no soft SaaS radius/shadow */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
 
-  --shadow-sm: 0 1px 2px rgba(12, 10, 9, 0.04);
-  --shadow-md: 0 4px 16px rgba(12, 10, 9, 0.05);
-  --shadow-lg: 0 16px 32px rgba(12, 10, 9, 0.08);
-  --shadow-xl: 0 24px 48px rgba(12, 10, 9, 0.12);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
 
   --sidebar-width: 256px;
   --sidebar-collapsed: 72px;
@@ -121,8 +122,8 @@
   --section-gap: clamp(1rem, 1.5vw, 1.35rem);
 
   /* Component tokens */
-  --badge-radius: 5px;
-  --badge-pad-y: 2px;
+  --badge-radius: 0;
+  --badge-pad-y: 3px;
   --badge-pad-x: 8px;
   --stat-min: 9.5rem;
   --card-pad: 1.125rem;
@@ -295,12 +296,15 @@ img {
 .page-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
+  gap: 8px;
   align-items: center;
+  justify-content: flex-end;
 }
 
-.page-actions > a {
+.page-actions > a,
+.page-actions > app-button {
   display: inline-flex;
+  flex: 0 0 auto;
 }
 
 .grid-stats {
@@ -332,13 +336,12 @@ img {
 .ui-select {
   min-height: 36px;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: 0;
   padding: 8px 12px;
   background: white;
   color: var(--color-foreground);
-  transition:
-    border-color var(--transition),
-    box-shadow var(--transition);
+  transition: border-color var(--transition);
+  box-shadow: none;
 }
 
 .filters-row select:hover,
@@ -349,14 +352,14 @@ img {
 .filters-row select:focus,
 .ui-select:focus {
   outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(161, 98, 7, 0.12);
+  border-color: var(--color-primary);
+  box-shadow: none;
 }
 
 .table-wrap {
   width: 100%;
   overflow-x: auto;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  border-radius: 0;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -444,8 +447,10 @@ img {
 
 .actions-cell {
   display: flex;
-  gap: 2px;
+  gap: 8px;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .mono {

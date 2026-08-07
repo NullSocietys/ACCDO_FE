@@ -53,6 +53,17 @@
   align-items: stretch;
 }
 
+.mast__cta {
+  display: flex;
+  width: 100%;
+}
+
+.mast__cta > :first-child,
+.mast__cta app-button {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
 .mast__pulse {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -458,10 +469,10 @@
 .row__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 8px;
   justify-content: flex-end;
-  align-items: flex-start;
-  padding-top: 2px;
+  align-items: center;
+  padding-top: 0;
 }
 
 /* —— Modal form sheet —— */

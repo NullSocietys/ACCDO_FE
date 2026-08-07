@@ -2,42 +2,49 @@
   display: block;
   background: var(--color-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition:
-    box-shadow var(--transition),
-    border-color var(--transition);
+  border-radius: 0;
+  box-shadow: none;
+  transition: border-color var(--transition);
 }
+
 :host(.interactive) {
   cursor: default;
 }
+
 :host(.interactive:hover) {
-  box-shadow: var(--shadow-md);
-  border-color: color-mix(in srgb, var(--color-border-strong) 70%, transparent);
+  border-color: var(--color-border-strong);
 }
+
 .card-inner {
   padding: var(--pad);
 }
+
 .card-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 16px;
-  padding-bottom: 14px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--color-border);
 }
+
 .card-title {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--color-primary);
   margin: 0;
 }
+
 .card-desc {
-  margin: 5px 0 0;
+  margin: 6px 0 0;
   color: var(--color-muted-foreground);
   font-size: 12.5px;
   line-height: 1.4;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-weight: 450;
 }

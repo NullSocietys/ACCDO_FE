@@ -3,7 +3,7 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CATEGORIAS } from '../../core/data/mock-data';
-import { Inscripcion, InscripcionEstado, Sexo } from '../../core/models';
+import { InscripcionEstado, InscripcionView, Sexo } from '../../core/models';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -11,8 +11,6 @@ import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.c
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
-import { KpiBoardComponent } from '../../shared/ui/kpi-board.component';
-import { KpiItem } from '../../shared/ui/kpi-board.types';
 import { ModalComponent } from '../../shared/ui/modal.component';
 
 type EstadoFiltro = 'todos' | InscripcionEstado;
@@ -40,7 +38,6 @@ const PAGE_SIZE = 5;
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
-    KpiBoardComponent,
     ModalComponent,
   ],
   styleUrl: './inscripciones.page.css',
@@ -61,86 +58,42 @@ export class InscripcionesPage {
   readonly eventoFilter = signal('');
   readonly categoriaFilter = signal('');
   readonly estadoFiltro = signal<EstadoFiltro>('todos');
-  readonly selected = signal<Inscripcion | null>(null);
+  readonly selected = signal<InscripcionView | null>(null);
   readonly page = signal(1);
 
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
     { key: 'todos', label: 'Todos' },
-    { key: 'confirmada', label: 'Confirmadas' },
-    { key: 'pendiente', label: 'Pendientes' },
-    { key: 'borrador', label: 'Borradores' },
-    { key: 'rechazada', label: 'Rechazadas' },
+    { key: 'CONFIRMADA', label: 'Confirmadas' },
+    { key: 'PENDIENTE', label: 'Pendientes' },
+    { key: 'RECHAZADA', label: 'Rechazadas' },
   ];
 
   readonly overview = computed(() => {
-    const list = this.store.inscripciones();
+    const list = this.store.inscripcionesView();
     const total = list.length;
-    const confirmadas = list.filter((i) => i.estado === 'confirmada');
-    const pendientes = list.filter((i) => i.estado === 'pendiente').length;
-    const pct = (n: number) => (total === 0 ? 0 : Math.round((n / total) * 100));
+    const confirmadas = list.filter((i) => i.estado === 'CONFIRMADA');
+    const pendientes = list.filter((i) => i.estado === 'PENDIENTE').length;
 
     return {
       total,
       confirmadas: confirmadas.length,
       pendientes,
-      monto: confirmadas.reduce((sum, i) => sum + i.monto, 0),
-      pctConfirmadas: pct(confirmadas.length),
+      monto: confirmadas.reduce((sum, i) => sum + i.total, 0),
     };
-  });
-
-  readonly kpis = computed((): KpiItem[] => {
-    const o = this.overview();
-    const monto = new Intl.NumberFormat('es-PE', {
-      style: 'currency',
-      currency: 'PEN',
-      maximumFractionDigits: 0,
-    }).format(o.monto);
-
-    return [
-      {
-        label: 'Inscripciones',
-        value: o.total,
-        hint: 'Total en temporada',
-        icon: 'clipboardList',
-        tone: 'ink',
-      },
-      {
-        label: 'Confirmadas',
-        value: o.confirmadas,
-        hint: `${o.pctConfirmadas}% del registro`,
-        icon: 'circle-check',
-        tone: 'ok',
-      },
-      {
-        label: 'Pendientes',
-        value: o.pendientes,
-        hint: o.pendientes > 0 ? 'Requieren revisión' : 'Sin cola de revisión',
-        icon: 'clock',
-        tone: 'warn',
-      },
-      {
-        label: 'Monto declarado',
-        value: monto,
-        hint: 'Solo confirmadas',
-        icon: 'wallet',
-        tone: 'gold',
-        money: true,
-      },
-    ];
   });
 
   readonly filtered = computed(() => {
     const q = this.busqueda().toLowerCase().trim();
     const estado = this.estadoFiltro();
-    return this.store.inscripciones().filter((ins) => {
+    return this.store.inscripcionesView().filter((ins) => {
       const matchQ =
         !q ||
-        ins.grupo.toLowerCase().includes(q) ||
+        ins.nombreGrupo.toLowerCase().includes(q) ||
         ins.codigo.toLowerCase().includes(q) ||
-        ins.responsable.toLowerCase().includes(q) ||
-        ins.categoria.toLowerCase().includes(q);
+        ins.responsableNombre.toLowerCase().includes(q) ||
+        ins.categoriaNombre.toLowerCase().includes(q);
       const matchEv = !this.eventoFilter() || ins.eventoId === this.eventoFilter();
-      const matchCat = !this.categoriaFilter() || ins.categoria === this.categoriaFilter();
+      const matchCat = !this.categoriaFilter() || ins.categoriaNombre === this.categoriaFilter();
       const matchEst = estado === 'todos' || ins.estado === estado;
       return matchQ && matchEv && matchCat && matchEst;
     });
@@ -179,19 +132,19 @@ export class InscripcionesPage {
   readonly modalDescription = computed(() => {
     const ins = this.selected();
     if (!ins) return null;
-    return `${ins.categoria} · ${ins.codigo}`;
+    return `${ins.categoriaNombre} · ${ins.codigo}`;
   });
 
   readonly detailMembers = computed((): DetailMember[] => {
     const ins = this.selected();
     if (!ins) return [];
     return this.store
-      .participantes()
+      .participantesView()
       .filter((p) => p.inscripcionId === ins.id)
       .map((p) => ({
         id: p.id,
-        nombreCompleto: `${p.nombre} ${p.apellido}`,
-        iniciales: `${p.nombre.charAt(0)}${p.apellido.charAt(0)}`.toUpperCase(),
+        nombreCompleto: `${p.nombres} ${p.apellidos}`,
+        iniciales: `${p.nombres.charAt(0)}${p.apellidos.charAt(0)}`.toUpperCase(),
         dni: p.dni,
         edad: p.edad,
         sexo: p.sexo,
@@ -210,8 +163,8 @@ export class InscripcionesPage {
   }
 
   cuentaEstado(key: EstadoFiltro): number {
-    if (key === 'todos') return this.store.inscripciones().length;
-    return this.store.inscripciones().filter((i) => i.estado === key).length;
+    if (key === 'todos') return this.store.inscripcionesView().length;
+    return this.store.inscripcionesView().filter((i) => i.estado === key).length;
   }
 
   formatFecha(fecha: string): string {
@@ -221,8 +174,11 @@ export class InscripcionesPage {
     return `${d} ${m} ${y}`;
   }
 
-  formatRegistro(ins: Inscripcion): string {
-    return `${this.formatFecha(ins.fecha)} · ${ins.hora}`;
+  formatRegistro(ins: InscripcionView): string {
+    const created = ins.createdAt;
+    const fecha = created.slice(0, 10);
+    const hora = created.includes('T') ? created.slice(11, 16) : '';
+    return hora ? `${this.formatFecha(fecha)} · ${hora}` : this.formatFecha(fecha);
   }
 
   goToPage(page: number): void {
@@ -235,7 +191,7 @@ export class InscripcionesPage {
     return String((p - 1) * this.pageSize + localIndex + 1).padStart(2, '0');
   }
 
-  openDetail(ins: Inscripcion): void {
+  openDetail(ins: InscripcionView): void {
     this.selected.set(ins);
   }
 
@@ -254,16 +210,16 @@ export class InscripcionesPage {
     void this.router.navigateByUrl('/inscripciones/nueva');
   }
 
-  async remove(ins: Inscripcion): Promise<void> {
+  async remove(ins: InscripcionView): Promise<void> {
     const ok = await this.confirm.ask({
       title: 'Eliminar inscripción',
-      description: `¿Eliminar la inscripción de «${ins.grupo}»?`,
+      description: `¿Eliminar la inscripción de «${ins.nombreGrupo}»?`,
       confirmLabel: 'Eliminar',
       tone: 'danger',
     });
     if (!ok) return;
     if (this.selected()?.id === ins.id) this.selected.set(null);
-    this.store.inscripciones.update((list) => list.filter((i) => i.id !== ins.id));
+    this.store.removeInscripcion(ins.id);
     this.toast.success('Inscripción eliminada');
   }
 }

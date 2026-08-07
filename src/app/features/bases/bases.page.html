@@ -132,9 +132,9 @@
               </tr>
             </thead>
             <tbody>
-              @for (p of premios; track p.modalidad) {
+              @for (p of premios; track p.categoriaId) {
                 <tr>
-                  <td style="font-weight: 600">{{ p.modalidad }}</td>
+                  <td style="font-weight: 600">{{ p.categoriaNombre }}</td>
                   <td>{{ p.primero }}</td>
                   <td>{{ p.segundo }}</td>
                   <td>{{ p.tercero }}</td>

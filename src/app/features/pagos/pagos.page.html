@@ -23,15 +23,13 @@
     </dl>
   </header>
 
-  @if (store.pagos().length === 0) {
+  @if (store.pagosView().length === 0) {
     <app-empty-state
       icon="creditCard"
       title="Sin pagos"
       description="Cuando se registren inscripciones con pago, aparecerán aquí."
     />
   } @else {
-    <app-kpi-board label="Indicadores de pagos" [items]="kpis()" [columns]="4" />
-
     @if (overview().pendientes > 0) {
       <aside class="strip" role="status">
         <span class="strip__mark" aria-hidden="true">!</span>
@@ -39,7 +37,7 @@
           <strong>{{ overview().pendientes }} comprobantes</strong>
           esperan verificación antes del sorteo.
         </p>
-        <button type="button" class="strip__link" (click)="estadoFiltro.set('pendiente')">
+        <button type="button" class="strip__link" (click)="estadoFiltro.set('PENDIENTE')">
           Filtrar cola →
         </button>
       </aside>
@@ -99,15 +97,15 @@
             <article
               class="row"
               role="listitem"
-              [class.is-pendiente]="pago.estado === 'pendiente'"
-              [class.is-rechazado]="pago.estado === 'rechazado'"
-              [class.is-verificado]="pago.estado === 'verificado'"
+              [class.is-pendiente]="pago.estado === 'PENDIENTE'"
+              [class.is-rechazado]="pago.estado === 'RECHAZADO'"
+              [class.is-verificado]="pago.estado === 'VERIFICADO'"
             >
               <span class="row__index">{{ rowIndex(i) }}</span>
 
               <div class="row__body">
                 <div class="row__title">
-                  <h3>{{ pago.grupo }}</h3>
+                  <h3>{{ pago.nombreGrupo }}</h3>
                   <app-badge [tone]="statusTone(pago.estado)" [dot]="false">
                     {{ statusLabel(pago.estado) }}
                   </app-badge>
@@ -115,15 +113,15 @@
                 <ul class="row__facts">
                   <li>
                     <span class="k">Método</span>
-                    <span class="v v--gold">{{ statusLabel(pago.metodo) }}</span>
+                    <span class="v v--gold">{{ statusLabel(pago.metodoPago) }}</span>
                   </li>
                   <li>
                     <span class="k">Encargado</span>
-                    <span class="v">{{ pago.responsable }}</span>
+                    <span class="v">{{ pago.responsableNombre }}</span>
                   </li>
                   <li>
                     <span class="k">Fecha</span>
-                    <span class="v">{{ formatFecha(pago.fecha) }}</span>
+                    <span class="v">{{ formatFecha(pago.fechaPago) }}</span>
                   </li>
                   <li>
                     <span class="k">Operación</span>
@@ -147,7 +145,7 @@
                 >
                   Ver
                 </app-button>
-                @if (pago.estado === 'pendiente') {
+                @if (pago.estado === 'PENDIENTE') {
                   <app-button
                     variant="ghost"
                     size="icon"
@@ -210,7 +208,8 @@
 
 <app-modal
   [open]="!!selected()"
-  [title]="selected()?.grupo ?? 'Comprobante'"
+  label="Comprobante"
+  [title]="selected()?.nombreGrupo ?? 'Comprobante'"
   [description]="modalDescription()"
   size="lg"
   (closed)="closeComprobante()"
@@ -232,11 +231,11 @@
       <dl class="sheet__grid">
         <div>
           <dt>Método</dt>
-          <dd class="gold">{{ statusLabel(pago.metodo) }}</dd>
+          <dd class="gold">{{ statusLabel(pago.metodoPago) }}</dd>
         </div>
         <div>
           <dt>Fecha</dt>
-          <dd>{{ formatFecha(pago.fecha) }}</dd>
+          <dd>{{ formatFecha(pago.fechaPago) }}</dd>
         </div>
         <div>
           <dt>Código</dt>
@@ -248,7 +247,7 @@
         </div>
         <div class="sheet__wide">
           <dt>Encargado</dt>
-          <dd>{{ pago.responsable }}</dd>
+          <dd>{{ pago.responsableNombre }}</dd>
         </div>
       </dl>
 
@@ -258,7 +257,7 @@
           <strong>Comprobante</strong>
           <p>
             {{
-              pago.comprobanteUrl
+              pago.comprobante
                 ? 'Archivo cargado. Confirme monto y número de operación.'
                 : 'Sin archivo adjunto.'
             }}
@@ -269,7 +268,7 @@
   }
 
   <div modal-footer>
-    @if (selected()?.estado === 'pendiente') {
+    @if (selected()?.estado === 'PENDIENTE') {
       <app-button variant="outline" icon="x" (clicked)="reject(selected()!)">
         Rechazar
       </app-button>

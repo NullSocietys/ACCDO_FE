@@ -1,27 +1,81 @@
 import {
+  Categoria,
   CriterioCalificacion,
-  Modalidad,
-  ModalidadTarifa,
-  PremioModalidad,
+  PremioCategoria,
 } from '../models';
 
-/** Tarifas oficiales (Artículo 01 / 02). */
-export const MODALIDADES: ModalidadTarifa[] = [
-  { codigo: '01', modalidad: 'Unipersonal – Macho Caporal', costo: 70 },
-  { codigo: '02', modalidad: 'Unipersonal – Caporalita de Oro', costo: 70 },
-  { codigo: '03', modalidad: 'Pareja (Libre)', costo: 80 },
-  { codigo: '04', modalidad: 'Dúos Machos y Caporalitas', costo: 80 },
-  { codigo: '05', modalidad: 'Tropas Machos y Caporalitas', costo: 100 },
-  { codigo: '06', modalidad: 'Ballet (Libre)', costo: 170 },
+/** Categorías oficiales = filas de la tabla `categorias` (Bases 2026). */
+export const CATEGORIAS_DB: Categoria[] = [
+  {
+    id: 'cat-01',
+    nombre: 'UNIPERSONAL MACHO CAPORAL',
+    precio: 70,
+    minIntegrantes: 1,
+    maxIntegrantes: 1,
+    activo: true,
+  },
+  {
+    id: 'cat-02',
+    nombre: 'UNIPERSONAL CAPORALITA DE ORO',
+    precio: 70,
+    minIntegrantes: 1,
+    maxIntegrantes: 1,
+    activo: true,
+  },
+  {
+    id: 'cat-03',
+    nombre: 'PAREJA (LIBRE)',
+    precio: 80,
+    minIntegrantes: 2,
+    maxIntegrantes: 2,
+    activo: true,
+  },
+  {
+    id: 'cat-04',
+    nombre: 'DUOS MACHOS Y CAPORALITAS',
+    precio: 80,
+    minIntegrantes: 2,
+    maxIntegrantes: 2,
+    activo: true,
+  },
+  {
+    id: 'cat-05',
+    nombre: 'TROPAS MACHOS Y CAPORALITAS',
+    precio: 100,
+    minIntegrantes: 3,
+    maxIntegrantes: 40,
+    activo: true,
+  },
+  {
+    id: 'cat-06',
+    nombre: 'BALLET (LIBRE)',
+    precio: 170,
+    minIntegrantes: 8,
+    maxIntegrantes: 40,
+    activo: true,
+  },
 ];
 
-export const CATEGORIAS = MODALIDADES.map((m) => m.modalidad);
+/** Alias de compatibilidad con pantallas de bases / wizard. */
+export const MODALIDADES = CATEGORIAS_DB.map((c, i) => ({
+  codigo: String(i + 1).padStart(2, '0'),
+  modalidad: c.nombre,
+  costo: c.precio,
+  categoriaId: c.id,
+  minIntegrantes: c.minIntegrantes,
+  maxIntegrantes: c.maxIntegrantes,
+}));
 
-export const MONTOS_POR_CATEGORIA: Record<Modalidad, number> = Object.fromEntries(
-  MODALIDADES.map((m) => [m.modalidad, m.costo]),
-) as Record<Modalidad, number>;
+export const CATEGORIAS = CATEGORIAS_DB.map((c) => c.nombre);
 
-/** Criterios de calificación (Artículo 08). Total máximo: 25 puntos. */
+export const MONTOS_POR_CATEGORIA: Record<string, number> = Object.fromEntries(
+  CATEGORIAS_DB.map((c) => [c.nombre, c.precio]),
+);
+
+export const PRECIO_POR_CATEGORIA_ID: Record<string, number> = Object.fromEntries(
+  CATEGORIAS_DB.map((c) => [c.id, c.precio]),
+);
+
 export const CRITERIOS_CALIFICACION: CriterioCalificacion[] = [
   {
     clave: 'presentacion',
@@ -60,39 +114,45 @@ export const CRITERIOS_CALIFICACION: CriterioCalificacion[] = [
   },
 ];
 
-export const PREMIOS: PremioModalidad[] = [
+export const PREMIOS: PremioCategoria[] = [
   {
-    modalidad: 'Unipersonal – Macho Caporal',
+    categoriaId: 'cat-01',
+    categoriaNombre: 'UNIPERSONAL MACHO CAPORAL',
     primero: 'S/ 500 + Medalla + Diploma',
     segundo: 'S/ 250 + Medalla + Diploma',
     tercero: 'Medalla + Diploma',
   },
   {
-    modalidad: 'Unipersonal – Caporalita de Oro',
+    categoriaId: 'cat-02',
+    categoriaNombre: 'UNIPERSONAL CAPORALITA DE ORO',
     primero: 'S/ 500 + Medalla + Diploma',
     segundo: 'S/ 250 + Medalla + Diploma',
     tercero: 'Medalla + Diploma',
   },
   {
-    modalidad: 'Pareja (Libre)',
+    categoriaId: 'cat-03',
+    categoriaNombre: 'PAREJA (LIBRE)',
     primero: 'S/ 600 + Medalla + Diploma',
     segundo: 'S/ 300 + Medalla + Diploma',
     tercero: 'Medalla + Diploma',
   },
   {
-    modalidad: 'Dúos Machos y Caporalitas',
+    categoriaId: 'cat-04',
+    categoriaNombre: 'DUOS MACHOS Y CAPORALITAS',
     primero: 'S/ 600 + Medalla + Diploma',
     segundo: 'S/ 300 + Medalla + Diploma',
     tercero: 'Medalla + Diploma',
   },
   {
-    modalidad: 'Tropas Machos y Caporalitas',
+    categoriaId: 'cat-05',
+    categoriaNombre: 'TROPAS MACHOS Y CAPORALITAS',
     primero: 'S/ 800 + Trofeo + Diploma',
     segundo: 'S/ 400 + Trofeo + Diploma',
     tercero: 'Medalla + Diploma',
   },
   {
-    modalidad: 'Ballet (Libre)',
+    categoriaId: 'cat-06',
+    categoriaNombre: 'BALLET (LIBRE)',
     primero: 'S/ 2,500 + Trofeo',
     segundo: 'S/ 1,200 + Trofeo',
     tercero: 'S/ 300 + Trofeo',
@@ -132,8 +192,15 @@ export const ARTICULOS_BASES: ArticuloBases[] = [
       'Se pueden inscribir pasado el sorteo o el mismo día del concurso; en ese caso pasan a ser los primeros de la lista en el primer bloque.',
     ],
     tabla: {
-      headers: ['N°', 'Modalidad', 'Costo'],
-      rows: MODALIDADES.map((m) => [m.codigo, m.modalidad, `S/ ${m.costo.toFixed(2)}`]),
+      headers: ['N°', 'Modalidad', 'Costo', 'Integrantes'],
+      rows: CATEGORIAS_DB.map((c, i) => [
+        String(i + 1).padStart(2, '0'),
+        c.nombre,
+        `S/ ${c.precio.toFixed(2)}`,
+        c.minIntegrantes === c.maxIntegrantes
+          ? String(c.minIntegrantes)
+          : `${c.minIntegrantes}–${c.maxIntegrantes}`,
+      ]),
     },
   },
   {
@@ -157,7 +224,7 @@ export const ARTICULOS_BASES: ArticuloBases[] = [
     id: '04',
     titulo: 'Número de participantes categoría Ballet',
     resumen:
-      'Categoría Ballet Adultos: mínimo 4 parejas mixtas; máximo 5 o 6 parejas mixtas.',
+      'Categoría Ballet: mínimo 8 integrantes y máximo 40 según tabla oficial de categorías.',
   },
   {
     id: '05',
@@ -259,7 +326,7 @@ export const ARTICULOS_BASES: ArticuloBases[] = [
     ],
     tabla: {
       headers: ['Modalidad', '1.er puesto', '2.º puesto', '3.er puesto'],
-      rows: PREMIOS.map((p) => [p.modalidad, p.primero, p.segundo, p.tercero]),
+      rows: PREMIOS.map((p) => [p.categoriaNombre, p.primero, p.segundo, p.tercero]),
     },
   },
   {

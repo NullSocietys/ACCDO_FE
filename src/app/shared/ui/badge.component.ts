@@ -31,6 +31,10 @@ export function statusTone(status: string): BadgeTone {
     rechazado: 'danger',
     borrador: 'muted',
     inactivo: 'muted',
+    yape: 'gold',
+    plin: 'info',
+    transferencia: 'muted',
+    efectivo: 'muted',
   };
   return map[status.toLowerCase()] ?? 'muted';
 }

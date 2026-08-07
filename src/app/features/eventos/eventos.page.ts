@@ -9,8 +9,6 @@ import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.c
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
-import { KpiBoardComponent } from '../../shared/ui/kpi-board.component';
-import { KpiItem } from '../../shared/ui/kpi-board.types';
 import { ModalComponent } from '../../shared/ui/modal.component';
 
 const emptyForm = (): Omit<Evento, 'id'> => ({
@@ -19,7 +17,9 @@ const emptyForm = (): Omit<Evento, 'id'> => ({
   fecha: '',
   hora: '',
   lugar: '',
-  estado: 'proximo',
+  estado: 'PROXIMO',
+  activo: true,
+  createdAt: new Date().toISOString(),
 });
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -37,7 +37,6 @@ type EstadoFiltro = 'todos' | EventoEstado;
     EmptyStateComponent,
     InputComponent,
     ModalComponent,
-    KpiBoardComponent,
   ],
   styleUrl: './eventos.page.css',
   templateUrl: './eventos.page.html',
@@ -58,10 +57,11 @@ export class EventosPage {
 
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
     { key: 'todos', label: 'Todos' },
-    { key: 'activo', label: 'Activos' },
-    { key: 'proximo', label: 'Próximos' },
-    { key: 'finalizado', label: 'Finalizados' },
-    { key: 'cancelado', label: 'Cancelados' }];
+    { key: 'ACTIVO', label: 'Activos' },
+    { key: 'PROXIMO', label: 'Próximos' },
+    { key: 'FINALIZADO', label: 'Finalizados' },
+    { key: 'CANCELADO', label: 'Cancelados' },
+  ];
 
   private readonly ordenados = computed(() =>
     [...this.store.eventos()].sort(
@@ -83,12 +83,12 @@ export class EventosPage {
   });
 
   readonly featured = computed(() => {
-    const activos = this.ordenados().filter((e) => e.estado === 'activo');
+    const activos = this.ordenados().filter((e) => e.estado === 'ACTIVO' && e.activo);
     const ev = activos[0];
     if (!ev) return null;
     const q = this.busqueda().trim().toLowerCase();
     const f = this.estadoFiltro();
-    const pasaFiltro = f === 'todos' || f === 'activo';
+    const pasaFiltro = f === 'todos' || f === 'ACTIVO';
     const pasaBusqueda =
       !q || ev.nombre.toLowerCase().includes(q) || ev.lugar.toLowerCase().includes(q);
     return pasaFiltro && pasaBusqueda ? ev : null;
@@ -98,50 +98,16 @@ export class EventosPage {
     const eventos = this.store.eventos();
     return {
       total: eventos.length,
-      activos: eventos.filter((e) => e.estado === 'activo').length,
-      proximos: eventos.filter((e) => e.estado === 'proximo').length,
-      grupos: this.store.inscripciones().filter((i) => i.estado !== 'rechazada').length,
+      activos: eventos.filter((e) => e.estado === 'ACTIVO').length,
+      proximos: eventos.filter((e) => e.estado === 'PROXIMO').length,
+      grupos: this.store.inscripcionesView().filter((i) => i.estado !== 'RECHAZADA').length,
     };
-  });
-
-  readonly kpis = computed((): KpiItem[] => {
-    const o = this.overview();
-    return [
-      {
-        label: 'Eventos',
-        value: o.total,
-        hint: 'En calendario',
-        icon: 'calendar',
-        tone: 'ink',
-      },
-      {
-        label: 'Activos',
-        value: o.activos,
-        hint: 'En curso ahora',
-        icon: 'circle-check',
-        tone: 'ok',
-      },
-      {
-        label: 'Por venir',
-        value: o.proximos,
-        hint: 'Próximos en agenda',
-        icon: 'clock',
-        tone: 'info',
-      },
-      {
-        label: 'Grupos inscritos',
-        value: o.grupos,
-        hint: 'Sin rechazados',
-        icon: 'users',
-        tone: 'gold',
-      },
-    ];
   });
 
   private inscripcionesDe(eventoId: string) {
     return this.store
-      .inscripciones()
-      .filter((i) => i.eventoId === eventoId && i.estado !== 'rechazada');
+      .inscripcionesView()
+      .filter((i) => i.eventoId === eventoId && i.estado !== 'RECHAZADA');
   }
 
   gruposDe(eventoId: string): number {
@@ -171,12 +137,16 @@ export class EventosPage {
   }
 
   weekdayOf(fecha: string): string {
-    const d = new Date(Number(fecha.slice(0, 4)), Number(fecha.slice(5, 7)) - 1, Number(fecha.slice(8, 10)));
+    const d = new Date(
+      Number(fecha.slice(0, 4)),
+      Number(fecha.slice(5, 7)) - 1,
+      Number(fecha.slice(8, 10)),
+    );
     return DIAS[d.getDay()] ?? '';
   }
 
   countdownLabel(evento: Evento): string | null {
-    if (evento.estado === 'finalizado' || evento.estado === 'cancelado') return null;
+    if (evento.estado === 'FINALIZADO' || evento.estado === 'CANCELADO') return null;
     const target = new Date(
       Number(evento.fecha.slice(0, 4)),
       Number(evento.fecha.slice(5, 7)) - 1,
@@ -228,7 +198,13 @@ export class EventosPage {
       this.store.updateEvento({ id, ...data, estado: data.estado as EventoEstado });
       this.toast.success('Evento actualizado');
     } else {
-      this.store.addEvento({ id: crypto.randomUUID(), ...data, estado: data.estado as EventoEstado });
+      this.store.addEvento({
+        id: crypto.randomUUID(),
+        ...data,
+        estado: data.estado as EventoEstado,
+        activo: true,
+        createdAt: new Date().toISOString(),
+      });
       this.toast.success('Evento creado');
     }
     this.modalOpen.set(false);
