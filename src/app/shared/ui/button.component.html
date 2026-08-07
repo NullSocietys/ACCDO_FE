@@ -1,0 +1,14 @@
+<button
+  [type]="type()"
+  [class]="variant() + ' ' + size()"
+  [disabled]="disabled() || loading()"
+  [attr.aria-label]="ariaLabel() || null"
+  (click)="clicked.emit($event)"
+>
+  @if (loading()) {
+    <span class="spinner" aria-hidden="true"></span>
+  } @else if (icon()) {
+    <app-icon [name]="icon()!" [size]="size() === 'sm' ? 15 : 16" />
+  }
+  <ng-content />
+</button>

@@ -1,0 +1,158 @@
+<div class="page">
+  <div class="page-header">
+    <div class="page-header__meta">
+      <h1>Configuración</h1>
+      <p>Datos de la asociación, medios de pago y mensajes automáticos.</p>
+    </div>
+    <div class="page-actions">
+      <app-button icon="save" [loading]="saving()" (clicked)="save()">Guardar cambios</app-button>
+    </div>
+  </div>
+
+  <app-card title="Datos de la asociación" description="Información pública y de contacto">
+    <div class="form-grid">
+      <div class="field form-span-2">
+        <label for="cfg-nombre">Nombre de la asociación</label>
+        <app-input
+          controlId="cfg-nombre"
+          icon="building"
+          [value]="form().nombreAsociacion"
+          (valueChange)="patch({ nombreAsociacion: $event })"
+        />
+      </div>
+      <div class="field">
+        <label for="cfg-tel">Teléfono</label>
+        <app-input
+          controlId="cfg-tel"
+          type="tel"
+          icon="phone"
+          [value]="form().telefono"
+          (valueChange)="patch({ telefono: $event })"
+        />
+      </div>
+      <div class="field">
+        <label for="cfg-mail">Correo</label>
+        <app-input
+          controlId="cfg-mail"
+          type="email"
+          icon="mail"
+          [value]="form().correo"
+          (valueChange)="patch({ correo: $event })"
+        />
+      </div>
+      <div class="field form-span-2">
+        <label for="cfg-dir">Dirección</label>
+        <app-input
+          controlId="cfg-dir"
+          icon="mapPin"
+          [value]="form().direccion"
+          (valueChange)="patch({ direccion: $event })"
+        />
+      </div>
+    </div>
+  </app-card>
+
+  <app-card title="Medios de pago" description="Yape oficial para inscripciones (Art. 01)">
+    <div class="form-grid">
+      <div class="field">
+        <label for="cfg-coord">Coordinadora general</label>
+        <app-input
+          controlId="cfg-coord"
+          icon="user"
+          [value]="form().coordinadoraGeneral"
+          (valueChange)="patch({ coordinadoraGeneral: $event })"
+        />
+      </div>
+      <div class="field form-span-2">
+        <label for="cfg-banco">Cuenta / medio bancario</label>
+        <app-input
+          controlId="cfg-banco"
+          icon="wallet"
+          [value]="form().cuentaBancaria"
+          (valueChange)="patch({ cuentaBancaria: $event })"
+        />
+      </div>
+      <div class="field">
+        <label for="cfg-yape">Número Yape / WhatsApp</label>
+        <app-input
+          controlId="cfg-yape"
+          [value]="form().numeroYape"
+          (valueChange)="patch({ numeroYape: $event })"
+        />
+      </div>
+      <div class="field">
+        <label for="cfg-plin">Número Plin</label>
+        <app-input
+          controlId="cfg-plin"
+          [value]="form().numeroPlin"
+          (valueChange)="patch({ numeroPlin: $event })"
+        />
+      </div>
+      <div class="field">
+        <label for="cfg-limite">Fecha límite de inscripción</label>
+        <app-input
+          controlId="cfg-limite"
+          type="date"
+          [value]="form().fechaLimiteInscripcion"
+          (valueChange)="patch({ fechaLimiteInscripcion: $event })"
+        />
+      </div>
+      <div class="field">
+        <label for="cfg-sorteo">Fecha de sorteo</label>
+        <app-input
+          controlId="cfg-sorteo"
+          type="date"
+          [value]="form().fechaSorteo"
+          (valueChange)="patch({ fechaSorteo: $event })"
+        />
+      </div>
+      <div class="field">
+        <label for="cfg-hora-sorteo">Hora de sorteo</label>
+        <app-input
+          controlId="cfg-hora-sorteo"
+          [value]="form().horaSorteo"
+          (valueChange)="patch({ horaSorteo: $event })"
+        />
+      </div>
+      <div class="field">
+        <label for="cfg-hora-inicio">Hora de inicio del concurso</label>
+        <app-input
+          controlId="cfg-hora-inicio"
+          [value]="form().horaInicioConcurso"
+          (valueChange)="patch({ horaInicioConcurso: $event })"
+        />
+      </div>
+    </div>
+  </app-card>
+
+  <app-card title="Marca y mensajes" description="Logo y confirmación automática">
+    <div class="form-grid">
+      <div class="field form-span-2">
+        <label>Logo</label>
+        <label class="logo-box" style="cursor: pointer">
+          <input type="file" accept="image/*" class="sr-only" (change)="onLogo($event)" />
+          <div class="logo-preview" aria-hidden="true">C</div>
+          <div>
+            <div style="font-weight: 600; color: var(--color-primary)">
+              {{ form().logoUrl || 'Subir logo de la asociación' }}
+            </div>
+            <div class="text-muted" style="font-size: 12px; margin-top: 4px">
+              PNG o SVG recomendado, fondo transparente.
+            </div>
+          </div>
+          <app-icon name="upload" [size]="18" />
+        </label>
+      </div>
+      <div class="field form-span-2">
+        <label for="cfg-msg">Mensaje automático de confirmación</label>
+        <app-input
+          controlId="cfg-msg"
+          [multiline]="true"
+          [rows]="5"
+          [value]="form().mensajeConfirmacion"
+          (valueChange)="patch({ mensajeConfirmacion: $event })"
+        />
+      </div>
+    </div>
+  </app-card>
+</div>

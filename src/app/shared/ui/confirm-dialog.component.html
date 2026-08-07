@@ -1,0 +1,21 @@
+<app-modal
+  [open]="confirm.open()"
+  [title]="confirm.options().title"
+  [description]="confirm.options().description ?? null"
+  (closed)="confirm.resolve(false)"
+>
+  <p class="text-muted" style="font-size: 13px">
+    Esta acción no se puede deshacer fácilmente. Confirme para continuar.
+  </p>
+  <div modal-footer>
+    <app-button variant="outline" (clicked)="confirm.resolve(false)">
+      {{ confirm.options().cancelLabel || 'Cancelar' }}
+    </app-button>
+    <app-button
+      [variant]="confirm.options().tone === 'danger' ? 'destructive' : 'primary'"
+      (clicked)="confirm.resolve(true)"
+    >
+      {{ confirm.options().confirmLabel || 'Confirmar' }}
+    </app-button>
+  </div>
+</app-modal>

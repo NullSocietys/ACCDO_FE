@@ -1,0 +1,111 @@
+<div class="page">
+  @if (loading()) {
+    <div class="hero">
+      <app-skeleton variant="card" [height]="168" />
+    </div>
+    <div class="kpi-skel">
+      @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
+        <app-skeleton variant="card" [height]="148" />
+      }
+    </div>
+  } @else {
+    <section class="hero" aria-label="Resumen principal">
+      <div class="hero-copy">
+        <div>
+          <div class="hero-kicker"><i aria-hidden="true"></i> Temporada 2026 activa</div>
+          <h1>Caporales con control claro</h1>
+          <p>
+            Inscripciones, pagos y resultados en un solo flujo. Empiece por el concurso activo o
+            registre un nuevo grupo.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <a routerLink="/inscripciones/nueva">
+            <app-button icon="plus">Nueva inscripción</app-button>
+          </a>
+          <a routerLink="/eventos">
+            <app-button variant="outline-dark" icon="calendar">Ver eventos</app-button>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <app-kpi-board label="Indicadores de temporada" [items]="kpis()" [columns]="3" />
+
+    <div class="grid-2">
+      <app-card
+        title="Inscripciones por modalidad"
+        description="Ranking de grupos inscritos según las bases oficiales"
+      >
+        <div class="chart-panel" role="img" [attr.aria-label]="chartAria()">
+          <div class="chart-summary">
+            <div>
+              <b>{{ chartTotal() }}</b>
+              <span>Total grupos</span>
+            </div>
+            <div class="is-peak">
+              <b>{{ peakCategory()?.label }}</b>
+              <span>Modalidad líder</span>
+            </div>
+            <div>
+              <b>{{ peakCategory()?.pct }}%</b>
+              <span>Del total</span>
+            </div>
+          </div>
+
+          <div class="hbar-list">
+            @for (row of chartRows(); track row.label) {
+              <div class="hbar" [class.is-peak]="row.isPeak">
+                <span class="hbar-label">{{ row.label }}</span>
+                <div class="hbar-track">
+                  <div class="hbar-fill" [style.width.%]="row.width"></div>
+                </div>
+                <div class="hbar-meta">
+                  <span class="hbar-count">{{ row.value }}</span>
+                  <span class="hbar-pct">{{ row.pct }}%</span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="chart-insight">
+            <app-icon name="trophy" [size]="15" />
+            <span>
+              {{ peakCategory()?.label }} concentra el pico con {{ peakCategory()?.value }} grupos
+              ({{ peakCategory()?.pct }}%). Las demás modalidades suman
+              {{ chartTotal() - (peakCategory()?.value ?? 0) }} grupos.
+            </span>
+          </div>
+        </div>
+      </app-card>
+
+      <div class="feed-stack">
+        <app-card title="Últimas inscripciones" description="Actividad reciente">
+          @for (ins of latestInscripciones; track ins.id) {
+            <div class="list-item">
+              <div>
+                <div class="item-title">{{ ins.grupo }}</div>
+                <div class="item-meta">{{ ins.codigo }} · {{ ins.categoria }}</div>
+              </div>
+              <app-badge [tone]="statusTone(ins.estado)">{{ statusLabel(ins.estado) }}</app-badge>
+            </div>
+          }
+        </app-card>
+
+        <app-card title="Próximos eventos" description="Agenda del concurso">
+          @for (ev of upcomingEventos; track ev.id) {
+            <div class="list-item">
+              <div>
+                <div class="item-title">{{ ev.nombre }}</div>
+                <div class="item-meta">
+                  {{ ev.fecha | date: 'd MMM y' }} · {{ ev.hora }} · {{ ev.lugar }}
+                </div>
+              </div>
+              <app-badge [tone]="statusTone(ev.estado)">{{ statusLabel(ev.estado) }}</app-badge>
+            </div>
+          }
+        </app-card>
+      </div>
+    </div>
+  }
+</div>

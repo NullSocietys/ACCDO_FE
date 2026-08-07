@@ -1,0 +1,271 @@
+<div class="page">
+  @if (success()) {
+    <app-card>
+      <div class="success">
+        <div class="check" aria-hidden="true">
+          <app-icon name="check" [size]="42" />
+        </div>
+        <h1>¡Gracias por inscribirse!</h1>
+        <p class="success-msg">Su inscripción fue registrada correctamente.</p>
+        <div class="summary">
+          <div class="summary-row"><span>Código</span><strong>{{ resultCodigo() }}</strong></div>
+          <div class="summary-row"><span>Grupo</span><strong>{{ step1().grupo }}</strong></div>
+          <div class="summary-row"><span>Modalidad</span><strong>{{ step1().categoria }}</strong></div>
+          <div class="summary-row"><span>Evento</span><strong>{{ eventoNombre() }}</strong></div>
+        </div>
+        <div class="page-actions" style="justify-content: center; margin-top: 8px">
+          <app-button variant="outline" icon="download" (clicked)="downloadComprobante()">
+            Descargar comprobante
+          </app-button>
+          <a routerLink="/"><app-button icon="home">Volver al inicio</app-button></a>
+        </div>
+      </div>
+    </app-card>
+  } @else {
+    <div class="page-header">
+      <div class="page-header__meta">
+        <h1>Nueva inscripción</h1>
+        <p>Complete el wizard en 4 pasos para registrar un grupo.</p>
+      </div>
+    </div>
+
+    <div class="steps" role="list">
+      @for (s of stepMeta; track s.n) {
+        <div
+          class="step"
+          role="listitem"
+          [class.active]="step() === s.n"
+          [class.done]="step() > s.n"
+        >
+          <div class="step-num"><span>{{ s.n }}</span></div>
+          {{ s.label }}
+        </div>
+      }
+    </div>
+
+    <app-card [title]="stepMeta[step() - 1].label" [description]="stepMeta[step() - 1].desc">
+      @switch (step()) {
+        @case (1) {
+          <div class="form-grid">
+            <div class="field">
+              <label for="w-evento">Evento</label>
+              <select
+                id="w-evento"
+                class="ui-select"
+                [ngModel]="step1().eventoId"
+                (ngModelChange)="patch1({ eventoId: $event })"
+              >
+                <option value="">Seleccionar evento</option>
+                @for (ev of eventosActivos(); track ev.id) {
+                  <option [value]="ev.id">{{ ev.nombre }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="w-cat">Modalidad</label>
+              <select
+                id="w-cat"
+                class="ui-select"
+                [ngModel]="step1().categoria"
+                (ngModelChange)="onCategoria($event)"
+              >
+                <option value="">Seleccionar modalidad</option>
+                @for (cat of categorias; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="w-grupo">Nombre del grupo</label>
+              <app-input
+                controlId="w-grupo"
+                [value]="step1().grupo"
+                placeholder="Ej. Reyes del Chicote"
+                (valueChange)="patch1({ grupo: $event })"
+              />
+            </div>
+            <div class="field">
+              <label for="w-academia">Academia</label>
+              <app-input
+                controlId="w-academia"
+                icon="building"
+                [value]="step1().academia"
+                placeholder="Nombre de la academia"
+                (valueChange)="patch1({ academia: $event })"
+              />
+            </div>
+            <div class="field">
+              <label for="w-cant">Cantidad de integrantes</label>
+              <app-input
+                controlId="w-cant"
+                type="number"
+                [value]="'' + (step1().cantidadIntegrantes || '')"
+                (valueChange)="patch1({ cantidadIntegrantes: Number($event) || 0 })"
+              />
+            </div>
+          </div>
+        }
+        @case (2) {
+          <div class="form-grid">
+            <div class="field">
+              <label for="w-nom">Nombres</label>
+              <app-input controlId="w-nom" icon="user" [value]="step2().nombres" (valueChange)="patch2({ nombres: $event })" />
+            </div>
+            <div class="field">
+              <label for="w-ape">Apellidos</label>
+              <app-input controlId="w-ape" [value]="step2().apellidos" (valueChange)="patch2({ apellidos: $event })" />
+            </div>
+            <div class="field">
+              <label for="w-dni">DNI</label>
+              <app-input controlId="w-dni" [value]="step2().dni" (valueChange)="patch2({ dni: $event })" />
+            </div>
+            <div class="field">
+              <label for="w-tel">Teléfono</label>
+              <app-input controlId="w-tel" type="tel" icon="phone" [value]="step2().telefono" (valueChange)="patch2({ telefono: $event })" />
+            </div>
+            <div class="field form-span-2">
+              <label for="w-mail">Correo</label>
+              <app-input controlId="w-mail" type="email" icon="mail" [value]="step2().correo" (valueChange)="patch2({ correo: $event })" />
+            </div>
+            <div class="field">
+              <label for="w-dep">Departamento</label>
+              <select id="w-dep" class="ui-select" [ngModel]="step2().departamento" (ngModelChange)="onDepartamento($event)">
+                <option value="">Seleccionar</option>
+                @for (d of departamentos; track d) {
+                  <option [value]="d">{{ d }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="w-prov">Provincia</label>
+              <select id="w-prov" class="ui-select" [ngModel]="step2().provincia" (ngModelChange)="onProvincia($event)">
+                <option value="">Seleccionar</option>
+                @for (p of provincias(); track p) {
+                  <option [value]="p">{{ p }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="w-dist">Distrito</label>
+              <select id="w-dist" class="ui-select" [ngModel]="step2().distrito" (ngModelChange)="patch2({ distrito: $event })">
+                <option value="">Seleccionar</option>
+                @for (d of distritos(); track d) {
+                  <option [value]="d">{{ d }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+        @case (3) {
+          <div class="page-actions" style="margin-bottom: 12px">
+            <app-button variant="outline" icon="plus" (clicked)="addParticipante()">Agregar participante</app-button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Apellido</th>
+                  <th>DNI</th>
+                  <th>Edad</th>
+                  <th>Sexo</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of participantes(); track $index; let i = $index) {
+                  <tr>
+                    <td>
+                      <input class="ui-select" [ngModel]="p.nombre" (ngModelChange)="updateParticipante(i, { nombre: $event })" aria-label="Nombre participante" />
+                    </td>
+                    <td>
+                      <input class="ui-select" [ngModel]="p.apellido" (ngModelChange)="updateParticipante(i, { apellido: $event })" aria-label="Apellido participante" />
+                    </td>
+                    <td>
+                      <input class="ui-select" [ngModel]="p.dni" (ngModelChange)="updateParticipante(i, { dni: $event })" aria-label="DNI participante" />
+                    </td>
+                    <td>
+                      <input class="ui-select" type="number" [ngModel]="p.edad" (ngModelChange)="updateParticipante(i, { edad: $event === '' || $event === null ? null : +$event })" aria-label="Edad participante" />
+                    </td>
+                    <td>
+                      <select class="ui-select" [ngModel]="p.sexo" (ngModelChange)="updateParticipante(i, { sexo: $event })" aria-label="Sexo participante">
+                        <option value="">—</option>
+                        <option value="M">M</option>
+                        <option value="F">F</option>
+                      </select>
+                    </td>
+                    <td>
+                      <app-button variant="ghost" size="icon" icon="trash" ariaLabel="Quitar participante" (clicked)="removeParticipante(i)" />
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        @case (4) {
+          <div class="form-grid">
+            <div class="field">
+              <label>Modalidad</label>
+              <app-input [value]="step1().categoria" [disabled]="true" />
+            </div>
+            <div class="field">
+              <label>Monto</label>
+              <app-input [value]="(monto() | currency: 'PEN':'symbol-narrow':'1.0-0') ?? ''" [disabled]="true" />
+            </div>
+            <div class="field">
+              <label for="w-metodo">Método de pago</label>
+              <select id="w-metodo" class="ui-select" [ngModel]="pago().metodo" (ngModelChange)="patchPago({ metodo: $event })">
+                <option value="yape">Yape (926 266 295)</option>
+                <option value="plin">Plin</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="efectivo">Efectivo</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="w-op">Número de operación</label>
+              <app-input
+                controlId="w-op"
+                [value]="pago().numeroOperacion"
+                placeholder="Ej. YAP-123456"
+                (valueChange)="patchPago({ numeroOperacion: $event })"
+              />
+            </div>
+            <div class="field form-span-2">
+              <label>Voucher / comprobante</label>
+              <label class="upload" [class.has-file]="!!pago().comprobanteNombre">
+                <input type="file" accept="image/*,.pdf" class="sr-only" (change)="onFile($event)" />
+                <app-icon name="upload" [size]="20" />
+                <div style="margin-top: 8px; font-weight: 600">
+                  {{ pago().comprobanteNombre || 'Subir foto legible del voucher' }}
+                </div>
+                <div style="font-size: 12px; margin-top: 4px">
+                  Incluya nombre y modalidad de la institución. Enviar también al WhatsApp 926 266 295 (Martha Bravo).
+                </div>
+              </label>
+            </div>
+            <div class="field form-span-2">
+              <div class="summary" style="width: 100%">
+                <div class="summary-row"><span>Grupo</span><strong>{{ step1().grupo }}</strong></div>
+                <div class="summary-row"><span>Responsable</span><strong>{{ step2().nombres }} {{ step2().apellidos }}</strong></div>
+                <div class="summary-row"><span>Integrantes</span><strong>{{ participantes().length }}</strong></div>
+                <div class="summary-row"><span>Total a pagar</span><strong>{{ monto() | currency: 'PEN':'symbol-narrow':'1.0-0' }}</strong></div>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </app-card>
+
+    <div class="wizard-nav">
+      <app-button variant="outline" icon="arrowLeft" [disabled]="step() === 1" (clicked)="prev()">
+        Anterior
+      </app-button>
+      @if (step() < 4) {
+        <app-button icon="chevronRight" (clicked)="next()">Siguiente</app-button>
+      } @else {
+        <app-button icon="check" [loading]="saving()" (clicked)="submit()">Registrar inscripción</app-button>
+      }
+    </div>
+  }
+</div>

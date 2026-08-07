@@ -1,0 +1,14 @@
+<div class="empty">
+  <div class="icon-wrap" aria-hidden="true">
+    <app-icon [name]="icon()" [size]="24" />
+  </div>
+  <h3>{{ title() }}</h3>
+  <p>{{ description() }}</p>
+  @if (actionLabel()) {
+    <div class="action">
+      <app-button [icon]="actionIcon()" (clicked)="actioned.emit()">
+        {{ actionLabel() }}
+      </app-button>
+    </div>
+  }
+</div>

@@ -1,0 +1,140 @@
+<div class="page">
+  <div class="page-header">
+    <div class="page-header__meta">
+      <h1>Resultados</h1>
+      <p>Calificación oficial: enteros de 0 a 25 puntos (5 criterios × 5).</p>
+    </div>
+    <div class="page-actions">
+      <app-button icon="plus" (clicked)="modalOpen.set(true)">Registrar resultados</app-button>
+    </div>
+  </div>
+
+  <app-card>
+    <div class="field" style="max-width: 420px">
+      <label for="res-evento">Seleccionar evento</label>
+      <select
+        id="res-evento"
+        class="ui-select"
+        [ngModel]="eventoId()"
+        (ngModelChange)="eventoId.set($event)"
+      >
+        @for (ev of store.eventos(); track ev.id) {
+          <option [value]="ev.id">{{ ev.nombre }}</option>
+        }
+      </select>
+    </div>
+  </app-card>
+
+  <app-card padding="0">
+    @if (filtered().length === 0) {
+      <app-empty-state
+        icon="trophy"
+        title="Sin resultados"
+        description="No hay resultados registrados para este evento."
+        actionLabel="Registrar resultados"
+        (actioned)="modalOpen.set(true)"
+      />
+    } @else {
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Puesto</th>
+              <th>Grupo</th>
+              <th>Modalidad</th>
+              <th>Pres.</th>
+              <th>Coreo.</th>
+              <th>Armonía</th>
+              <th>Mensaje</th>
+              <th>Expr.</th>
+              <th>Total</th>
+              <th>Observaciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of filtered(); track r.id) {
+              <tr>
+                <td class="mono">{{ r.puesto }}°</td>
+                <td style="font-weight: 600">{{ r.grupo }}</td>
+                <td>{{ r.categoria }}</td>
+                <td class="mono">{{ r.presentacion }}</td>
+                <td class="mono">{{ r.coreografia }}</td>
+                <td class="mono">{{ r.armonia }}</td>
+                <td class="mono">{{ r.mensaje }}</td>
+                <td class="mono">{{ r.expresion }}</td>
+                <td class="mono" style="font-weight: 700">{{ r.puntaje }}/25</td>
+                <td>{{ r.observaciones }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </app-card>
+</div>
+
+<app-modal
+  [open]="modalOpen()"
+  title="Registrar resultado"
+  description="Asigne enteros de 0 a 5 por cada criterio (máximo 25)."
+  (closed)="modalOpen.set(false)"
+>
+  <div class="form-grid">
+    <div class="field">
+      <label for="r-grupo">Grupo</label>
+      <app-input controlId="r-grupo" [value]="form().grupo" (valueChange)="patch({ grupo: $event })" />
+    </div>
+    <div class="field">
+      <label for="r-cat">Modalidad</label>
+      <select
+        id="r-cat"
+        class="ui-select"
+        [ngModel]="form().categoria"
+        (ngModelChange)="patch({ categoria: $event })"
+      >
+        @for (mod of modalidades; track mod) {
+          <option [value]="mod">{{ mod }}</option>
+        }
+      </select>
+    </div>
+
+    @for (c of criterios; track c.clave) {
+      <div class="field">
+        <label [attr.for]="'r-' + c.clave">{{ c.nombre }} (0–5)</label>
+        <app-input
+          [controlId]="'r-' + c.clave"
+          type="number"
+          [value]="'' + form()[c.clave]"
+          (valueChange)="patchCriterio(c.clave, $event)"
+        />
+      </div>
+    }
+
+    <div class="field">
+      <label>Total</label>
+      <div class="score-total">{{ puntajeTotal() }} / 25</div>
+    </div>
+    <div class="field">
+      <label for="r-puesto">Puesto</label>
+      <app-input
+        controlId="r-puesto"
+        type="number"
+        [value]="'' + form().puesto"
+        (valueChange)="patch({ puesto: +$event || 0 })"
+      />
+    </div>
+    <div class="field form-span-2">
+      <label for="r-obs">Observaciones</label>
+      <app-input
+        controlId="r-obs"
+        [multiline]="true"
+        [value]="form().observaciones"
+        (valueChange)="patch({ observaciones: $event })"
+      />
+    </div>
+  </div>
+  <div modal-footer>
+    <app-button variant="outline" (clicked)="modalOpen.set(false)">Cancelar</app-button>
+    <app-button icon="save" (clicked)="save()">Guardar</app-button>
+  </div>
+</app-modal>

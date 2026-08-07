@@ -1,0 +1,162 @@
+<div class="page">
+  <div class="page-header">
+    <div class="page-header__meta">
+      <h1>Participantes</h1>
+      <p>Nómina por grupo: modalidad, evento y encargado. El elenco se consulta en detalle.</p>
+    </div>
+  </div>
+
+  @if (groups().length === 0) {
+    <app-empty-state
+      icon="users"
+      title="Sin participantes"
+      description="Cuando se registren inscripciones, la nómina aparecerá aquí."
+    />
+  } @else {
+    <app-kpi-board label="Resumen de participantes" [items]="kpis()" [columns]="4" />
+
+    <div class="filters-bar">
+      <div class="search-wrap">
+        <app-input
+          controlId="part-search"
+          icon="search"
+          placeholder="Buscar grupo, modalidad, evento o encargado…"
+          [value]="search()"
+          (valueChange)="search.set($event)"
+        />
+      </div>
+      <select
+        class="ui-select"
+        [ngModel]="modalidadFilter()"
+        (ngModelChange)="modalidadFilter.set($event)"
+        aria-label="Filtrar por modalidad"
+      >
+        <option value="">Todas las modalidades</option>
+        @for (mod of modalidades; track mod) {
+          <option [value]="mod">{{ mod }}</option>
+        }
+      </select>
+      <select
+        class="ui-select"
+        [ngModel]="grupoFilter()"
+        (ngModelChange)="grupoFilter.set($event)"
+        aria-label="Filtrar por grupo"
+      >
+        <option value="">Todos los grupos</option>
+        @for (g of grupos(); track g) {
+          <option [value]="g">{{ g }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="section-head">
+      <h2>Grupos inscritos</h2>
+      <span>{{ filtered().length }} grupos · {{ memberCount() }} bailarines</span>
+    </div>
+
+    @if (filtered().length === 0) {
+      <app-empty-state
+        icon="search"
+        title="Sin resultados"
+        description="Ningún grupo coincide con los filtros aplicados."
+        actionLabel="Limpiar filtros"
+        actionIcon="x"
+        (actioned)="limpiarFiltros()"
+      />
+    } @else {
+      <div class="roster" role="list">
+        @for (g of filtered(); track g.key) {
+          <article class="group" role="listitem" [class.is-rechazada]="g.estado === 'rechazada'">
+            <div class="group__top">
+              <div class="group__identity">
+                <h3 class="group__name">{{ g.grupo }}</h3>
+                <p class="group__modalidad">{{ g.modalidad }}</p>
+                <p class="group__evento">{{ g.eventoNombre }}</p>
+                <p class="group__lead">
+                  <span class="group__lead-label">Encargado</span>
+                  {{ g.encargado }}
+                </p>
+              </div>
+
+              <div class="group__side">
+                <span class="group__code">{{ g.codigo }}</span>
+                <app-badge [tone]="statusTone(g.estado)" [dot]="false">
+                  {{ statusLabel(g.estado) }}
+                </app-badge>
+                <span class="group__count">{{ g.members.length }} en elenco</span>
+                <app-button
+                  variant="outline"
+                  size="sm"
+                  icon="users"
+                  (clicked)="openMembers(g)"
+                >
+                  Ver integrantes
+                </app-button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  }
+</div>
+
+<app-modal
+  [open]="!!selectedGroup()"
+  [title]="selectedGroup()?.grupo ?? 'Integrantes'"
+  [description]="modalDescription()"
+  size="lg"
+  (closed)="closeMembers()"
+>
+  @if (selectedGroup(); as g) {
+    @if (modalUsesPairs()) {
+      <div class="pairs" role="list" aria-label="Parejas del elenco">
+        @for (pair of modalPairs(); track pair.a.id; let i = $index) {
+          <article class="pair" role="listitem">
+            <header class="pair__head">
+              <span>Pareja {{ i + 1 }}</span>
+            </header>
+            <div class="pair__body">
+              <div class="person" [class.is-m]="pair.a.sexo === 'M'" [class.is-f]="pair.a.sexo === 'F'">
+                <span class="person__avatar" aria-hidden="true">{{ pair.a.iniciales }}</span>
+                <div class="person__info">
+                  <strong>{{ pair.a.nombreCompleto }}</strong>
+                  <span>{{ pair.a.sexoLabel }} · {{ pair.a.edad }} años</span>
+                  <span class="mono">DNI {{ pair.a.dni }}</span>
+                </div>
+              </div>
+              @if (pair.b; as b) {
+                <div class="pair__join" aria-hidden="true">+</div>
+                <div class="person" [class.is-m]="b.sexo === 'M'" [class.is-f]="b.sexo === 'F'">
+                  <span class="person__avatar" aria-hidden="true">{{ b.iniciales }}</span>
+                  <div class="person__info">
+                    <strong>{{ b.nombreCompleto }}</strong>
+                    <span>{{ b.sexoLabel }} · {{ b.edad }} años</span>
+                    <span class="mono">DNI {{ b.dni }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
+      <div class="people" role="list" aria-label="Integrantes del elenco">
+        @for (m of g.members; track m.id) {
+          <article class="person person--card" role="listitem" [class.is-m]="m.sexo === 'M'" [class.is-f]="m.sexo === 'F'">
+            <span class="person__avatar" aria-hidden="true">{{ m.iniciales }}</span>
+            <div class="person__info">
+              <strong>{{ m.nombreCompleto }}</strong>
+              <span>{{ m.sexoLabel }} · {{ m.edad }} años</span>
+              <span class="mono">DNI {{ m.dni }}</span>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  }
+
+  <div modal-footer>
+    <app-button variant="outline" (clicked)="closeMembers()">Cerrar</app-button>
+  </div>
+</app-modal>

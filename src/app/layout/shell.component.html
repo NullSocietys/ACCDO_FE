@@ -1,0 +1,93 @@
+<a class="skip-link" href="#main-content">Saltar al contenido</a>
+
+<div class="shell" [class.collapsed]="collapsed()" [class.mobile-open]="mobileOpen()">
+  @if (mobileOpen()) {
+    <div class="mobile-overlay" (click)="mobileOpen.set(false)" aria-hidden="true"></div>
+  }
+
+  <aside class="sidebar" aria-label="Navegación principal">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M4 18c4-1 7-6 8-10" />
+          <path d="M12 8c1.5 2 4 4 8 4" />
+          <circle cx="12" cy="7" r="1.4" fill="currentColor" stroke="none" />
+        </svg>
+      </div>
+      <div class="brand-text">
+        <strong>Chicote de Oro</strong>
+        <span>Inscripciones Caporales</span>
+      </div>
+    </div>
+
+    <nav class="nav">
+      @for (group of navGroups; track group.label) {
+        <div class="nav-group">
+          <div class="nav-group__label">{{ group.label }}</div>
+          @for (item of group.items; track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="item.path === '/' ? { exact: true } : { exact: false }"
+              (click)="onNavClick()"
+            >
+              <app-icon [name]="item.icon" [size]="17" />
+              <span class="nav-label">{{ item.label }}</span>
+            </a>
+          }
+        </div>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin">
+        <div class="admin-avatar" aria-hidden="true">AD</div>
+        <div class="admin-meta">
+          <strong>Administrador</strong>
+          <span>admin&#64;chicotedeoro.pe</span>
+        </div>
+      </div>
+      <button class="logout" type="button" (click)="logout()">
+        <app-icon name="logOut" [size]="17" />
+        <span class="logout-label">Cerrar sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="navbar">
+      <div class="navbar-left">
+        <button
+          class="icon-btn"
+          type="button"
+          [attr.aria-label]="collapsed() ? 'Expandir menú' : 'Colapsar menú'"
+          (click)="toggleSidebar()"
+        >
+          <app-icon [name]="mobileOpen() ? 'x' : 'menu'" [size]="17" />
+        </button>
+        <div class="page-title-wrap">
+          <span class="page-eyebrow">{{ sectionLabel() }}</span>
+          <div class="page-title">{{ pageTitle() }}</div>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <label class="search">
+          <app-icon name="search" [size]="15" />
+          <input type="search" placeholder="Buscar..." aria-label="Buscar en el sistema" />
+        </label>
+        <button class="icon-btn" type="button" aria-label="Notificaciones">
+          <app-icon name="bell" [size]="17" />
+        </button>
+      </div>
+    </header>
+
+    <main id="main-content" class="content" [class.navigating]="navigating()" tabindex="-1">
+      <div class="route-view">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+</div>
+
+<app-toast-host />
+<app-confirm-dialog />

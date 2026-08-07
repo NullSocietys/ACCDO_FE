@@ -1,0 +1,149 @@
+<div class="page">
+  <div class="page-header">
+    <div class="page-header__meta">
+      <h1>Bases del concurso</h1>
+      <p>
+        Normativa oficial de la Asociación Cultural Chicote de Oro: inscripciones, costos,
+        tiempos, calificación y premios.
+      </p>
+    </div>
+  </div>
+
+  <app-kpi-board label="Datos clave de inscripción" [items]="kpis" [columns]="4" />
+
+  <div class="bases-layout">
+    <nav class="toc" aria-label="Artículos de las bases">
+      <p class="toc__title">Índice</p>
+      @for (art of articulos; track art.id) {
+        <button
+          type="button"
+          class="toc__item"
+          [class.active]="activeId() === art.id"
+          (click)="select(art.id)"
+        >
+          <span class="toc__num">{{ art.id }}</span>
+          <span>{{ art.titulo }}</span>
+        </button>
+      }
+    </nav>
+
+    <div class="articles">
+      <section class="tariffs" aria-label="Costos por modalidad">
+        <header class="section-head">
+          <h2>Costos de inscripción</h2>
+          <p>Tarifa oficial por modalidad (Art. 01 y 02)</p>
+        </header>
+        <div class="tariff-grid">
+          @for (m of modalidades; track m.codigo) {
+            <article class="tariff">
+              <span class="tariff__code">{{ m.codigo }}</span>
+              <h3>{{ m.modalidad }}</h3>
+              <p class="tariff__cost">
+                {{ m.costo | currency: 'PEN':'symbol-narrow':'1.0-0' }}
+              </p>
+            </article>
+          }
+        </div>
+      </section>
+
+      <section class="criteria" aria-label="Criterios de calificación">
+        <header class="section-head">
+          <h2>Criterios de calificación</h2>
+          <p>Enteros de 0 a 25 puntos (5 × 5)</p>
+        </header>
+        <div class="criteria-grid">
+          @for (c of criterios; track c.clave) {
+            <article class="criterion">
+              <div class="criterion__top">
+                <strong>{{ c.nombre }}</strong>
+                <span>{{ c.puntos }} pts</span>
+              </div>
+              <p>{{ c.descripcion }}</p>
+            </article>
+          }
+        </div>
+      </section>
+
+      @for (art of articulos; track art.id) {
+        <article class="article" [id]="'art-' + art.id">
+          <header class="article__head">
+            <span class="article__badge">Artículo {{ art.id }}</span>
+            <h2>{{ art.titulo }}</h2>
+          </header>
+
+          @if (art.resumen) {
+            <p class="article__resumen">{{ art.resumen }}</p>
+          }
+
+          @if (art.bullets?.length) {
+            <ul class="article__list">
+              @for (b of art.bullets; track b) {
+                <li>{{ b }}</li>
+              }
+            </ul>
+          }
+
+          @if (art.tabla) {
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    @for (h of art.tabla.headers; track h) {
+                      <th>{{ h }}</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of art.tabla.rows; track $index) {
+                    <tr>
+                      @for (cell of row; track $index) {
+                        <td>{{ cell }}</td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          @if (art.notas?.length) {
+            <div class="article__notes">
+              @for (n of art.notas; track n) {
+                <p><app-icon name="alertTriangle" [size]="14" /> {{ n }}</p>
+              }
+            </div>
+          }
+        </article>
+      }
+
+      <section class="prizes" aria-label="Tabla de premios">
+        <header class="section-head">
+          <h2>Premios</h2>
+          <p>Entrega en la gran final de cada categoría</p>
+        </header>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Modalidad</th>
+                <th>1.er puesto</th>
+                <th>2.º puesto</th>
+                <th>3.er puesto</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of premios; track p.modalidad) {
+                <tr>
+                  <td style="font-weight: 600">{{ p.modalidad }}</td>
+                  <td>{{ p.primero }}</td>
+                  <td>{{ p.segundo }}</td>
+                  <td>{{ p.tercero }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

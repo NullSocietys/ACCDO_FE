@@ -1,0 +1,37 @@
+@if (open()) {
+  <div class="overlay" role="presentation" (click)="onBackdrop($event)">
+    <div
+      class="dialog"
+      [class.lg]="size() === 'lg'"
+      [class.xl]="size() === 'xl'"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="titleId"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="header">
+        <div>
+          <h2 [id]="titleId">{{ title() }}</h2>
+          @if (description()) {
+            <p>{{ description() }}</p>
+          }
+        </div>
+        <app-button
+          variant="ghost"
+          size="icon"
+          icon="x"
+          ariaLabel="Cerrar"
+          (clicked)="closed.emit()"
+        />
+      </div>
+      <div class="body">
+        <ng-content />
+      </div>
+      @if (showFooter()) {
+        <div class="footer">
+          <ng-content select="[modal-footer]" />
+        </div>
+      }
+    </div>
+  </div>
+}

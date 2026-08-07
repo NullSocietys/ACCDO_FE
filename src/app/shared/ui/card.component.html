@@ -1,0 +1,14 @@
+<div class="card-inner">
+  @if (title()) {
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">{{ title() }}</h3>
+        @if (description()) {
+          <p class="card-desc">{{ description() }}</p>
+        }
+      </div>
+      <ng-content select="[card-actions]" />
+    </div>
+  }
+  <ng-content />
+</div>

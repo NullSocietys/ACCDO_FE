@@ -1,0 +1,69 @@
+:host {
+  display: block;
+  width: 100%;
+}
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.icon-left {
+  position: absolute;
+  left: 12px;
+  color: var(--gold-600);
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: 1;
+}
+.wrap:focus-within .icon-left {
+  opacity: 1;
+  color: var(--gold-700);
+}
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  color: var(--color-foreground);
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
+  min-height: 36px;
+}
+textarea {
+  min-height: 88px;
+  resize: vertical;
+  padding-top: 10px;
+}
+.has-icon {
+  padding-left: 36px;
+}
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--color-border-strong);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(161, 98, 7, 0.12);
+}
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: var(--color-muted);
+  cursor: not-allowed;
+  color: var(--color-muted-foreground);
+}
+.invalid input,
+.invalid select,
+.invalid textarea {
+  border-color: var(--color-destructive);
+}

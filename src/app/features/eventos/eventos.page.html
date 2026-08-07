@@ -1,0 +1,232 @@
+<div class="page">
+  <div class="page-header">
+    <div class="page-header__meta">
+      <h1>Eventos</h1>
+      <p>Calendario de concursos y festivales de la temporada.</p>
+    </div>
+    <div class="page-actions">
+      <app-button icon="plus" (clicked)="openCreate()">Nuevo evento</app-button>
+    </div>
+  </div>
+
+  @if (store.eventos().length === 0) {
+    <app-empty-state
+      icon="calendar"
+      title="No hay eventos"
+      description="Cree el primer concurso para comenzar a recibir inscripciones."
+      actionLabel="Nuevo evento"
+      (actioned)="openCreate()"
+    />
+  } @else {
+    <app-kpi-board label="Resumen de la temporada" [items]="kpis()" [columns]="4" />
+
+    @if (featured(); as ev) {
+      <section class="featured" aria-label="Evento destacado">
+        <div class="f-date" aria-hidden="true">
+          <span class="d">{{ dayOf(ev.fecha) }}</span>
+          <span class="m">{{ monthOf(ev.fecha) }}</span>
+          <span class="y">{{ yearOf(ev.fecha) }}</span>
+        </div>
+        <div>
+          <span class="f-kicker"><i aria-hidden="true"></i> Evento activo · {{ countdownLabel(ev) }}</span>
+          <h2 class="f-name">{{ ev.nombre }}</h2>
+          <p class="f-desc">{{ ev.descripcion }}</p>
+          <div class="f-meta">
+            <span
+              ><app-icon class="ic-clock" name="clock" [size]="14" /> {{ weekdayOf(ev.fecha) }} ·
+              {{ ev.hora }} h</span
+            >
+            <span><app-icon class="ic-pin" name="mapPin" [size]="14" /> {{ ev.lugar }}</span>
+          </div>
+        </div>
+        <div class="f-side">
+          <div class="f-stats">
+            <div class="f-stat">
+              <b>{{ gruposDe(ev.id) }}</b>
+              <span>Grupos</span>
+            </div>
+            <div class="f-stat">
+              <b>{{ integrantesDe(ev.id) }}</b>
+              <span>Integrantes</span>
+            </div>
+          </div>
+          <a routerLink="/inscripciones">
+            <app-button icon="chevronRight">Ver inscripciones</app-button>
+          </a>
+        </div>
+      </section>
+    }
+
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Filtrar por estado">
+        @for (f of filtros; track f.key) {
+          <button
+            type="button"
+            [class.active]="estadoFiltro() === f.key"
+            [attr.aria-pressed]="estadoFiltro() === f.key"
+            (click)="estadoFiltro.set(f.key)"
+          >
+            {{ f.label }}
+            <span class="n">{{ cuentaEstado(f.key) }}</span>
+          </button>
+        }
+      </div>
+      <div class="search-wrap">
+        <app-input
+          controlId="ev-search"
+          icon="search"
+          [value]="busqueda()"
+          placeholder="Buscar por nombre o sede…"
+          (valueChange)="busqueda.set($event)"
+        />
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>Agenda de temporada</h2>
+      <span>{{ filtrados().length }} de {{ store.eventos().length }} eventos</span>
+    </div>
+
+    @if (filtrados().length === 0) {
+      <app-empty-state
+        icon="search"
+        title="Sin resultados"
+        description="Ningún evento coincide con los filtros aplicados."
+        actionLabel="Limpiar filtros"
+        actionIcon="x"
+        (actioned)="limpiarFiltros()"
+      />
+    } @else {
+      <div class="ev-list">
+        @for (evento of filtrados(); track evento.id) {
+          <article
+            class="ev-card"
+            [class.is-active]="evento.estado === 'activo'"
+            [class.is-cancelled]="evento.estado === 'cancelado'"
+          >
+            <div class="ev-date" aria-hidden="true">
+              <span class="d">{{ dayOf(evento.fecha) }}</span>
+              <span class="m">{{ monthOf(evento.fecha) }}</span>
+              <span class="y">{{ yearOf(evento.fecha) }}</span>
+            </div>
+            <div class="ev-body">
+              <div class="ev-title-row">
+                <h3 class="ev-name">{{ evento.nombre }}</h3>
+                <app-badge [tone]="statusTone(evento.estado)">
+                  {{ statusLabel(evento.estado) }}
+                </app-badge>
+              </div>
+              <p class="ev-desc">{{ evento.descripcion }}</p>
+              <div class="ev-meta">
+                <span
+                  ><app-icon class="ic-clock" name="clock" [size]="14" /> {{ weekdayOf(evento.fecha) }} ·
+                  {{ evento.hora }} h@if (countdownLabel(evento); as cd) {
+                    · {{ cd }}
+                  }</span
+                >
+                <span><app-icon class="ic-pin" name="mapPin" [size]="14" /> {{ evento.lugar }}</span>
+                <span
+                  ><app-icon class="ic-users" name="users" [size]="14" /> {{ gruposDe(evento.id) }} grupos ·
+                  {{ integrantesDe(evento.id) }} integrantes</span
+                >
+              </div>
+            </div>
+            <div class="ev-actions">
+              <app-button
+                variant="ghost"
+                size="icon"
+                icon="pencil"
+                ariaLabel="Editar evento"
+                (clicked)="openEdit(evento)"
+              />
+              <app-button
+                variant="ghost"
+                size="icon"
+                icon="trash"
+                ariaLabel="Eliminar evento"
+                (clicked)="remove(evento)"
+              />
+            </div>
+          </article>
+        }
+      </div>
+    }
+  }
+</div>
+
+<app-modal
+  [open]="modalOpen()"
+  [title]="editingId() ? 'Editar evento' : 'Nuevo evento'"
+  description="Complete la información del concurso."
+  (closed)="modalOpen.set(false)"
+>
+  <div class="form-grid">
+    <div class="field form-span-2">
+      <label for="ev-nombre">Nombre</label>
+      <app-input
+        controlId="ev-nombre"
+        [value]="form().nombre"
+        placeholder="Nombre del evento"
+        (valueChange)="patch({ nombre: $event })"
+      />
+    </div>
+    <div class="field form-span-2">
+      <label for="ev-desc">Descripción</label>
+      <app-input
+        controlId="ev-desc"
+        [multiline]="true"
+        [value]="form().descripcion"
+        placeholder="Descripción breve"
+        (valueChange)="patch({ descripcion: $event })"
+      />
+    </div>
+    <div class="field">
+      <label for="ev-fecha">Fecha</label>
+      <app-input
+        controlId="ev-fecha"
+        type="date"
+        [value]="form().fecha"
+        (valueChange)="patch({ fecha: $event })"
+      />
+    </div>
+    <div class="field">
+      <label for="ev-hora">Hora</label>
+      <app-input
+        controlId="ev-hora"
+        type="time"
+        [value]="form().hora"
+        (valueChange)="patch({ hora: $event })"
+      />
+    </div>
+    <div class="field form-span-2">
+      <label for="ev-lugar">Lugar</label>
+      <app-input
+        controlId="ev-lugar"
+        icon="mapPin"
+        [value]="form().lugar"
+        placeholder="Sede o escenario"
+        (valueChange)="patch({ lugar: $event })"
+      />
+    </div>
+    <div class="field form-span-2">
+      <label for="ev-estado">Estado</label>
+      <select
+        id="ev-estado"
+        class="ui-select"
+        style="width: 100%"
+        [ngModel]="form().estado"
+        (ngModelChange)="patch({ estado: $event })"
+      >
+        <option value="activo">Activo</option>
+        <option value="proximo">Próximo</option>
+        <option value="finalizado">Finalizado</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+    </div>
+  </div>
+
+  <div modal-footer>
+    <app-button variant="outline" (clicked)="modalOpen.set(false)">Cancelar</app-button>
+    <app-button icon="save" (clicked)="save()">Guardar</app-button>
+  </div>
+</app-modal>

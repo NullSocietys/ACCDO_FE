@@ -1,0 +1,18 @@
+@switch (variant()) {
+  @case ('card') {
+    <div class="sk card" [style.height.px]="height()"></div>
+  }
+  @case ('avatar') {
+    <div class="sk avatar"></div>
+  }
+  @case ('table') {
+    @for (_ of rows; track $index) {
+      <div class="sk table-row"></div>
+    }
+  }
+  @default {
+    @for (_ of rows; track $index) {
+      <div class="sk line" [style.width.%]="$index % 2 === 0 ? 100 : 72"></div>
+    }
+  }
+}

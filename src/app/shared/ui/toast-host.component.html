@@ -1,0 +1,29 @@
+<div class="host" aria-live="polite" aria-relevant="additions">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div class="toast" [class]="toast.tone" role="status">
+      <div class="icon" aria-hidden="true">
+        <app-icon
+          [name]="
+            toast.tone === 'success'
+              ? 'circle-check'
+              : toast.tone === 'error'
+                ? 'alertTriangle'
+                : toast.tone === 'warning'
+                  ? 'alertTriangle'
+                  : 'bell'
+          "
+          [size]="15"
+        />
+      </div>
+      <div>
+        <div class="title">{{ toast.title }}</div>
+        @if (toast.description) {
+          <div class="desc">{{ toast.description }}</div>
+        }
+      </div>
+      <button class="close" type="button" aria-label="Cerrar notificación" (click)="toastService.dismiss(toast.id)">
+        <app-icon name="x" [size]="14" />
+      </button>
+    </div>
+  }
+</div>

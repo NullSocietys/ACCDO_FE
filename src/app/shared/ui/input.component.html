@@ -1,0 +1,27 @@
+<div class="wrap" [class.invalid]="invalid()">
+  @if (icon()) {
+    <app-icon class="icon-left" [name]="icon()!" [size]="16" />
+  }
+  @if (multiline()) {
+    <textarea
+      [id]="controlId()"
+      [name]="name() ?? undefined"
+      [placeholder]="placeholder()"
+      [rows]="rows()"
+      [disabled]="disabled()"
+      [value]="value()"
+      (input)="valueChange.emit(($any($event.target)).value)"
+    ></textarea>
+  } @else {
+    <input
+      [id]="controlId()"
+      [name]="name() ?? undefined"
+      [type]="type()"
+      [placeholder]="placeholder()"
+      [class.has-icon]="!!icon()"
+      [disabled]="disabled()"
+      [value]="value()"
+      (input)="valueChange.emit(($any($event.target)).value)"
+    />
+  }
+</div>

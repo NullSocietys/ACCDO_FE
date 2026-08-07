@@ -1,0 +1,18 @@
+<section [class]="boardClass()" [attr.aria-label]="label()">
+  @for (item of items(); track item.label) {
+    <article [class]="'kpi kpi--' + (item.tone ?? 'ink')">
+      <div class="kpi__top">
+        @if (item.icon) {
+          <span class="kpi__icon" aria-hidden="true">
+            <app-icon [name]="item.icon" [size]="20" />
+          </span>
+        }
+        <span class="kpi__label">{{ item.label }}</span>
+      </div>
+      <p class="kpi__value" [class.kpi__value--money]="item.money">{{ item.value }}</p>
+      @if (item.hint) {
+        <p class="kpi__hint">{{ item.hint }}</p>
+      }
+    </article>
+  }
+</section>
