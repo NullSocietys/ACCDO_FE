@@ -5,7 +5,6 @@ import { Evento, EventoEstado } from '../../core/models';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
-import { IconComponent } from '../../shared/icons/icon.component';
 import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
@@ -33,7 +32,6 @@ type EstadoFiltro = 'todos' | EventoEstado;
   imports: [
     FormsModule,
     RouterLink,
-    IconComponent,
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
@@ -196,6 +194,10 @@ export class EventosPage {
   limpiarFiltros(): void {
     this.busqueda.set('');
     this.estadoFiltro.set('todos');
+  }
+
+  rowIndex(localIndex: number): string {
+    return String(localIndex + 1).padStart(2, '0');
   }
 
   openCreate(): void {

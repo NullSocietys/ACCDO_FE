@@ -7,7 +7,6 @@ import { Inscripcion, InscripcionEstado, Sexo } from '../../core/models';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
-import { IconComponent } from '../../shared/icons/icon.component';
 import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
@@ -37,7 +36,6 @@ const PAGE_SIZE = 5;
     CurrencyPipe,
     FormsModule,
     RouterLink,
-    IconComponent,
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
@@ -230,6 +228,11 @@ export class InscripcionesPage {
   goToPage(page: number): void {
     const next = Math.min(Math.max(1, page), this.totalPages());
     this.page.set(next);
+  }
+
+  rowIndex(localIndex: number): string {
+    const p = Math.min(this.page(), this.totalPages());
+    return String((p - 1) * this.pageSize + localIndex + 1).padStart(2, '0');
   }
 
   openDetail(ins: Inscripcion): void {

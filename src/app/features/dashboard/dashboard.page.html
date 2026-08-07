@@ -1,110 +1,190 @@
-<div class="page">
+<div class="page dash">
   @if (loading()) {
-    <div class="hero">
-      <app-skeleton variant="card" [height]="168" />
-    </div>
-    <div class="kpi-skel">
-      @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
-        <app-skeleton variant="card" [height]="148" />
-      }
+    <div class="skel">
+      <app-skeleton variant="card" [height]="120" />
+      <div class="skel__kpis">
+        @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
+          <app-skeleton variant="card" [height]="112" />
+        }
+      </div>
     </div>
   } @else {
-    <section class="hero" aria-label="Resumen principal">
-      <div class="hero-copy">
-        <div>
-          <div class="hero-kicker"><i aria-hidden="true"></i> Temporada 2026 activa</div>
-          <h1>Caporales con control claro</h1>
-          <p>
-            Inscripciones, pagos y resultados en un solo flujo. Empiece por el concurso activo o
-            registre un nuevo grupo.
-          </p>
-        </div>
-        <div class="hero-actions">
+    <header class="mast">
+      <div class="mast__copy">
+        <p class="mast__eyebrow">Temporada · Consola</p>
+        <h1>Principal</h1>
+        <p class="mast__lead">
+          Control de la temporada Caporales: elencos, caja y agenda en un solo tablero.
+        </p>
+      </div>
+      <div class="mast__aside">
+        <dl class="mast__pulse" aria-label="Resumen rápido">
+          <div>
+            <dt>Grupos</dt>
+            <dd>{{ overview().grupos }}</dd>
+          </div>
+          <div>
+            <dt>Cola</dt>
+            <dd>{{ overview().pendientes }}</dd>
+          </div>
+          <div class="mast__pulse--gold">
+            <dt>Caja</dt>
+            <dd>{{ overview().ingresos | currency: 'PEN':'symbol-narrow':'1.0-0' }}</dd>
+          </div>
+        </dl>
+        <div class="mast__actions">
           <a routerLink="/inscripciones/nueva">
             <app-button icon="plus">Nueva inscripción</app-button>
           </a>
           <a routerLink="/eventos">
-            <app-button variant="outline-dark" icon="calendar">Ver eventos</app-button>
+            <app-button variant="outline" icon="calendar">Eventos</app-button>
           </a>
         </div>
       </div>
-    </section>
+    </header>
 
     <app-kpi-board label="Indicadores de temporada" [items]="kpis()" [columns]="3" />
 
-    <div class="grid-2">
-      <app-card
-        title="Inscripciones por modalidad"
-        description="Ranking de grupos inscritos según las bases oficiales"
-      >
-        <div class="chart-panel" role="img" [attr.aria-label]="chartAria()">
-          <div class="chart-summary">
-            <div>
-              <b>{{ chartTotal() }}</b>
-              <span>Total grupos</span>
-            </div>
-            <div class="is-peak">
-              <b>{{ peakCategory()?.label }}</b>
-              <span>Modalidad líder</span>
-            </div>
-            <div>
-              <b>{{ peakCategory()?.pct }}%</b>
-              <span>Del total</span>
-            </div>
-          </div>
+    @if (overview().pendientes > 0) {
+      <aside class="strip" role="status">
+        <span class="strip__mark" aria-hidden="true">!</span>
+        <p>
+          <strong>{{ overview().pendientes }} comprobantes</strong>
+          esperan verificación en caja.
+        </p>
+        <a routerLink="/pagos" class="strip__link">Ir a pagos →</a>
+      </aside>
+    }
 
-          <div class="hbar-list">
-            @for (row of chartRows(); track row.label) {
-              <div class="hbar" [class.is-peak]="row.isPeak">
-                <span class="hbar-label">{{ row.label }}</span>
-                <div class="hbar-track">
-                  <div class="hbar-fill" [style.width.%]="row.width"></div>
-                </div>
-                <div class="hbar-meta">
-                  <span class="hbar-count">{{ row.value }}</span>
-                  <span class="hbar-pct">{{ row.pct }}%</span>
-                </div>
-              </div>
-            }
-          </div>
+    @if (featured(); as ev) {
+      <section class="live" aria-label="Evento activo">
+        <div class="live__date" aria-hidden="true">
+          <span class="live__day">{{ dayOf(ev.fecha) }}</span>
+          <span class="live__mon">{{ monthOf(ev.fecha) }}</span>
+        </div>
+        <div class="live__body">
+          <p class="live__kicker">En curso · {{ overview().activos }} activo(s)</p>
+          <h2>{{ ev.nombre }}</h2>
+          <p class="live__meta">{{ ev.hora }} h · {{ ev.lugar }}</p>
+        </div>
+        <a routerLink="/inscripciones" class="live__cta">
+          <app-button variant="outline" size="sm" icon="chevronRight">Inscripciones</app-button>
+        </a>
+      </section>
+    }
 
-          <div class="chart-insight">
-            <app-icon name="trophy" [size]="15" />
-            <span>
-              {{ peakCategory()?.label }} concentra el pico con {{ peakCategory()?.value }} grupos
-              ({{ peakCategory()?.pct }}%). Las demás modalidades suman
-              {{ chartTotal() - (peakCategory()?.value ?? 0) }} grupos.
-            </span>
+    <div class="board">
+      <section class="folio folio--rank" aria-label="Inscripciones por modalidad">
+        <div class="folio__head">
+          <h2>Modalidades</h2>
+          <span>{{ chartTotal() }} grupos</span>
+        </div>
+
+        <div class="rank-pulse" role="img" [attr.aria-label]="chartAria()">
+          <div>
+            <span class="k">Total</span>
+            <b>{{ chartTotal() }}</b>
+          </div>
+          <div class="rank-pulse--gold">
+            <span class="k">Líder</span>
+            <b [attr.title]="peakCategory()?.label">{{ peakCategory()?.label }}</b>
+          </div>
+          <div>
+            <span class="k">Peso</span>
+            <b>{{ peakCategory()?.pct }}%</b>
           </div>
         </div>
-      </app-card>
 
-      <div class="feed-stack">
-        <app-card title="Últimas inscripciones" description="Actividad reciente">
-          @for (ins of latestInscripciones; track ins.id) {
-            <div class="list-item">
-              <div>
-                <div class="item-title">{{ ins.grupo }}</div>
-                <div class="item-meta">{{ ins.codigo }} · {{ ins.categoria }}</div>
-              </div>
-              <app-badge [tone]="statusTone(ins.estado)">{{ statusLabel(ins.estado) }}</app-badge>
-            </div>
-          }
-        </app-card>
+        <div class="folio__cols folio__cols--rank" aria-hidden="true">
+          <span>#</span>
+          <span>Modalidad</span>
+          <span>Grupos</span>
+        </div>
 
-        <app-card title="Próximos eventos" description="Agenda del concurso">
-          @for (ev of upcomingEventos; track ev.id) {
-            <div class="list-item">
-              <div>
-                <div class="item-title">{{ ev.nombre }}</div>
-                <div class="item-meta">
-                  {{ ev.fecha | date: 'd MMM y' }} · {{ ev.hora }} · {{ ev.lugar }}
+        <div class="rank-list" role="list">
+          @for (row of chartRows(); track row.label) {
+            <div class="rank" role="listitem" [class.is-peak]="row.isPeak">
+              <span class="rank__index">{{ row.index }}</span>
+              <div class="rank__main">
+                <div class="rank__label">{{ row.label }}</div>
+                <div class="rank__track" aria-hidden="true">
+                  <div class="rank__fill" [style.width.%]="row.width"></div>
                 </div>
               </div>
-              <app-badge [tone]="statusTone(ev.estado)">{{ statusLabel(ev.estado) }}</app-badge>
+              <div class="rank__meta">
+                <span class="rank__count">{{ row.value }}</span>
+                <span class="rank__pct">{{ row.pct }}%</span>
+              </div>
             </div>
           }
-        </app-card>
+        </div>
+
+        @if (peakCategory(); as peak) {
+          <p class="rank-note">
+            {{ peak.label }} concentra el pico con {{ peak.value }} grupos ({{ peak.pct }}%).
+            El resto suma {{ chartTotal() - peak.value }}.
+          </p>
+        }
+      </section>
+
+      <div class="rail">
+        <section class="folio" aria-label="Últimas inscripciones">
+          <div class="folio__head">
+            <h2>Nómina reciente</h2>
+            <a routerLink="/inscripciones" class="folio__link">Ver todo →</a>
+          </div>
+
+          @if (latestInscripciones().length === 0) {
+            <p class="folio__empty">Sin inscripciones registradas.</p>
+          } @else {
+            <div class="folio__list" role="list">
+              @for (ins of latestInscripciones(); track ins.id; let i = $index) {
+                <article class="feed" role="listitem">
+                  <span class="feed__index">{{ rowIndex(i) }}</span>
+                  <div class="feed__body">
+                    <h3>{{ ins.grupo }}</h3>
+                    <p>
+                      <span class="feed__cat">{{ ins.categoria }}</span>
+                      · {{ ins.codigo }}
+                    </p>
+                  </div>
+                  <app-badge [tone]="statusTone(ins.estado)" [dot]="false">
+                    {{ statusLabel(ins.estado) }}
+                  </app-badge>
+                </article>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="folio" aria-label="Próximos eventos">
+          <div class="folio__head">
+            <h2>Agenda</h2>
+            <a routerLink="/eventos" class="folio__link">Calendario →</a>
+          </div>
+
+          @if (upcomingEventos().length === 0) {
+            <p class="folio__empty">No hay eventos próximos.</p>
+          } @else {
+            <div class="folio__list" role="list">
+              @for (ev of upcomingEventos(); track ev.id) {
+                <article class="agenda" role="listitem" [class.is-activo]="ev.estado === 'activo'">
+                  <div class="agenda__date" aria-hidden="true">
+                    <span class="agenda__day">{{ dayOf(ev.fecha) }}</span>
+                    <span class="agenda__mon">{{ monthOf(ev.fecha) }}</span>
+                  </div>
+                  <div class="agenda__body">
+                    <h3>{{ ev.nombre }}</h3>
+                    <p>{{ ev.hora }} h · {{ ev.lugar }}</p>
+                  </div>
+                  <app-badge [tone]="statusTone(ev.estado)" [dot]="false">
+                    {{ statusLabel(ev.estado) }}
+                  </app-badge>
+                </article>
+              }
+            </div>
+          }
+        </section>
       </div>
     </div>
   }
