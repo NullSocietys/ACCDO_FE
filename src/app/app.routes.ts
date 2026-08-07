@@ -1,9 +1,15 @@
 import { Routes } from '@angular/router';
 import { ShellComponent } from './layout/shell.component';
+import { LandingPage } from './features/landing/landing.page';
 
 export const routes: Routes = [
   {
     path: '',
+    component: LandingPage,
+    pathMatch: 'full',
+  },
+  {
+    path: 'admin',
     component: ShellComponent,
     children: [
       {

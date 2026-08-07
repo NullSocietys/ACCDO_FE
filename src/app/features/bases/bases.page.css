@@ -100,12 +100,20 @@
 .tariffs,
 .criteria,
 .article,
-.prizes {
+.prizes,
+.comision {
   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 20px 22px;
   box-shadow: var(--shadow-sm);
+}
+
+.comision__text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--stone-700);
+  line-height: 1.5;
 }
 
 .tariff-grid {

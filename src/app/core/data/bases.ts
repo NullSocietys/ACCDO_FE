@@ -1,81 +1,50 @@
 import {
-  Categoria,
   CriterioCalificacion,
-  PremioCategoria,
+  Modalidad,
 } from '../models';
 
-/** Categorías oficiales = filas de la tabla `categorias` (Bases 2026). */
-export const CATEGORIAS_DB: Categoria[] = [
-  {
-    id: 'cat-01',
-    nombre: 'UNIPERSONAL MACHO CAPORAL',
-    precio: 70,
-    minIntegrantes: 1,
-    maxIntegrantes: 1,
-    activo: true,
-  },
-  {
-    id: 'cat-02',
-    nombre: 'UNIPERSONAL CAPORALITA DE ORO',
-    precio: 70,
-    minIntegrantes: 1,
-    maxIntegrantes: 1,
-    activo: true,
-  },
-  {
-    id: 'cat-03',
-    nombre: 'PAREJA (LIBRE)',
-    precio: 80,
-    minIntegrantes: 2,
-    maxIntegrantes: 2,
-    activo: true,
-  },
-  {
-    id: 'cat-04',
-    nombre: 'DUOS MACHOS Y CAPORALITAS',
-    precio: 80,
-    minIntegrantes: 2,
-    maxIntegrantes: 2,
-    activo: true,
-  },
-  {
-    id: 'cat-05',
-    nombre: 'TROPAS MACHOS Y CAPORALITAS',
-    precio: 100,
-    minIntegrantes: 3,
-    maxIntegrantes: 40,
-    activo: true,
-  },
-  {
-    id: 'cat-06',
-    nombre: 'BALLET (LIBRE)',
-    precio: 170,
-    minIntegrantes: 8,
-    maxIntegrantes: 40,
-    activo: true,
-  },
+// Interfaces locales para estructura de datos
+interface ModalidadTarifa {
+  codigo: string;
+  modalidad: string;
+  costo: number;
+}
+
+interface PremioModalidad {
+  modalidad: string;
+  primero: string;
+  segundo: string;
+  tercero: string;
+}
+
+/** Tarifas oficiales (Artículo 01 / 02). */
+export const MODALIDADES: ModalidadTarifa[] = [
+  { codigo: '01', modalidad: 'Unipersonal – Macho Caporal', costo: 70 },
+  { codigo: '02', modalidad: 'Unipersonal – Caporalita de Oro', costo: 70 },
+  { codigo: '03', modalidad: 'Pareja (Libre)', costo: 80 },
+  { codigo: '04', modalidad: 'Dúos Machos y Caporalitas', costo: 80 },
+  { codigo: '05', modalidad: 'Tropas Machos y Caporalitas', costo: 100 },
+  { codigo: '06', modalidad: 'Ballet (Libre)', costo: 170 },
 ];
 
-/** Alias de compatibilidad con pantallas de bases / wizard. */
-export const MODALIDADES = CATEGORIAS_DB.map((c, i) => ({
-  codigo: String(i + 1).padStart(2, '0'),
-  modalidad: c.nombre,
-  costo: c.precio,
-  categoriaId: c.id,
-  minIntegrantes: c.minIntegrantes,
-  maxIntegrantes: c.maxIntegrantes,
+export const CATEGORIAS = MODALIDADES.map((m) => m.modalidad);
+
+export const MONTOS_POR_CATEGORIA: Record<Modalidad, number> = Object.fromEntries(
+  MODALIDADES.map((m) => [m.modalidad, m.costo]),
+) as Record<Modalidad, number>;
+
+// Aliases para compatibilidad con mock-data.ts
+export const CATEGORIAS_DB = MODALIDADES.map((m, index) => ({
+  id: `cat-${index + 1}`,
+  nombre: m.modalidad,
+  precio: m.costo,
+  minIntegrantes: 1,
+  maxIntegrantes: m.modalidad.includes('Ballet') ? 12 : m.modalidad.includes('Tropas') ? 10 : m.modalidad.includes('Dúo') || m.modalidad.includes('Pareja') ? 2 : 1,
+  activo: true
 }));
+export const PRECIO_POR_CATEGORIA_ID = MONTOS_POR_CATEGORIA;
 
-export const CATEGORIAS = CATEGORIAS_DB.map((c) => c.nombre);
-
-export const MONTOS_POR_CATEGORIA: Record<string, number> = Object.fromEntries(
-  CATEGORIAS_DB.map((c) => [c.nombre, c.precio]),
-);
-
-export const PRECIO_POR_CATEGORIA_ID: Record<string, number> = Object.fromEntries(
-  CATEGORIAS_DB.map((c) => [c.id, c.precio]),
-);
-
+/** Criterios de calificación (Artículo 08). Total máximo: 25 puntos. */
 export const CRITERIOS_CALIFICACION: CriterioCalificacion[] = [
   {
     clave: 'presentacion',
@@ -114,45 +83,39 @@ export const CRITERIOS_CALIFICACION: CriterioCalificacion[] = [
   },
 ];
 
-export const PREMIOS: PremioCategoria[] = [
+export const PREMIOS: PremioModalidad[] = [
   {
-    categoriaId: 'cat-01',
-    categoriaNombre: 'UNIPERSONAL MACHO CAPORAL',
+    modalidad: 'Unipersonal – Macho Caporal',
     primero: 'S/ 500 + Medalla + Diploma',
     segundo: 'S/ 250 + Medalla + Diploma',
     tercero: 'Medalla + Diploma',
   },
   {
-    categoriaId: 'cat-02',
-    categoriaNombre: 'UNIPERSONAL CAPORALITA DE ORO',
+    modalidad: 'Unipersonal – Caporalita de Oro',
     primero: 'S/ 500 + Medalla + Diploma',
     segundo: 'S/ 250 + Medalla + Diploma',
     tercero: 'Medalla + Diploma',
   },
   {
-    categoriaId: 'cat-03',
-    categoriaNombre: 'PAREJA (LIBRE)',
+    modalidad: 'Pareja (Libre)',
     primero: 'S/ 600 + Medalla + Diploma',
     segundo: 'S/ 300 + Medalla + Diploma',
     tercero: 'Medalla + Diploma',
   },
   {
-    categoriaId: 'cat-04',
-    categoriaNombre: 'DUOS MACHOS Y CAPORALITAS',
+    modalidad: 'Dúos Machos y Caporalitas',
     primero: 'S/ 600 + Medalla + Diploma',
     segundo: 'S/ 300 + Medalla + Diploma',
     tercero: 'Medalla + Diploma',
   },
   {
-    categoriaId: 'cat-05',
-    categoriaNombre: 'TROPAS MACHOS Y CAPORALITAS',
+    modalidad: 'Tropas Machos y Caporalitas',
     primero: 'S/ 800 + Trofeo + Diploma',
     segundo: 'S/ 400 + Trofeo + Diploma',
     tercero: 'Medalla + Diploma',
   },
   {
-    categoriaId: 'cat-06',
-    categoriaNombre: 'BALLET (LIBRE)',
+    modalidad: 'Ballet (Libre)',
     primero: 'S/ 2,500 + Trofeo',
     segundo: 'S/ 1,200 + Trofeo',
     tercero: 'S/ 300 + Trofeo',
@@ -191,23 +154,16 @@ export const ARTICULOS_BASES: ArticuloBases[] = [
       'Ingresan al sorteo quienes pagaron su inscripción y enviaron la ficha correctamente rellenada.',
       'Se pueden inscribir pasado el sorteo o el mismo día del concurso; en ese caso pasan a ser los primeros de la lista en el primer bloque.',
     ],
-    tabla: {
-      headers: ['N°', 'Modalidad', 'Costo', 'Integrantes'],
-      rows: CATEGORIAS_DB.map((c, i) => [
-        String(i + 1).padStart(2, '0'),
-        c.nombre,
-        `S/ ${c.precio.toFixed(2)}`,
-        c.minIntegrantes === c.maxIntegrantes
-          ? String(c.minIntegrantes)
-          : `${c.minIntegrantes}–${c.maxIntegrantes}`,
-      ]),
-    },
   },
   {
     id: '02',
     titulo: 'Costos de inscripción',
     resumen:
-      'Los costos oficiales por modalidad se detallan en la tabla del Artículo 01. El pago se realiza por Yape al 926 266 295.',
+      'El pago se realiza por YAPE al 926 266 295.',
+    tabla: {
+      headers: ['N°', 'Modalidad', 'Costo'],
+      rows: MODALIDADES.map((m) => [m.codigo, m.modalidad, `S/ ${m.costo.toFixed(2)}`]),
+    },
   },
   {
     id: '03',
@@ -216,7 +172,6 @@ export const ARTICULOS_BASES: ArticuloBases[] = [
       'Las instituciones pueden participar con hasta 3 propuestas por cada modalidad de la misma categoría, por sede o institución. Válido en todas las categorías y modalidades.',
       'No hay máximo de sedes por institución.',
       'Las centrales podrán presentar 2 ballets como máximo.',
-      'Habrá tolerancia de 5 minutos.',
       'En Macho Caporal y Caporalita de Oro: máximo 4 participantes por institución.',
     ],
   },
@@ -224,7 +179,7 @@ export const ARTICULOS_BASES: ArticuloBases[] = [
     id: '04',
     titulo: 'Número de participantes categoría Ballet',
     resumen:
-      'Categoría Ballet: mínimo 8 integrantes y máximo 40 según tabla oficial de categorías.',
+      'Categoría Ballet Adultos: mínimo 4 parejas mixtas; máximo 5 o 6 parejas mixtas.',
   },
   {
     id: '05',
@@ -236,13 +191,13 @@ export const ARTICULOS_BASES: ArticuloBases[] = [
     id: '06',
     titulo: 'Responsabilidad de los participantes',
     bullets: [
-      'Llegar temprano para el inicio del concurso (10:00 a. m.).',
+      'Llegar temprano para el inicio del concurso (10:00 am); habrá tolerancia de 5 minutos para el inicio de las distintas modalidades.',
       'Designar un delegado responsable de reuniones, sorteos y reclamos.',
-      'Presentarse caracterizados y listos; no habrá camerino ni backstage.',
-      'Traer la propia utilería necesaria.',
-      'Traer la pista musical en USB. La organización no se hace responsable de fallos.',
+      'Presentarse caracterizados y listos; no se contará con lugar de cambio o backstage.',
+      'Traer la propia utilería necesaria para el concurso.',
+      'Traer la pista musical en USB. La organización no se hace responsable de cualquier fallo.',
       'La pista debe tener buena calidad de audio y entregarse el día del sorteo.',
-      'El Comité Organizador no se responsabiliza si la pista está mal grabada o tiene errores.',
+      'El Comité Organizador no se responsabiliza si la pista está mal grabada o tiene algún error.',
     ],
   },
   {
@@ -326,7 +281,7 @@ export const ARTICULOS_BASES: ArticuloBases[] = [
     ],
     tabla: {
       headers: ['Modalidad', '1.er puesto', '2.º puesto', '3.er puesto'],
-      rows: PREMIOS.map((p) => [p.categoriaNombre, p.primero, p.segundo, p.tercero]),
+      rows: PREMIOS.map((p) => [p.modalidad, p.primero, p.segundo, p.tercero]),
     },
   },
   {

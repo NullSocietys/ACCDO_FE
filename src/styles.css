@@ -144,6 +144,16 @@ html {
   scroll-behavior: smooth;
 }
 
+/* La landing pública replica el sitio estático original: oculta el scrollbar solo ahí */
+html:has(app-landing) {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html:has(app-landing)::-webkit-scrollbar {
+  display: none;
+}
+
 html,
 body {
   margin: 0;

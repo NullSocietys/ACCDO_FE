@@ -1,0 +1,1044 @@
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="gooey-dots">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="3.2 1" result="blur" />
+        <feColorMatrix in="blur" mode="matrix"
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10" result="goo" />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- ===================== ANIMACIÓN DE ENTRADA ===================== -->
+  <div class="intro-overlay" id="introOverlay" aria-hidden="true">
+    <video id="introVideo" autoplay muted playsinline preload="auto">
+      <source src="video/animacion-entrada-responsive.mp4" type="video/mp4" media="(max-width: 768px)">
+      <source src="video/animacion-entrada.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+
+  <!-- ===================== ENCABEZADO ===================== -->
+  <header class="site-header" id="siteHeader">
+    <div class="container header-inner">
+      <a class="brand" href="#hero" aria-label="Chicote de Oro — inicio">
+        <img class="brand-logo" src="logo/eslogan.png" alt="Chicote de Oro — Elegancia en movimiento">
+      </a>
+
+      <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="primaryNav" aria-label="Abrir menú">
+        <span class="menu-bar"></span>
+        <span class="menu-bar"></span>
+        <span class="menu-bar"></span>
+      </button>
+
+      <div class="header-right">
+        <nav class="site-nav" id="primaryNav" aria-label="Navegación principal">
+          <ul class="nav-list">
+            <li><a href="#hero">Galería</a></li>
+            <li><a href="#experiencia">La experiencia</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+          </ul>
+        </nav>
+        <a class="btn btn-gold header-cta" href="#contacto">Participar</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ===================== HERO: PÓSTER DE GALERÍA A PANTALLA COMPLETA ===================== -->
+    <section class="hero" id="hero">
+
+      <div class="hero-carousel carousel" id="carousel" role="region" aria-roledescription="carrusel" aria-label="Galería de imágenes" tabindex="0">
+        <div class="carousel-viewport">
+          <div class="carousel-track" id="carouselTrack">
+            <figure class="carousel-slide active">
+              <img src="carrusel-img/background1.png" alt="Galería Chicote de Oro — imagen 1 de 8" width="1672" height="941" fetchpriority="high" decoding="async">
+            </figure>
+            <figure class="carousel-slide">
+              <img src="carrusel-img/background2.png" alt="Galería Chicote de Oro — imagen 2 de 8" width="2000" height="1414" loading="lazy" decoding="async">
+            </figure>
+            <figure class="carousel-slide">
+              <img src="carrusel-img/background3.png" alt="Galería Chicote de Oro — imagen 3 de 8" width="2000" height="1414" loading="lazy" decoding="async">
+            </figure>
+            <figure class="carousel-slide">
+              <img src="carrusel-img/background4.png" alt="Galería Chicote de Oro — imagen 4 de 8" width="2000" height="1414" loading="lazy" decoding="async">
+            </figure>
+            <figure class="carousel-slide">
+              <img src="carrusel-img/background5.png" alt="Galería Chicote de Oro — imagen 5 de 8" width="2000" height="1414" loading="lazy" decoding="async">
+            </figure>
+            <figure class="carousel-slide">
+              <img src="carrusel-img/background6.png" alt="Galería Chicote de Oro — imagen 6 de 8" width="2000" height="1414" loading="lazy" decoding="async">
+            </figure>
+            <figure class="carousel-slide">
+              <img src="carrusel-img/background7.png" alt="Galería Chicote de Oro — imagen 7 de 8" width="2000" height="1414" loading="lazy" decoding="async">
+            </figure>
+            <figure class="carousel-slide">
+              <img src="carrusel-img/background8.png" alt="Galería Chicote de Oro — imagen 8 de 8" width="2000" height="1414" loading="lazy" decoding="async">
+            </figure>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-frame" aria-hidden="true">
+        <span class="frame-corner tl"></span>
+        <span class="frame-corner tr"></span>
+        <span class="frame-corner bl"></span>
+        <span class="frame-corner br"></span>
+      </div>
+
+      <div class="hero-overlay">
+        <button class="carousel-btn carousel-prev" type="button" aria-label="Imagen anterior">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <button class="carousel-btn carousel-next" type="button" aria-label="Imagen siguiente">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+        </button>
+
+        <div class="hero-top hero-anim" style="animation-delay:.1s">
+          <span class="hero-tag">★ VII Concurso Nacional 2026 · Dom 16 ago · Coliseo de Imperial, Cañete · 10:00 am</span>
+        </div>
+
+        <div class="hero-bottom">
+          <div class="hero-content">
+            <div class="hero-content-grid">
+              <div class="hero-media hero-anim" style="animation-delay:.2s">
+                <img class="hero-logo" src="logo/logo.png" alt="" width="960" height="955" fetchpriority="high" decoding="async">
+              </div>
+
+              <div class="hero-text">
+                <h1 class="hero-title hero-anim" style="animation-delay:.25s">
+                  <span class="hero-brand-text">Chicote de Oro<span class="hero-brand-sub">Elegancia en movimiento</span></span>
+                </h1>
+                <p class="hero-sub hero-anim" style="animation-delay:.4s">
+                  Vive la pasión por la danza en un escenario de lujo: concursos, categorías y resultados
+                  que celebran el talento con elegancia dorada.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-divider" aria-hidden="true"></div>
+
+          <div class="hero-side hero-anim" style="animation-delay:.55s">
+            <span class="hero-side-label">Reserva tu lugar</span>
+            <div class="hero-actions">
+              <a class="btn btn-gold" href="#experiencia">
+                <span>Conocer más</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="carousel-dots carousel-dots-bottom" id="carouselDots" role="group" aria-label="Seleccionar imagen"></div>
+    </section>
+
+    <!-- ===================== EL CONCURSO — EDITORIAL ULTRA PREMIUM ===================== -->
+    <section class="program" id="experiencia">
+      <div class="container">
+        <div class="sec-head reveal">
+          <div>
+            <span class="sec-eyebrow">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
+              El concurso · VII edición
+            </span>
+            <h1 class="sec-title">
+              <span class="sec-title__line">VII Concurso Nacional de</span>
+              <span class="sec-title__emphasis">Caporales</span>
+            </h1>
+          </div>
+          <p class="sec-note">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Semifinal y Gran Final el domingo 16 de agosto en el Coliseo de Imperial — Cañete. Organiza la Asociación Cultural Chicote de Oro.
+          </p>
+        </div>
+
+        <div class="program-editorial">
+          <!-- Foto editorial principal a todo el ancho -->
+          <div class="prog-media reveal">
+            <img src="fotos/ballets/ballet4.png" alt="Ballet sobre el escenario — VII Concurso Nacional de Caporales" width="2000" height="1414" fetchpriority="high" decoding="async">
+            <div class="prog-media__veil" aria-hidden="true"></div>
+            <div class="prog-media__body">
+              <span class="prog-media__eyebrow">16 de agosto · 10:00 am</span>
+              <h2 class="prog-media__title">Semifinal y<br>Gran Final</h2>
+              <p class="prog-media__desc">Coliseo de Imperial — Cañete. Una jornada completa dedicada a la elegancia de los caporales.</p>
+            </div>
+          </div>
+
+          <!-- Datos clave en una franja compacta -->
+          <div class="prog-facts">
+            <div class="prog-fact">
+              <span class="prog-fact__k">Organiza</span>
+              <strong class="prog-fact__v">Asociación Cultural Chicote de Oro</strong>
+            </div>
+            <div class="prog-fact">
+              <span class="prog-fact__k">Horario</span>
+              <strong class="prog-fact__v">10:00 am — jornada completa</strong>
+            </div>
+            <div class="prog-fact">
+              <span class="prog-fact__k">Sorteo oficial</span>
+              <strong class="prog-fact__v">Vie 14 ago · 09:00 pm — Facebook</strong>
+            </div>
+            <div class="prog-fact prog-fact--cta">
+              <span class="prog-fact__k">Inscripciones hasta 12 ago</span>
+              <strong class="prog-fact__v">Yape · WhatsApp · 926 266 295</strong>
+            </div>
+          </div>
+
+          <!-- Muro de fotos por categoría -->
+          <div class="prog-wall-wrapper">
+            <div class="prog-wall" id="progWall">
+              <figure class="prog-shot prog-shot--portrait reveal">
+                <img src="fotos/unipersonal/unipersonal-M.png" alt="Unipersonal — camino al escenario" loading="lazy" decoding="async" width="1365" height="2048">
+                <figcaption class="prog-shot__cap"><span>Unipersonal</span></figcaption>
+              </figure>
+              <figure class="prog-shot prog-shot--portrait reveal">
+                <img src="fotos/unipersonal/unipersonal-V1.png" alt="Unipersonal — presentación en el coliseo" loading="lazy" decoding="async" width="1365" height="2048">
+                <figcaption class="prog-shot__cap"><span>Unipersonal</span></figcaption>
+              </figure>
+              <figure class="prog-shot prog-shot--landscape reveal">
+                <img src="fotos/unipersonal/unipersonal-v2.png" alt="Unipersonal — ensayo general" loading="lazy" decoding="async" width="2000" height="1414">
+                <figcaption class="prog-shot__cap"><span>Unipersonal</span></figcaption>
+              </figure>
+              <figure class="prog-shot prog-shot--landscape reveal">
+                <img src="fotos/unipersonal/unipersonal-V3.png" alt="Unipersonal — momento en escenario" loading="lazy" decoding="async" width="2000" height="1414">
+                <figcaption class="prog-shot__cap"><span>Unipersonal</span></figcaption>
+              </figure>
+
+              <figure class="prog-shot prog-shot--landscape reveal">
+                <img src="fotos/parejas/pareja1.png" alt="Pareja en escenario — categoría libre" loading="lazy" decoding="async" width="2048" height="1365">
+                <figcaption class="prog-shot__cap"><span>Parejas</span></figcaption>
+              </figure>
+              <figure class="prog-shot prog-shot--portrait reveal">
+                <img src="fotos/parejas/pareja2.png" alt="Pareja — dúo de pasos" loading="lazy" decoding="async" width="1365" height="2048">
+                <figcaption class="prog-shot__cap"><span>Parejas</span></figcaption>
+              </figure>
+              <figure class="prog-shot prog-shot--portrait reveal">
+                <img src="fotos/parejas/pareja3.png" alt="Pareja — coreografía conjunta" loading="lazy" decoding="async" width="1365" height="2048">
+                <figcaption class="prog-shot__cap"><span>Parejas</span></figcaption>
+              </figure>
+              <figure class="prog-shot prog-shot--portrait reveal">
+                <img src="fotos/parejas/pareja4.png" alt="Pareja — duete sobre el escenario" loading="lazy" decoding="async" width="1365" height="2048">
+                <figcaption class="prog-shot__cap"><span>Parejas</span></figcaption>
+              </figure>
+
+              <figure class="prog-shot prog-shot--landscape reveal">
+                <img src="fotos/ballets/ballet1.png" alt="Ballet — bloque grupal" loading="lazy" decoding="async" width="2000" height="1414">
+                <figcaption class="prog-shot__cap"><span>Ballet</span></figcaption>
+              </figure>
+              <figure class="prog-shot prog-shot--landscape reveal">
+                <img src="fotos/ballets/ballet3.png" alt="Ballet — formación en conjunto" loading="lazy" decoding="async" width="2000" height="1414">
+                <figcaption class="prog-shot__cap"><span>Ballet</span></figcaption>
+              </figure>
+              <figure class="prog-shot prog-shot--landscape reveal">
+                <img src="fotos/ballets/ballet4.png" alt="Ballet — la gran apuesta" loading="lazy" decoding="async" width="2000" height="1414">
+                <figcaption class="prog-shot__cap"><span>Ballet</span></figcaption>
+              </figure>
+            </div>
+
+            <!-- Controles del carrusel (solo visibles en móvil) -->
+            <div class="prog-wall-controls" aria-label="Controles del carrusel de fotos">
+              <button class="prog-wall-btn prog-wall-prev" type="button" aria-label="Foto anterior">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+              <div class="prog-wall-dots" id="progWallDots"></div>
+              <button class="prog-wall-btn prog-wall-next" type="button" aria-label="Foto siguiente">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CÓMO INSCRIBIRSE — PROCESO REFINED ===================== -->
+    <section class="cta" id="inscripcion">
+      <div class="container">
+        <div class="sec-head reveal">
+          <div>
+            <span class="sec-eyebrow">Inscripciones</span>
+            <h2 class="sec-title">Proceso de <em>inscripción</em></h2>
+          </div>
+          <p class="sec-note">Tres pasos simples desde tu celular. Cada paso toma menos de 2 minutos.</p>
+        </div>
+
+        <div class="process-flow">
+          <article class="process-step reveal">
+            <span class="process-step__num" aria-hidden="true">01</span>
+            <span class="process-step__kicker">Paso uno</span>
+            <div class="process-step__icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+            </div>
+            <h3 class="process-step__title">Realiza el pago</h3>
+            <p class="process-step__description">Yape al <strong>926 266 295</strong> indicando nombre e institución</p>
+            <div class="process-step__time">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              ~1 min
+            </div>
+          </article>
+
+          <article class="process-step reveal">
+            <span class="process-step__num" aria-hidden="true">02</span>
+            <span class="process-step__kicker">Paso 2</span>
+            <div class="process-step__icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4c-1.4 0-2.7-.3-3.9-.9L3 21l1.9-5.2a8.4 8.4 0 1 1 16.1-4.3Z"/></svg>
+            </div>
+            <h3 class="process-step__title">Envía el voucher</h3>
+            <p class="process-step__description">Foto legible por <strong>WhatsApp</strong> a Martha Bravo</p>
+            <div class="process-step__time">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              ~30 seg
+            </div>
+          </article>
+
+          <article class="process-step reveal">
+            <span class="process-step__num" aria-hidden="true">03</span>
+            <span class="process-step__kicker">Paso final</span>
+            <div class="process-step__icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V8Z"/></svg>
+            </div>
+            <h3 class="process-step__title">Asiste al sorteo</h3>
+            <p class="process-step__description"><strong>14 ago 9pm</strong> vía Facebook, entrega pista en USB</p>
+            <div class="process-step__time">
+              <span class="process-step__live" aria-hidden="true"></span>
+              En vivo
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TARIFAS — PRICING TABLE REFINED ===================== -->
+    <section class="cta" id="costos">
+      <div class="container">
+        <div class="sec-head reveal">
+          <div>
+            <span class="sec-eyebrow">Tarifas 2026</span>
+            <h2 class="sec-title">Inversión por <em>categoría</em></h2>
+          </div>
+          <p class="sec-note">Seis modalidades desde S/ 70. Pago único por Yape.</p>
+        </div>
+
+        <div class="pricing-table">
+          <div class="pricing-grid">
+
+            <article class="rate-item reveal">
+              <div class="rate-item__index" aria-hidden="true">01</div>
+              <div class="rate-item__body">
+                <span class="rate-item__badge">Unipersonal</span>
+                <h3 class="rate-item__name">Macho Caporal</h3>
+              </div>
+              <div class="rate-item__price">
+                <span class="rate-item__currency">S/</span>
+                <strong class="rate-item__amount">70</strong>
+              </div>
+            </article>
+
+            <article class="rate-item reveal">
+              <div class="rate-item__index" aria-hidden="true">02</div>
+              <div class="rate-item__body">
+                <span class="rate-item__badge">Unipersonal</span>
+                <h3 class="rate-item__name">Té de Oro</h3>
+              </div>
+              <div class="rate-item__price">
+                <span class="rate-item__currency">S/</span>
+                <strong class="rate-item__amount">70</strong>
+              </div>
+            </article>
+
+            <article class="rate-item reveal">
+              <div class="rate-item__index" aria-hidden="true">03</div>
+              <div class="rate-item__body">
+                <span class="rate-item__badge">Pareja</span>
+                <h3 class="rate-item__name">Libre</h3>
+              </div>
+              <div class="rate-item__price">
+                <span class="rate-item__currency">S/</span>
+                <strong class="rate-item__amount">80</strong>
+              </div>
+            </article>
+
+            <article class="rate-item reveal">
+              <div class="rate-item__index" aria-hidden="true">04</div>
+              <div class="rate-item__body">
+                <span class="rate-item__badge">Dúos</span>
+                <h3 class="rate-item__name">Machos y Caporalitas</h3>
+              </div>
+              <div class="rate-item__price">
+                <span class="rate-item__currency">S/</span>
+                <strong class="rate-item__amount">80</strong>
+              </div>
+            </article>
+
+            <article class="rate-item reveal">
+              <div class="rate-item__index" aria-hidden="true">05</div>
+              <div class="rate-item__body">
+                <span class="rate-item__badge">Tropas</span>
+                <h3 class="rate-item__name">Machos y Caporalitas</h3>
+              </div>
+              <div class="rate-item__price">
+                <span class="rate-item__currency">S/</span>
+                <strong class="rate-item__amount">100</strong>
+              </div>
+            </article>
+
+            <article class="rate-item rate-item--featured reveal">
+              <div class="rate-item__body">
+                <span class="rate-item__badge">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
+                  Ballet libre
+                </span>
+                <h3 class="rate-item__name">La gran apuesta</h3>
+              </div>
+              <div class="rate-item__price price">
+                <span class="rate-item__currency">S/</span>
+                <strong class="rate-item__amount">170</strong>
+              </div>
+              <div class="rate-item__awards">
+                <span>Premio</span>
+                <strong>S/ 2,500</strong>
+              </div>
+              <div class="rate-item__index rate-item__index--big" aria-hidden="true">06</div>
+              <div class="rate-item__shine" aria-hidden="true"></div>
+            </article>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CRITERIOS — BARRAS DE EVALUACIÓN ===================== -->
+    <section class="cta" id="criterios">
+      <div class="container">
+        <div class="sec-head reveal">
+          <div>
+            <span class="sec-eyebrow">Calificación</span>
+            <h2 class="sec-title">Criterios de <em>evaluación</em></h2>
+          </div>
+          <p class="sec-note">5 criterios, cada uno hasta 5 puntos. Los mejores de cada bloque pasan a la gran final.</p>
+        </div>
+
+        <div class="criteria">
+          <div class="criteria-score reveal">
+            <span class="criteria-score__label">Puntaje máximo</span>
+            <div class="criteria-score__dial" aria-hidden="true">
+              <span class="criteria-score__val">25</span>
+            </div>
+            <span class="criteria-score__pts">puntos</span>
+          </div>
+
+          <ol class="criteria-bars">
+            <li class="criteria-bar reveal">
+              <span class="criteria-bar__num" aria-hidden="true">01</span>
+              <div class="criteria-bar__body">
+                <div class="criteria-bar__head">
+                  <h3>Presentación y vestimenta</h3>
+                  <span class="criteria-bar__pts">5<span class="criteria-bar__pts-max"> / 5</span></span>
+                </div>
+                <span class="criteria-bar__scale" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </span>
+              </div>
+            </li>
+            <li class="criteria-bar reveal">
+              <span class="criteria-bar__num" aria-hidden="true">02</span>
+              <div class="criteria-bar__body">
+                <div class="criteria-bar__head">
+                  <h3>Coreografía</h3>
+                  <span class="criteria-bar__pts">5<span class="criteria-bar__pts-max"> / 5</span></span>
+                </div>
+                <span class="criteria-bar__scale" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </span>
+              </div>
+            </li>
+            <li class="criteria-bar reveal">
+              <span class="criteria-bar__num" aria-hidden="true">03</span>
+              <div class="criteria-bar__body">
+                <div class="criteria-bar__head">
+                  <h3>Armonía rítmica</h3>
+                  <span class="criteria-bar__pts">5<span class="criteria-bar__pts-max"> / 5</span></span>
+                </div>
+                <span class="criteria-bar__scale" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </span>
+              </div>
+            </li>
+            <li class="criteria-bar reveal">
+              <span class="criteria-bar__num" aria-hidden="true">04</span>
+              <div class="criteria-bar__body">
+                <div class="criteria-bar__head">
+                  <h3>Mensaje</h3>
+                  <span class="criteria-bar__pts">5<span class="criteria-bar__pts-max"> / 5</span></span>
+                </div>
+                <span class="criteria-bar__scale" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </span>
+              </div>
+            </li>
+            <li class="criteria-bar reveal">
+              <span class="criteria-bar__num" aria-hidden="true">05</span>
+              <div class="criteria-bar__body">
+                <div class="criteria-bar__head">
+                  <h3>Expresión</h3>
+                  <span class="criteria-bar__pts">5<span class="criteria-bar__pts-max"> / 5</span></span>
+                </div>
+                <span class="criteria-bar__scale" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </span>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta" id="premios">
+      <div class="container">
+        <div class="sec-head reveal">
+          <div>
+            <span class="sec-eyebrow">Premios</span>
+            <h2 class="sec-title">Premiación en la <em>gran final</em></h2>
+          </div>
+          <p class="sec-note">Cada modalidad entrega medallas, trofeos y diplomas. El premio mayor se define en la gran final.</p>
+        </div>
+
+        <div class="prizes">
+          <div class="prize-lead reveal">
+            <div class="prize-lead__crown" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 18h16" />
+                <path d="M5 18l-2.5-8.5 5 3.5L12 7l4.5 6 5-3.5L19 18" />
+                <circle cx="12" cy="6" r="1.2" />
+              </svg>
+            </div>
+            <span class="prize-lead__label">Premio mayor · Ballet</span>
+            <span class="prize-lead__amount">S/ <strong>2,500</strong></span>
+            <span class="prize-lead__sub">Trofeo de oro + diploma para la gran ganadora</span>
+          </div>
+
+          <div class="prize-grid">
+            <div class="prize-card reveal">
+              <span class="prize-card__idx" aria-hidden="true">01</span>
+              <div class="prize-row">
+                <span class="prize-row__name">Macho Caporal de Oro</span>
+                <span class="prize-row__p1 prize-row__p1--gold">1.º <strong>S/ 500</strong></span>
+                <span class="prize-row__p2">2.º <strong>S/ 250</strong></span>
+                <span class="prize-row__p3">3.º <em>Medalla</em></span>
+              </div>
+            </div>
+            <div class="prize-card reveal">
+              <span class="prize-card__idx" aria-hidden="true">02</span>
+              <div class="prize-row">
+                <span class="prize-row__name">Caporalita de Oro</span>
+                <span class="prize-row__p1 prize-row__p1--gold">1.º <strong>S/ 500</strong></span>
+                <span class="prize-row__p2">2.º <strong>S/ 250</strong></span>
+                <span class="prize-row__p3">3.º <em>Medalla</em></span>
+              </div>
+            </div>
+            <div class="prize-card reveal">
+              <span class="prize-card__idx" aria-hidden="true">03</span>
+              <div class="prize-row">
+                <span class="prize-row__name">Pareja (Libre)</span>
+                <span class="prize-row__p1 prize-row__p1--gold">1.º <strong>S/ 600</strong></span>
+                <span class="prize-row__p2">2.º <strong>S/ 300</strong></span>
+                <span class="prize-row__p3">3.º <em>Medalla</em></span>
+              </div>
+            </div>
+            <div class="prize-card reveal">
+              <span class="prize-card__idx" aria-hidden="true">04</span>
+              <div class="prize-row">
+                <span class="prize-row__name">Dúo</span>
+                <span class="prize-row__p1 prize-row__p1--gold">1.º <strong>S/ 600</strong></span>
+                <span class="prize-row__p2">2.º <strong>S/ 300</strong></span>
+                <span class="prize-row__p3">3.º <em>Medalla</em></span>
+              </div>
+            </div>
+            <div class="prize-card reveal">
+              <span class="prize-card__idx" aria-hidden="true">05</span>
+              <div class="prize-row">
+                <span class="prize-row__name">Tropas</span>
+                <span class="prize-row__p1 prize-row__p1--gold">1.º <strong>S/ 800</strong></span>
+                <span class="prize-row__p2">2.º <strong>S/ 400</strong></span>
+                <span class="prize-row__p3">3.º <em>Trofeo</em></span>
+              </div>
+            </div>
+            <div class="prize-card prize-card--grand reveal">
+              <span class="prize-card__idx" aria-hidden="true">06</span>
+              <div class="prize-row">
+                <span class="prize-row__name">Ballet (Libre)</span>
+                <span class="prize-row__p1 prize-row__p1--gold">1.º <strong>S/ 2,500</strong></span>
+                <span class="prize-row__p2">2.º <strong>S/ 1,200</strong></span>
+                <span class="prize-row__p3">3.º <strong>S/ 300</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="prize-note reveal">2.º y 3.er puesto en cada modalidad: premios en medalla, trofeo y diploma según el reglamento oficial.</p>
+      </div>
+    </section>
+
+    <!-- ===================== TIEMPOS — DURACIÓN ===================== -->
+    <section class="cta" id="tiempos">
+      <div class="container">
+        <div class="sec-head reveal">
+          <div>
+            <span class="sec-eyebrow">Reglas</span>
+            <h2 class="sec-title">Tiempos de <em>participación</em></h2>
+          </div>
+          <p class="sec-note">Duración máxima por modalidad, con 45 segundos adicionales de entrada.</p>
+        </div>
+
+        <div class="times">
+          <div class="time-lead reveal">
+            <span class="time-lead__label">Unipersonal</span>
+            <span class="time-lead__val">2–3 <em>min</em></span>
+            <span class="time-lead__scale" aria-hidden="true"><span class="time-lead__fill" style="--w:55%"></span></span>
+            <span class="time-lead__base">Entrada estándar</span>
+          </div>
+          <div class="time-lead reveal">
+            <span class="time-lead__label">Pareja y Dúos</span>
+            <span class="time-lead__val">3 <em>min</em></span>
+            <span class="time-lead__scale" aria-hidden="true"><span class="time-lead__fill" style="--w:70%"></span></span>
+            <span class="time-lead__chip">+ 45 s de entrada</span>
+          </div>
+          <div class="time-lead reveal">
+            <span class="time-lead__label">Ballet tropa</span>
+            <span class="time-lead__val">5 <em>min</em></span>
+            <span class="time-lead__scale" aria-hidden="true"><span class="time-lead__fill" style="--w:92%"></span></span>
+            <span class="time-lead__chip">+ 45 s de entrada</span>
+          </div>
+          <div class="time-lead time-lead--accent reveal">
+            <span class="time-lead__label">Ballet libre</span>
+            <span class="time-lead__val">5 <em>min</em></span>
+            <span class="time-lead__scale" aria-hidden="true"><span class="time-lead__fill" style="--w:100%"></span></span>
+            <span class="time-lead__chip">+ 45 s de entrada</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ORDEN DE PARTICIPACIÓN ===================== -->
+    <section class="cta" id="orden">
+      <div class="container">
+        <div class="sec-head reveal">
+          <div>
+            <span class="sec-eyebrow">Semifinal</span>
+            <h2 class="sec-title">Orden de <em>presentación</em></h2>
+          </div>
+          <p class="sec-note">La semifinal inicia a las 10:00 am. Las agrupaciones que lleven más de dos ballets deberán sacar su ticket por bloque.</p>
+        </div>
+
+        <ol class="order-rail">
+          <li class="order-step reveal">
+            <span class="order-step__num" aria-hidden="true">01</span>
+            <span class="order-step__name">Macho caporal</span>
+          </li>
+          <li class="order-step reveal">
+            <span class="order-step__num" aria-hidden="true">02</span>
+            <span class="order-step__name">Caporalita de Oro</span>
+          </li>
+          <li class="order-step reveal">
+            <span class="order-step__num" aria-hidden="true">03</span>
+            <span class="order-step__name">Dúo macho caporal</span>
+          </li>
+          <li class="order-step reveal">
+            <span class="order-step__num" aria-hidden="true">04</span>
+            <span class="order-step__name">Dúo caporalitas</span>
+          </li>
+          <li class="order-step reveal">
+            <span class="order-step__num" aria-hidden="true">05</span>
+            <span class="order-step__name">Tropas macho caporal</span>
+          </li>
+          <li class="order-step reveal">
+            <span class="order-step__num" aria-hidden="true">06</span>
+            <span class="order-step__name">Tropas caporalitas</span>
+          </li>
+          <li class="order-step reveal">
+            <span class="order-step__num" aria-hidden="true">07</span>
+            <span class="order-step__name">Categoría Pareja libre</span>
+          </li>
+          <li class="order-step order-step--final reveal">
+            <span class="order-step__num" aria-hidden="true">08</span>
+            <span class="order-step__name">Categoría Ballet libre</span>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===================== LA GRAN FINAL — DISEÑO EDITORIAL MEJORADO ===================== -->
+    <section class="cta" id="final">
+      <div class="container">
+        <div class="sec-head reveal">
+          <div>
+            <span class="sec-eyebrow">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
+              Gran final
+            </span>
+            <h2 class="sec-title">Cómo se define la <em>ganadora</em></h2>
+          </div>
+          <p class="sec-note">Reglas de clasificación y desempate para la etapa decisiva del concurso.</p>
+        </div>
+
+        <!-- Grid de 2 columnas con layout interesante -->
+        <div class="final-layout">
+          <!-- Columna izquierda: Reglas principales -->
+          <div class="final-col final-col--main">
+            <!-- Regla destacada con imagen -->
+            <article class="final-card final-card--hero reveal">
+              <div class="final-card__visual">
+                <div class="final-card__image">
+                  <img src="fotos/ballets/ballet1.png" alt="Ballet en competencia" loading="lazy">
+                  <div class="final-card__image-overlay"></div>
+                </div>
+                <div class="final-card__badge">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 21h8M12 17v4M8 4h8v6a4 4 0 0 1-8 0V4Z"/></svg>
+                  Regla principal
+                </div>
+              </div>
+              <div class="final-card__body">
+                <div class="final-card__header">
+                  <span class="final-card__num">01</span>
+                  <h3 class="final-card__title">Clasificación a la gran final</h3>
+                </div>
+                <p class="final-card__text">Pasan a la gran final <strong>2 instituciones por bloque</strong>, las de mayor puntaje. En caso de empate, pasan las empatadas.</p>
+              </div>
+            </article>
+
+            <!-- Regla 02 -->
+            <article class="final-card reveal">
+              <div class="final-card__body">
+                <div class="final-card__header">
+                  <span class="final-card__num">02</span>
+                  <div class="final-card__icon">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  </div>
+                </div>
+                <h3 class="final-card__title">Límite por bloque</h3>
+                <p class="final-card__text">Los bloques tienen <strong>máximo 5 participantes</strong>. Si se supera, pasa el 40% del total.</p>
+              </div>
+            </article>
+
+            <!-- Regla 03 -->
+            <article class="final-card reveal">
+              <div class="final-card__body">
+                <div class="final-card__header">
+                  <span class="final-card__num">03</span>
+                  <div class="final-card__icon">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M7 12h10M10 18h4"/></svg>
+                  </div>
+                </div>
+                <h3 class="final-card__title">Orden de presentación</h3>
+                <p class="final-card__text">El orden de la etapa final es <strong>de menor a mayor puntaje</strong>.</p>
+              </div>
+            </article>
+          </div>
+
+          <!-- Columna derecha: Desempates con visual -->
+          <div class="final-col final-col--side">
+            <!-- Visual de desempates -->
+            <div class="final-visual reveal">
+              <div class="final-visual__images">
+                <div class="final-visual__img">
+                  <img src="fotos/parejas/pareja1.png" alt="" loading="lazy">
+                </div>
+                <div class="final-visual__img">
+                  <img src="fotos/unipersonal/unipersonal-V1.png" alt="" loading="lazy">
+                </div>
+              </div>
+              <div class="final-visual__label">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M8 4h8v6a4 4 0 0 1-8 0V4Z"/></svg>
+                Sistema de desempate
+              </div>
+            </div>
+
+            <!-- Regla 04 - Desempate 1er puesto -->
+            <article class="final-card final-card--accent reveal">
+              <div class="final-card__body">
+                <div class="final-card__header">
+                  <span class="final-card__num final-card__num--gold">04</span>
+                  <div class="final-card__icon-large">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M8 4h8v6a4 4 0 0 1-8 0V4Z"/></svg>
+                  </div>
+                </div>
+                <h3 class="final-card__title">Empate en 1.er puesto</h3>
+                <p class="final-card__text">Se vuelve a bailar. Si persiste el empate, lo decide el jurado sumando <strong>Mensaje y Expresión</strong>.</p>
+              </div>
+            </article>
+
+            <!-- Regla 05 - Desempate 2do puesto -->
+            <article class="final-card final-card--accent reveal">
+              <div class="final-card__body">
+                <div class="final-card__header">
+                  <span class="final-card__num final-card__num--gold">05</span>
+                  <div class="final-card__icon-large">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M8 3H3v5M12 15c-1.1 0-2-.9-2-2V8h4v5c0 1.1-.9 2-2 2zM12 15v6M9 21h6"/></svg>
+                  </div>
+                </div>
+                <h3 class="final-card__title">Empate en 2.º puesto</h3>
+                <p class="final-card__text">No se vuelve a bailar. Lo define el jurado sumando <strong>Mensaje y Expresión</strong>.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== MOTIVOS DE DESCALIFICACIÓN ===================== -->
+    <section class="cta" id="descalificacion">
+      <div class="container">
+        <div class="sec-head reveal">
+          <div>
+            <span class="sec-eyebrow">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+              Reglas
+            </span>
+            <h2 class="sec-title">Se descalifica <em>por:</em></h2>
+          </div>
+          <p class="sec-note">Normas de respeto, disciplina y competencia leal durante todo el evento.</p>
+        </div>
+
+        <!-- Layout simple: imagen arriba + lista abajo en 2 columnas -->
+        <div class="rules-container">
+          <!-- Hero visual -->
+          <div class="rules-hero reveal">
+            <div class="rules-hero__image">
+              <img src="fotos/parejas/pareja3.png" alt="Ballet en competencia" loading="lazy">
+              <div class="rules-hero__overlay"></div>
+            </div>
+            <div class="rules-hero__badge">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <span>Fair Play — Competencia leal y respetuosa</span>
+            </div>
+          </div>
+
+          <!-- Tabla compacta de 3 columnas -->
+          <div class="rules-table reveal">
+            <div class="rules-row">
+              <span class="rules-table__num">01</span>
+              <p class="rules-table__text">No estar presente en el escenario al <strong>tercer llamado</strong>.</p>
+            </div>
+            
+            <div class="rules-row">
+              <span class="rules-table__num">02</span>
+              <p class="rules-table__text">Encender <strong>artefactos pirotécnicos</strong> (bombardas).</p>
+            </div>
+            
+            <div class="rules-row">
+              <span class="rules-table__num">03</span>
+              <p class="rules-table__text">Cambiar el <strong>orden de participación</strong> entre instituciones.</p>
+            </div>
+            
+            <div class="rules-row">
+              <span class="rules-table__num">04</span>
+              <p class="rules-table__text">Bailar en estado de <strong>ebriedad</strong> o consumir alcohol durante el concurso.</p>
+            </div>
+            
+            <div class="rules-row">
+              <span class="rules-table__num">05</span>
+              <p class="rules-table__text">Presentar integrantes que hayan bailado en la semifinal por <strong>otra institución</strong>.</p>
+            </div>
+            
+            <div class="rules-row">
+              <span class="rules-table__num">06</span>
+              <p class="rules-table__text">Presentar integrantes de <strong>Lima</strong> cuando la institución viene de <strong>provincia</strong>.</p>
+            </div>
+            
+            <div class="rules-row">
+              <span class="rules-table__num">07</span>
+              <p class="rules-table__text">Palabras, gestos o actos <strong>reñidos contra la moral</strong> hacia jurados u organizadores.</p>
+            </div>
+            
+            <div class="rules-row rules-row--critical">
+              <span class="rules-table__num">08</span>
+              <p class="rules-table__text">Enviar a miembros o padres a realizar <strong>reclamos fuera de la mesa oficial</strong>: eliminación automática sin devolución; el agresor puede ser sancionado hasta por 1 año.</p>
+            </div>
+            
+            <div class="rules-row">
+              <span class="rules-table__num">09</span>
+              <p class="rules-table__text">Incumplir normas de <strong>respeto y disciplina</strong> antes, durante o después del evento.</p>
+            </div>
+            
+            <div class="rules-row">
+              <span class="rules-table__num">10</span>
+              <p class="rules-table__text">Un <strong>varón no puede bailar de mujer</strong> y viceversa.</p>
+            </div>
+            
+            <div class="rules-row">
+              <span class="rules-table__num">11</span>
+              <p class="rules-table__text">Presentar en la final a una <strong>pareja o integrante que no clasificó</strong> en la semifinal.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== DEL JURADO — SPLIT LAYOUT ===================== -->
+    <section class="cta" id="jurado">
+      <div class="container">
+        <div class="sec-head reveal">
+          <div>
+            <span class="sec-eyebrow">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
+              Del jurado
+            </span>
+            <h2 class="sec-title">Calificación y <em>reclamos</em></h2>
+          </div>
+        </div>
+
+        <!-- Layout split: reglas + veredicto -->
+        <div class="jury-layout">
+          <!-- Columna izquierda: Lista numerada simple -->
+          <div class="jury-rules reveal">
+            <ol class="jury-list">
+              <li>
+                <span class="jury-list__num">01</span>
+                <p>Jurado conformado por <strong>especialistas del folklore y la danza</strong>: máximo 4, mínimo 3.</p>
+              </li>
+              <li>
+                <span class="jury-list__num">02</span>
+                <p>La calificación será en la modalidad de <strong>paleta a mano alzada</strong>.</p>
+              </li>
+              <li>
+                <span class="jury-list__num">03</span>
+                <p>Los reclamos solo los hace el <strong>delegado</strong> y deben quedar grabados de inicio a fin.</p>
+              </li>
+              <li>
+                <span class="jury-list__num">04</span>
+                <p>Chicote de Oro garantiza <strong>autonomía, idoneidad e imparcialidad</strong>.</p>
+              </li>
+            </ol>
+          </div>
+
+          <!-- Columna derecha: Veredicto destacado -->
+          <div class="jury-verdict reveal">
+            <div class="jury-verdict__icon">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M8 4h8v6a4 4 0 0 1-8 0V4Z"/></svg>
+            </div>
+            <div class="jury-verdict__content">
+              <span class="jury-verdict__label">Veredicto final</span>
+              <h3 class="jury-verdict__title">El fallo del jurado es inapelable</h3>
+              <p class="jury-verdict__note">Las decisiones del jurado son definitivas y no admiten apelación ni revisión.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CTA FINAL — HERO GRANDE ===================== -->
+    <section class="cta" id="contacto">
+      <div class="container">
+        <div class="cta-hero reveal">
+          <div class="cta-hero__bg">
+            <img src="fotos/ballets/ballet3.png" alt="" loading="lazy">
+            <div class="cta-hero__overlay"></div>
+          </div>
+          <div class="cta-hero__content">
+            <span class="cta-hero__eyebrow">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
+              Participa
+            </span>
+            <h2 class="cta-hero__title">¿Listo para <em>brillar</em>?</h2>
+            <p class="cta-hero__text">Inscríbete por Yape al <strong>926 266 295</strong> antes del 12 de agosto y sé parte del VII Concurso Nacional de Caporales.</p>
+            <div class="cta-hero__actions">
+              <a class="btn btn-gold" href="https://wa.me/51926266295" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                <span>Inscribirme por WhatsApp</span>
+              </a>
+              <a class="btn btn-outline" href="#inscripcion">
+                <span>Ver proceso de inscripción</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===================== PIE DE PÁGINA ===================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-main">
+        <!-- Columna branding -->
+        <div class="footer-brand">
+          <a class="brand" href="#hero" aria-label="Chicote de Oro — inicio">
+            <img class="brand-logo" src="logo/logo.png" alt="" width="960" height="955">
+            <div class="brand-text">
+              <span class="brand-title-text">Chicote de Oro</span>
+              <span class="brand-subtitle">Elegancia en movimiento</span>
+            </div>
+          </a>
+          <p class="footer-desc">
+            Asociación Cultural dedicada a promover y celebrar la danza de caporales con excelencia y pasión.
+          </p>
+          <div class="footer-social">
+            <a href="https://www.facebook.com/profile.php?id=61551954963131" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href="https://wa.me/51926266295" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            </a>
+            <a href="mailto:mbravomend@gmail.com" target="_blank" rel="noopener noreferrer" aria-label="Correo electrónico">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Columna navegación rápida -->
+        <div class="footer-links">
+          <h3 class="footer-links-title">Navegación</h3>
+          <ul class="footer-nav">
+            <li><a href="#experiencia">Datos del concurso</a></li>
+            <li><a href="#inscripcion">Inscripción</a></li>
+            <li><a href="#costos">Costos y tarifas</a></li>
+            <li><a href="#premios">Premios</a></li>
+            <li><a href="#criterios">Criterios</a></li>
+            <li><a href="#orden">Reglas</a></li>
+          </ul>
+        </div>
+
+        <!-- Columna acceso rápido -->
+        <div class="footer-links">
+          <h3 class="footer-links-title">Acceso rápido</h3>
+          <ul class="footer-nav">
+            <li><a (click)="replayIntro()" role="button" tabindex="0">Ver animación</a></li>
+            <li><a routerLink="/admin">Administración</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+          </ul>
+        </div>
+
+        <!-- Columna contacto -->
+        <div class="footer-links footer-contact">
+          <h3 class="footer-links-title">Contacto</h3>
+          <ul class="footer-nav footer-contact-list">
+            <li>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <a href="tel:+51926266295">+51 926 266 295</a>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <a href="mailto:mbravomend@gmail.com">mbravomend@gmail.com</a>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Imperial, Cañete</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer bottom -->
+      <div class="footer-bottom">
+        <p class="footer-copy">© 2026 Chicote de Oro. Todos los derechos reservados.</p>
+        <div class="footer-badge">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
+          <span>VII Edición · 2026</span>
+        </div>
+      </div>
+    </div>
+  </footer>

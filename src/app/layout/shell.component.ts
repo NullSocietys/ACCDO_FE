@@ -17,7 +17,6 @@ interface NavItem {
   label: string;
   path: string;
   icon: string;
-  index: string;
 }
 
 interface NavGroup {
@@ -45,47 +44,43 @@ export class ShellComponent {
   readonly collapsed = signal(false);
   readonly mobileOpen = signal(false);
   readonly navigating = signal(false);
-  readonly pageTitle = signal('Principal');
+  readonly pageTitle = signal('Dashboard');
   readonly sectionLabel = signal('General');
 
-  readonly navGroups: NavGroup[] = (() => {
-    let n = 0;
-    const idx = () => String(++n).padStart(2, '0');
-    return [
-      {
-        label: 'General',
-        items: [{ label: 'Principal', path: '/', icon: 'layoutDashboard', index: idx() }],
-      },
-      {
-        label: 'Gestión',
-        items: [
-          { label: 'Eventos', path: '/eventos', icon: 'calendar', index: idx() },
-          { label: 'Inscripciones', path: '/inscripciones', icon: 'clipboardList', index: idx() },
-          { label: 'Participantes', path: '/participantes', icon: 'users', index: idx() },
-          { label: 'Pagos', path: '/pagos', icon: 'creditCard', index: idx() },
-        ],
-      },
-      {
-        label: 'Sistema',
-        items: [
-          { label: 'Resultados', path: '/resultados', icon: 'trophy', index: idx() },
-          { label: 'Bases', path: '/bases', icon: 'fileText', index: idx() },
-          { label: 'Configuración', path: '/configuracion', icon: 'settings', index: idx() },
-        ],
-      },
-    ];
-  })();
+  readonly navGroups: NavGroup[] = [
+    {
+      label: 'General',
+      items: [{ label: 'Dashboard', path: '/admin', icon: 'layoutDashboard' }],
+    },
+    {
+      label: 'Gestión',
+      items: [
+        { label: 'Eventos', path: '/admin/eventos', icon: 'calendar' },
+        { label: 'Inscripciones', path: '/admin/inscripciones', icon: 'clipboardList' },
+        { label: 'Participantes', path: '/admin/participantes', icon: 'users' },
+        { label: 'Pagos', path: '/admin/pagos', icon: 'creditCard' },
+      ],
+    },
+    {
+      label: 'Sistema',
+      items: [
+        { label: 'Resultados', path: '/admin/resultados', icon: 'trophy' },
+        { label: 'Bases', path: '/admin/bases', icon: 'fileText' },
+        { label: 'Configuración', path: '/admin/configuracion', icon: 'settings' },
+      ],
+    },
+  ];
 
   private readonly titles: Record<string, { title: string; section: string }> = {
-    '/': { title: 'Principal', section: 'General' },
-    '/eventos': { title: 'Eventos', section: 'Gestión' },
-    '/inscripciones': { title: 'Inscripciones', section: 'Gestión' },
-    '/inscripciones/nueva': { title: 'Nueva inscripción', section: 'Gestión' },
-    '/participantes': { title: 'Participantes', section: 'Gestión' },
-    '/pagos': { title: 'Pagos', section: 'Gestión' },
-    '/resultados': { title: 'Resultados', section: 'Sistema' },
-    '/bases': { title: 'Bases del concurso', section: 'Sistema' },
-    '/configuracion': { title: 'Configuración', section: 'Sistema' },
+    '/admin': { title: 'Dashboard', section: 'General' },
+    '/admin/eventos': { title: 'Eventos', section: 'Gestión' },
+    '/admin/inscripciones': { title: 'Inscripciones', section: 'Gestión' },
+    '/admin/inscripciones/nueva': { title: 'Nueva inscripción', section: 'Gestión' },
+    '/admin/participantes': { title: 'Participantes', section: 'Gestión' },
+    '/admin/pagos': { title: 'Pagos', section: 'Gestión' },
+    '/admin/resultados': { title: 'Resultados', section: 'Sistema' },
+    '/admin/bases': { title: 'Bases del concurso', section: 'Sistema' },
+    '/admin/configuracion': { title: 'Configuración', section: 'Sistema' },
   };
 
   constructor() {
