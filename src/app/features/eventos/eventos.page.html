@@ -33,8 +33,6 @@
       icon="calendar"
       title="No hay eventos"
       description="Cree el primer concurso para comenzar a recibir inscripciones."
-      actionLabel="Nuevo evento"
-      (actioned)="openCreate()"
     />
   } @else {
     @if (featured(); as ev) {
@@ -73,7 +71,7 @@
           </ul>
         </div>
         <div class="live__cta">
-          <a routerLink="/inscripciones">
+          <a routerLink="/admin/inscripciones">
             <app-button icon="chevronRight">Inscripciones</app-button>
           </a>
         </div>
@@ -123,9 +121,12 @@
         </div>
 
         <div class="folio__cols" aria-hidden="true">
-          <span>#</span>
           <span>Fecha</span>
-          <span>Evento</span>
+          <span>Nombre</span>
+          <span>Sede</span>
+          <span>Hora</span>
+          <span>Grupos</span>
+          <span>Estado</span>
           <span></span>
         </div>
 
@@ -138,45 +139,39 @@
               [class.is-cancelado]="evento.estado === 'CANCELADO'"
               [class.is-proximo]="evento.estado === 'PROXIMO'"
             >
-              <span class="row__index">{{ rowIndex(i) }}</span>
-
+              <!-- Fecha -->
               <div class="row__date" aria-hidden="true">
                 <span class="row__day">{{ dayOf(evento.fecha) }}</span>
                 <span class="row__mon">{{ monthOf(evento.fecha) }}</span>
                 <span class="row__yr">{{ yearOf(evento.fecha) }}</span>
               </div>
 
-              <div class="row__body">
-                <div class="row__title">
-                  <h3>{{ evento.nombre }}</h3>
-                  <app-badge [tone]="statusTone(evento.estado)" [dot]="false">
-                    {{ statusLabel(evento.estado) }}
-                  </app-badge>
-                </div>
-                <p class="row__desc">{{ evento.descripcion }}</p>
-                <ul class="row__facts">
-                  <li>
-                    <span class="k">Horario</span>
-                    <span class="v">
-                      {{ weekdayOf(evento.fecha) }} · {{ evento.hora }} h
-                      @if (countdownLabel(evento); as cd) {
-                        <span class="v--gold"> · {{ cd }}</span>
-                      }
-                    </span>
-                  </li>
-                  <li>
-                    <span class="k">Sede</span>
-                    <span class="v" [attr.title]="evento.lugar">{{ evento.lugar }}</span>
-                  </li>
-                  <li>
-                    <span class="k">Grupos</span>
-                    <span class="v">{{ gruposDe(evento.id) }}</span>
-                  </li>
-                  <li>
-                    <span class="k">Elenco</span>
-                    <span class="v">{{ integrantesDe(evento.id) }}</span>
-                  </li>
-                </ul>
+              <!-- Nombre -->
+              <div class="row__cell">
+                <h3>{{ evento.nombre }}</h3>
+                <span class="row__sub">{{ evento.descripcion }}</span>
+              </div>
+
+              <!-- Sede -->
+              <div class="row__cell">
+                <span class="row__text" [attr.title]="evento.lugar">{{ evento.lugar }}</span>
+              </div>
+
+              <!-- Hora -->
+              <div class="row__cell">
+                <span class="row__text">{{ evento.hora }} h</span>
+              </div>
+
+              <!-- Grupos -->
+              <div class="row__cell">
+                <span class="row__text">{{ gruposDe(evento.id) }}</span>
+              </div>
+
+              <!-- Estado -->
+              <div class="row__cell">
+                <app-badge [tone]="statusTone(evento.estado)" [dot]="false">
+                  {{ statusLabel(evento.estado) }}
+                </app-badge>
               </div>
 
               <div class="row__actions">

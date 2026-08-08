@@ -4,9 +4,7 @@
 
 .kpi-board {
   display: grid;
-  gap: 0;
-  border: 1px solid var(--color-border);
-  background: var(--color-card);
+  gap: 12px;
 }
 
 .kpi-board--cols-2 {
@@ -30,19 +28,18 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 12px;
-  min-height: 112px;
-  padding: 18px 20px 16px;
-  background: transparent;
-  border: 0;
-  border-right: 1px solid var(--color-border);
-  border-radius: 0;
+  gap: 10px;
+  min-height: 92px;
+  padding: 12px 18px 12px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
   box-shadow: none;
   overflow: hidden;
 }
 
 .kpi:last-child {
-  border-right: 0;
+  border-right: 1px solid var(--color-border);
 }
 
 .kpi__top {
@@ -59,10 +56,10 @@
 }
 
 .kpi__label {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   font-weight: 550;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-muted-foreground);
   line-height: 1.25;
@@ -130,35 +127,12 @@
   .kpi-board--cols-5 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
-  .kpi-board--cols-5 .kpi:nth-child(3n) {
-    border-right: 0;
-  }
-
-  .kpi-board--cols-5 .kpi:nth-child(n + 4) {
-    border-top: 1px solid var(--color-border);
-  }
 }
 
 @media (max-width: 1100px) {
   .kpi-board--cols-4,
   .kpi-board--cols-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .kpi-board--cols-4 .kpi,
-  .kpi-board--cols-3 .kpi {
-    border-right: 1px solid var(--color-border);
-  }
-
-  .kpi-board--cols-4 .kpi:nth-child(2n),
-  .kpi-board--cols-3 .kpi:nth-child(2n) {
-    border-right: 0;
-  }
-
-  .kpi-board--cols-4 .kpi:nth-child(n + 3),
-  .kpi-board--cols-3 .kpi:nth-child(n + 3) {
-    border-top: 1px solid var(--color-border);
   }
 }
 
@@ -174,18 +148,6 @@
   .kpi {
     min-height: 0;
     padding: 16px 18px;
-    border-right: 0;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .kpi:last-child {
-    border-bottom: 0;
-  }
-
-  .kpi-board--cols-4 .kpi:nth-child(n + 3),
-  .kpi-board--cols-3 .kpi:nth-child(n + 3),
-  .kpi-board--cols-5 .kpi:nth-child(n + 4) {
-    border-top: 0;
   }
 
   .kpi__value {

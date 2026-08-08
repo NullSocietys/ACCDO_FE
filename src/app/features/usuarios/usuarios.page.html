@@ -1,0 +1,242 @@
+<div class="page usuarios">
+  <header class="mast">
+    <div class="mast__copy">
+      <p class="mast__eyebrow">Usuarios · Cuentas</p>
+      <h1>Usuarios</h1>
+      <p class="mast__lead">
+        Cuentas de los delegados y administradores: acceso, restauración y depuración del sistema.
+      </p>
+    </div>
+    <div class="mast__aside">
+      <dl class="mast__pulse" aria-label="Resumen rápido">
+        <div>
+          <dt>Total</dt>
+          <dd>{{ overview().total }}</dd>
+        </div>
+        <div>
+          <dt>Activos</dt>
+          <dd>{{ overview().activos }}</dd>
+        </div>
+        <div class="mast__pulse--gold">
+          <dt>Inactivos</dt>
+          <dd>{{ overview().inactivos }}</dd>
+        </div>
+      </dl>
+      <div class="mast__cta">
+        <app-button icon="plus" [fullWidth]="true" (clicked)="openCreate()">Nuevo usuario</app-button>
+      </div>
+    </div>
+  </header>
+
+  @if (store.usuarios().length + store.usuariosInactivos().length === 0) {
+    <app-empty-state
+      icon="user"
+      title="No hay usuarios"
+      description="Registre la primera cuenta para administrar el panel."
+    />
+  } @else {
+    <div class="controls">
+      <nav class="tabs" role="group" aria-label="Filtrar por estado">
+        @for (f of filtros; track f.key) {
+          <button
+            type="button"
+            class="tabs__btn"
+            [class.is-active]="estadoFiltro() === f.key"
+            [attr.aria-pressed]="estadoFiltro() === f.key"
+            (click)="estadoFiltro.set(f.key); paginaActual.set(1)"
+          >
+            {{ f.label }}
+            <span class="tabs__n">
+              {{ f.key === 'activos' ? store.usuarios().length : store.usuariosInactivos().length }}
+            </span>
+          </button>
+        }
+      </nav>
+      <div class="controls__search">
+        <app-input
+          controlId="us-search"
+          icon="search"
+          [value]="busqueda()"
+          placeholder="Nombre o correo…"
+          (valueChange)="busqueda.set($event); paginaActual.set(1)"
+        />
+      </div>
+    </div>
+
+    @if (filtrados().length === 0) {
+      <app-empty-state
+        icon="search"
+        title="Sin resultados"
+        description="Ningún usuario coincide con los filtros aplicados."
+        actionLabel="Limpiar filtros"
+        actionIcon="x"
+        (actioned)="limpiarFiltros()"
+      />
+    } @else {
+      <section class="folio" aria-label="Listado de usuarios">
+        <div class="folio__head">
+          <h2>{{ estadoFiltro() === 'activos' ? 'Activos' : 'Inactivos' }}</h2>
+          <span>{{ filtrados().length }} de {{ lista().length }}</span>
+        </div>
+
+        <div class="folio__cols" aria-hidden="true">
+          <span></span>
+          <span>Nombre</span>
+          <span>Correo</span>
+          <span>Registro</span>
+          <span>Estado</span>
+          <span></span>
+        </div>
+
+        <div class="folio__list" role="list">
+          @for (usuario of paginado(); track usuario.id; let i = $index) {
+            <article class="row" role="listitem" [class.is-inactivo]="!usuario.activo">
+              <div class="row__avatar" aria-hidden="true">{{ iniciales(usuario) }}</div>
+
+              <div class="row__cell">
+                <h3>{{ usuario.nombre }}</h3>
+              </div>
+
+              <div class="row__cell">
+                <span class="row__text" [attr.title]="usuario.correo">{{ usuario.correo }}</span>
+              </div>
+
+              <div class="row__cell">
+                <span class="row__text">{{ fechaCorta(usuario.createdAt) }}</span>
+              </div>
+
+              <div class="row__cell">
+                <app-badge
+                  [tone]="usuario.activo ? 'success' : 'muted'"
+                  [dot]="usuario.activo"
+                >
+                  {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+                </app-badge>
+              </div>
+
+              <div class="row__actions">
+                @if (usuario.activo) {
+                  <app-button
+                    variant="outline"
+                    size="sm"
+                    icon="pencil"
+                    (clicked)="openEdit(usuario)"
+                  >
+                    Editar
+                  </app-button>
+                  <app-button
+                    variant="ghost"
+                    size="icon"
+                    icon="trash"
+                    ariaLabel="Desactivar usuario"
+                    (clicked)="remove(usuario)"
+                  />
+                } @else {
+                  <app-button variant="outline" size="sm" icon="check" (clicked)="restore(usuario)">
+                    Restaurar
+                  </app-button>
+                  <app-button
+                    variant="ghost"
+                    size="icon"
+                    icon="trash"
+                    ariaLabel="Eliminar definitivamente"
+                    (clicked)="removeFisico(usuario)"
+                  />
+                }
+              </div>
+            </article>
+          }
+        </div>
+
+        @if (totalPaginas() > 1) {
+          <nav class="pagination" aria-label="Paginación">
+            <button
+              class="pag-btn pag-btn--arrow"
+              type="button"
+              [disabled]="paginaActual() === 1"
+              (click)="irAPagina(paginaActual() - 1)"
+              aria-label="Página anterior"
+            >
+              ‹
+            </button>
+
+            @for (p of paginas(); track p) {
+              <button
+                class="pag-btn"
+                type="button"
+                [class.pag-btn--active]="paginaActual() === p"
+                [attr.aria-current]="paginaActual() === p ? 'page' : null"
+                (click)="irAPagina(p)"
+              >
+                {{ p }}
+              </button>
+            }
+
+            <button
+              class="pag-btn pag-btn--arrow"
+              type="button"
+              [disabled]="paginaActual() === totalPaginas()"
+              (click)="irAPagina(paginaActual() + 1)"
+              aria-label="Página siguiente"
+            >
+              ›
+            </button>
+
+            <span class="pag-info">
+              {{ (paginaActual() - 1) * pageSize + 1 }}–{{ paginaActual() * pageSize > filtrados().length ? filtrados().length : paginaActual() * pageSize }} de {{ filtrados().length }}
+            </span>
+          </nav>
+        }
+      </section>
+    }
+  }
+</div>
+
+<app-modal
+  [open]="modalOpen()"
+  label="Usuario"
+  [title]="editingId() ? 'Editar usuario' : 'Nuevo usuario'"
+  description="Cuenta de acceso al panel de administración."
+  (closed)="modalOpen.set(false)"
+>
+  <div class="sheet">
+    <div class="sheet__grid sheet__grid--form">
+      <div>
+        <label class="k" for="us-nombre">Nombre</label>
+        <app-input
+          controlId="us-nombre"
+          [value]="form().nombre"
+          placeholder="Nombre completo"
+          (valueChange)="patch({ nombre: $event })"
+        />
+      </div>
+      <div>
+        <label class="k" for="us-correo">Correo</label>
+        <app-input
+          controlId="us-correo"
+          type="email"
+          icon="mail"
+          [value]="form().correo"
+          placeholder="usuario@correo.com"
+          (valueChange)="patch({ correo: $event })"
+        />
+      </div>
+      <div class="sheet__wide">
+        <label class="k" for="us-password">Contraseña</label>
+        <app-input
+          controlId="us-password"
+          type="password"
+          icon="settings"
+          [value]="form().password"
+          [placeholder]="editingId() ? 'Dejar en blanco para no cambiarla' : 'Mínimo 8 caracteres'"
+          (valueChange)="patch({ password: $event })"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div modal-footer>
+    <app-button variant="outline" (clicked)="modalOpen.set(false)">Cancelar</app-button>
+    <app-button icon="save" (clicked)="save()">Guardar</app-button>
+  </div>
+</app-modal>

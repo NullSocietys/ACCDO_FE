@@ -187,27 +187,26 @@ export class EventosPage {
     this.form.update((f) => ({ ...f, ...partial }));
   }
 
-  save(): void {
+  async save(): Promise<void> {
     const data = this.form();
     if (!data.nombre || !data.fecha || !data.hora || !data.lugar) {
       this.toast.warning('Complete los campos obligatorios');
       return;
     }
+    const { createdAt: _c, ...payload } = data;
     const id = this.editingId();
-    if (id) {
-      this.store.updateEvento({ id, ...data, estado: data.estado as EventoEstado });
-      this.toast.success('Evento actualizado');
-    } else {
-      this.store.addEvento({
-        id: crypto.randomUUID(),
-        ...data,
-        estado: data.estado as EventoEstado,
-        activo: true,
-        createdAt: new Date().toISOString(),
-      });
-      this.toast.success('Evento creado');
+    try {
+      if (id) {
+        await this.store.updateEvento(id, payload);
+        this.toast.success('Evento actualizado');
+      } else {
+        await this.store.addEvento(payload);
+        this.toast.success('Evento creado');
+      }
+      this.modalOpen.set(false);
+    } catch (err) {
+      this.toast.error('No se pudo guardar', (err as Error).message);
     }
-    this.modalOpen.set(false);
   }
 
   async remove(evento: Evento): Promise<void> {
@@ -218,7 +217,11 @@ export class EventosPage {
       tone: 'danger',
     });
     if (!ok) return;
-    this.store.removeEvento(evento.id);
-    this.toast.success('Evento eliminado');
+    try {
+      await this.store.removeEvento(evento.id);
+      this.toast.success('Evento eliminado');
+    } catch (err) {
+      this.toast.error('No se pudo eliminar', (err as Error).message);
+    }
   }
 }

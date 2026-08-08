@@ -3,21 +3,11 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
-  CATEGORIAS,
-  CATEGORIAS_DB,
   DEPARTAMENTOS,
   DISTRITOS,
-  MONTOS_POR_CATEGORIA,
   PROVINCIAS,
 } from '../../core/data/mock-data';
-import {
-  Inscripcion,
-  Pago,
-  PagoMetodo,
-  Participante,
-  Responsable,
-  Sexo,
-} from '../../core/models';
+import { PagoMetodo, Sexo } from '../../core/models';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
 import { IconComponent } from '../../shared/icons/icon.component';
@@ -52,8 +42,10 @@ export class InscripcionWizardPage {
   private readonly toast = inject(ToastService);
 
   readonly Number = Number;
-  readonly categorias = CATEGORIAS;
   readonly departamentos = DEPARTAMENTOS;
+
+  /** Modalidades reales de la BD (store), con su precio real. */
+  readonly categorias = computed(() => this.store.categorias());
 
   readonly step = signal(1);
   readonly success = signal(false);
@@ -71,7 +63,6 @@ export class InscripcionWizardPage {
     eventoId: '',
     categoria: '',
     grupo: '',
-    academia: '',
     cantidadIntegrantes: 0,
   });
 
@@ -102,7 +93,8 @@ export class InscripcionWizardPage {
 
   readonly monto = computed(() => {
     const cat = this.step1().categoria;
-    return cat ? (MONTOS_POR_CATEGORIA[cat] ?? 0) : 0;
+    if (!cat) return 0;
+    return this.store.categorias().find((c) => c.nombre === cat)?.precio ?? 0;
   });
 
   readonly eventoNombre = computed(() => {
@@ -173,7 +165,7 @@ export class InscripcionWizardPage {
   validateStep(n: number): boolean {
     if (n === 1) {
       const s = this.step1();
-      if (!s.eventoId || !s.categoria || !s.grupo || !s.academia || !s.cantidadIntegrantes) {
+      if (!s.eventoId || !s.categoria || !s.grupo || !s.cantidadIntegrantes) {
         this.toast.warning('Complete los datos del grupo');
         return false;
       }
@@ -198,89 +190,71 @@ export class InscripcionWizardPage {
     return true;
   }
 
-  submit(): void {
+  async submit(): Promise<void> {
     if (!this.validateStep(4)) return;
-    if (!this.pago().numeroOperacion && this.pago().metodo !== 'EFECTIVO') {
+    const pagoForm = this.pago();
+    if (!pagoForm.numeroOperacion && pagoForm.metodo !== 'EFECTIVO') {
       this.toast.warning('Ingrese el número de operación');
       return;
     }
     this.saving.set(true);
-    window.setTimeout(() => {
-      const now = new Date().toISOString();
-      const codigo = `CDO-2026-${String(this.store.inscripciones().length + 1).padStart(3, '0')}`;
-      const id = crypto.randomUUID();
+    try {
       const s1 = this.step1();
       const s2 = this.step2();
-      const categoriaId =
-        CATEGORIAS_DB.find((c) => c.nombre === s1.categoria)?.id ??
-        this.store.categorias().find((c) => c.nombre === s1.categoria)?.id ??
-        '';
-      const responsableId = crypto.randomUUID();
+      const categoria = this.store.categorias().find((c) => c.nombre === s1.categoria);
+      if (!categoria) {
+        this.toast.error('La modalidad seleccionada no existe en el sistema');
+        this.saving.set(false);
+        return;
+      }
+      const usuarioId = this.store.usuarios()[0]?.id ?? null;
+      if (!usuarioId) {
+        this.toast.error('No hay un usuario delegado registrado');
+        this.saving.set(false);
+        return;
+      }
 
-      const responsable: Responsable = {
-        id: responsableId,
-        nombres: s2.nombres,
-        apellidos: s2.apellidos,
-        dni: s2.dni,
-        telefono: s2.telefono,
-        correo: s2.correo,
-        departamento: s2.departamento,
-        provincia: s2.provincia,
-        distrito: s2.distrito,
-        activo: true,
-        createdAt: now,
-      };
+      const inscripcion = await this.store.crearInscripcion(
+        {
+          usuarioId,
+          eventoId: s1.eventoId,
+          categoriaId: categoria.id,
+          nombreGrupo: s1.grupo,
+          observaciones: '',
+          responsable: {
+            nombres: s2.nombres,
+            apellidos: s2.apellidos,
+            dni: s2.dni,
+            telefono: s2.telefono,
+            correo: s2.correo,
+            departamento: s2.departamento,
+            provincia: s2.provincia,
+            distrito: s2.distrito,
+          },
+          participantes: this.participantes().map((p) => ({
+            nombres: p.nombre,
+            apellidos: p.apellido,
+            dni: p.dni,
+            edad: p.edad ?? 0,
+            sexo: p.sexo as Sexo,
+          })),
+        },
+        {
+          monto: this.monto(),
+          metodoPago: this.pago().metodo,
+          numeroOperacion: this.pago().numeroOperacion,
+          comprobante: this.pago().comprobanteNombre || undefined,
+        },
+      );
 
-      const inscripcion: Inscripcion = {
-        id,
-        codigo,
-        eventoId: s1.eventoId,
-        categoriaId,
-        usuarioId: null,
-        institucion: s1.academia,
-        responsableId,
-        academia: s1.academia,
-        nombreGrupo: s1.grupo,
-        cantidadIntegrantes: s1.cantidadIntegrantes,
-        total: this.monto(),
-        estado: 'PENDIENTE',
-        observaciones: '',
-        activo: true,
-        createdAt: now,
-      };
-
-      const participantes: Participante[] = this.participantes().map((p) => ({
-        id: crypto.randomUUID(),
-        inscripcionId: id,
-        nombres: p.nombre,
-        apellidos: p.apellido,
-        dni: p.dni,
-        edad: p.edad ?? 0,
-        sexo: p.sexo as Sexo,
-        activo: true,
-        createdAt: now,
-      }));
-
-      const pago: Pago = {
-        id: crypto.randomUUID(),
-        inscripcionId: id,
-        monto: this.monto(),
-        metodoPago: this.pago().metodo,
-        numeroOperacion: this.pago().numeroOperacion,
-        comprobante: this.pago().comprobanteNombre || '',
-        estado: 'PENDIENTE',
-        fechaPago: now.slice(0, 10),
-        observaciones: '',
-        activo: true,
-        createdAt: now,
-      };
-
-      this.store.addInscripcion(inscripcion, participantes, pago, responsable);
-      this.resultCodigo.set(codigo);
+      this.resultCodigo.set(inscripcion.codigo);
       this.saving.set(false);
       this.success.set(true);
-      this.toast.success('Inscripción registrada', codigo);
-    }, 700);
+      this.toast.success('Inscripción registrada', inscripcion.codigo);
+    } catch (err) {
+      this.saving.set(false);
+      this.toast.error('No se pudo registrar la inscripción', (err as Error).message);
+    }
   }
 
   downloadComprobante(): void {

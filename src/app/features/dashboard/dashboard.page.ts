@@ -30,13 +30,13 @@ export class DashboardPage {
     const ins = this.store.inscripcionesView().filter((i) => i.estado !== 'RECHAZADA');
     const pagos = this.store.pagosView();
     const pendientes = pagos.filter((p) => p.estado === 'PENDIENTE').length;
-    const verificados = pagos.filter((p) => p.estado === 'VERIFICADO');
-    const ingresos = verificados.reduce((sum, p) => sum + p.monto, 0);
+    const confirmados = pagos.filter((p) => p.estado === 'CONFIRMADO');
+    const ingresos = confirmados.reduce((sum, p) => sum + p.monto, 0);
     const activos = this.store.eventos().filter((e) => e.estado === 'ACTIVO').length;
     return {
       grupos: ins.length,
       pendientes,
-      verificados: verificados.length,
+      confirmados: confirmados.length,
       ingresos,
       activos,
     };
@@ -47,12 +47,12 @@ export class DashboardPage {
     return activos[0] ?? null;
   });
 
-  readonly chartTotal = computed(() => this.store.chart.reduce((sum, c) => sum + c.value, 0));
+  readonly chartTotal = computed(() => this.store.chart().reduce((sum, c) => sum + c.value, 0));
 
   readonly chartRows = computed(() => {
     const total = this.chartTotal() || 1;
-    const max = Math.max(...this.store.chart.map((c) => c.value), 1);
-    return [...this.store.chart]
+    const max = Math.max(...this.store.chart().map((c) => c.value), 1);
+    return [...this.store.chart()]
       .sort((a, b) => b.value - a.value)
       .map((c, i) => ({
         index: String(i + 1).padStart(2, '0'),

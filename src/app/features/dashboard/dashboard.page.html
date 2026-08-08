@@ -33,10 +33,10 @@
           </div>
         </dl>
         <div class="mast__actions">
-          <a routerLink="/inscripciones/nueva">
+          <a routerLink="/admin/inscripciones/nueva">
             <app-button icon="plus" [fullWidth]="true">Nueva inscripción</app-button>
           </a>
-          <a routerLink="/eventos">
+          <a routerLink="/admin/eventos">
             <app-button variant="outline" icon="calendar" [fullWidth]="true">Eventos</app-button>
           </a>
         </div>
@@ -50,7 +50,7 @@
           <strong>{{ overview().pendientes }} comprobantes</strong>
           esperan verificación en caja.
         </p>
-        <a routerLink="/pagos" class="strip__link">Ir a pagos →</a>
+        <a routerLink="/admin/pagos" class="strip__link">Ir a pagos →</a>
       </aside>
     }
 
@@ -65,71 +65,73 @@
           <h2>{{ ev.nombre }}</h2>
           <p class="live__meta">{{ ev.hora }} h · {{ ev.lugar }}</p>
         </div>
-        <a routerLink="/inscripciones" class="live__cta">
+        <a routerLink="/admin/inscripciones" class="live__cta">
           <app-button variant="outline" size="sm" icon="chevronRight">Inscripciones</app-button>
         </a>
       </section>
     }
 
     <div class="board">
-      <section class="folio folio--rank" aria-label="Inscripciones por modalidad">
-        <div class="folio__head">
-          <h2>Modalidades</h2>
-          <span>{{ chartTotal() }} grupos</span>
-        </div>
-
-        <div class="rank-pulse" role="img" [attr.aria-label]="chartAria()">
-          <div>
-            <span class="k">Total</span>
-            <b>{{ chartTotal() }}</b>
+      @if (store.categorias().length > 0) {
+        <section class="folio folio--rank" aria-label="Inscripciones por modalidad">
+          <div class="folio__head">
+            <h2>Modalidades</h2>
+            <span>{{ chartTotal() }} grupos</span>
           </div>
-          <div class="rank-pulse--gold">
-            <span class="k">Líder</span>
-            <b [attr.title]="peakCategory()?.label">{{ peakCategory()?.label }}</b>
-          </div>
-          <div>
-            <span class="k">Peso</span>
-            <b>{{ peakCategory()?.pct }}%</b>
-          </div>
-        </div>
 
-        <div class="folio__cols folio__cols--rank" aria-hidden="true">
-          <span>#</span>
-          <span>Modalidad</span>
-          <span>Grupos</span>
-        </div>
+          <div class="rank-pulse" role="img" [attr.aria-label]="chartAria()">
+            <div>
+              <span class="k">Total</span>
+              <b>{{ chartTotal() }}</b>
+            </div>
+            <div class="rank-pulse--gold">
+              <span class="k">Líder</span>
+              <b [attr.title]="peakCategory()?.label">{{ peakCategory()?.label }}</b>
+            </div>
+            <div>
+              <span class="k">Peso</span>
+              <b>{{ peakCategory()?.pct }}%</b>
+            </div>
+          </div>
 
-        <div class="rank-list" role="list">
-          @for (row of chartRows(); track row.label) {
-            <div class="rank" role="listitem" [class.is-peak]="row.isPeak">
-              <span class="rank__index">{{ row.index }}</span>
-              <div class="rank__main">
-                <div class="rank__label">{{ row.label }}</div>
-                <div class="rank__track" aria-hidden="true">
-                  <div class="rank__fill" [style.width.%]="row.width"></div>
+          <div class="folio__cols folio__cols--rank" aria-hidden="true">
+            <span>#</span>
+            <span>Modalidad</span>
+            <span>Grupos</span>
+          </div>
+
+          <div class="rank-list" role="list">
+            @for (row of chartRows(); track row.label) {
+              <div class="rank" role="listitem" [class.is-peak]="row.isPeak">
+                <span class="rank__index">{{ row.index }}</span>
+                <div class="rank__main">
+                  <div class="rank__label">{{ row.label }}</div>
+                  <div class="rank__track" aria-hidden="true">
+                    <div class="rank__fill" [style.width.%]="row.width"></div>
+                  </div>
+                </div>
+                <div class="rank__meta">
+                  <span class="rank__count">{{ row.value }}</span>
+                  <span class="rank__pct">{{ row.pct }}%</span>
                 </div>
               </div>
-              <div class="rank__meta">
-                <span class="rank__count">{{ row.value }}</span>
-                <span class="rank__pct">{{ row.pct }}%</span>
-              </div>
-            </div>
-          }
-        </div>
+            }
+          </div>
 
-        @if (peakCategory(); as peak) {
-          <p class="rank-note">
-            {{ peak.label }} concentra el pico con {{ peak.value }} grupos ({{ peak.pct }}%).
-            El resto suma {{ chartTotal() - peak.value }}.
-          </p>
-        }
-      </section>
+          @if (peakCategory(); as peak) {
+            <p class="rank-note">
+              {{ peak.label }} concentra el pico con {{ peak.value }} grupos ({{ peak.pct }}%).
+              El resto suma {{ chartTotal() - peak.value }}.
+            </p>
+          }
+        </section>
+      }
 
       <div class="rail">
         <section class="folio" aria-label="Últimas inscripciones">
           <div class="folio__head">
             <h2>Nómina reciente</h2>
-            <a routerLink="/inscripciones" class="folio__link">Ver todo →</a>
+            <a routerLink="/admin/inscripciones" class="folio__link">Ver todo →</a>
           </div>
 
           @if (latestInscripciones().length === 0) {
@@ -158,7 +160,7 @@
         <section class="folio" aria-label="Próximos eventos">
           <div class="folio__head">
             <h2>Agenda</h2>
-            <a routerLink="/eventos" class="folio__link">Calendario →</a>
+            <a routerLink="/admin/eventos" class="folio__link">Calendario →</a>
           </div>
 
           @if (upcomingEventos().length === 0) {

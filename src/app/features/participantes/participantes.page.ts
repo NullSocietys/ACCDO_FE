@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CATEGORIAS } from '../../core/data/mock-data';
 import { Sexo } from '../../core/models';
@@ -7,8 +7,6 @@ import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.c
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
-import { KpiBoardComponent } from '../../shared/ui/kpi-board.component';
-import { KpiItem } from '../../shared/ui/kpi-board.types';
 import { ModalComponent } from '../../shared/ui/modal.component';
 
 interface MemberItem {
@@ -45,7 +43,6 @@ interface GroupCard {
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
-    KpiBoardComponent,
     ModalComponent,
   ],
   styleUrl: './participantes.page.css',
@@ -61,6 +58,8 @@ export class ParticipantesPage {
   readonly modalidadFilter = signal('');
   readonly grupoFilter = signal('');
   readonly selectedGroup = signal<GroupCard | null>(null);
+  readonly page = signal(1);
+  readonly pageSize = 10;
 
   readonly groups = computed((): GroupCard[] => {
     const map = new Map<string, GroupCard>();
@@ -123,6 +122,44 @@ export class ParticipantesPage {
     this.filtered().reduce((sum, g) => sum + g.members.length, 0),
   );
 
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filtered().length / this.pageSize)),
+  );
+
+  readonly pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = Math.min(this.page(), total);
+    const window = 5;
+    let start = Math.max(1, current - Math.floor(window / 2));
+    const end = Math.min(total, start + window - 1);
+    start = Math.max(1, end - window + 1);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  readonly paged = computed(() => {
+    const list = this.filtered();
+    const p = Math.min(Math.max(1, this.page()), this.totalPages());
+    const start = (p - 1) * this.pageSize;
+    return list.slice(start, start + this.pageSize);
+  });
+
+  readonly rangeLabel = computed(() => {
+    const total = this.filtered().length;
+    if (total === 0) return '0 resultados';
+    const p = Math.min(this.page(), this.totalPages());
+    const from = (p - 1) * this.pageSize + 1;
+    const to = Math.min(p * this.pageSize, total);
+    return `${from}–${to} de ${total}`;
+  });
+
+  readonly totalMembers = computed(() =>
+    this.groups().reduce((sum, g) => sum + g.members.length, 0),
+  );
+
+  readonly uniqueModalidades = computed(() =>
+    new Set(this.groups().map((g) => g.modalidad)).size,
+  );
+
   readonly modalDescription = computed(() => {
     const g = this.selectedGroup();
     if (!g) return null;
@@ -138,45 +175,6 @@ export class ParticipantesPage {
     const g = this.selectedGroup();
     if (!g) return [];
     return this.toPairs(g.members);
-  });
-
-  readonly kpis = computed((): KpiItem[] => {
-    const all = this.groups();
-    const members = all.flatMap((g) => g.members);
-    const varones = members.filter((m) => m.sexo === 'M').length;
-    const mujeres = members.filter((m) => m.sexo === 'F').length;
-
-    return [
-      {
-        label: 'Grupos',
-        value: all.length,
-        hint: 'Elencos inscritos',
-        icon: 'users-round',
-        tone: 'ink',
-      },
-      {
-        label: 'Participantes',
-        value: members.length,
-        hint: 'Bailarines en nómina',
-        icon: 'users',
-        tone: 'gold',
-      },
-      {
-        label: 'Modalidades',
-        value: new Set(all.map((g) => g.modalidad)).size,
-        hint: 'En competencia',
-        icon: 'trophy',
-        tone: 'warn',
-      },
-      {
-        label: 'Composición',
-        value: `${varones} · ${mujeres}`,
-        hint: 'Varones · Mujeres',
-        icon: 'user',
-        tone: 'ink',
-        money: true,
-      },
-    ];
   });
 
   isPairModalidad(modalidad: string): boolean {
@@ -211,6 +209,20 @@ export class ParticipantesPage {
 
   closeMembers(): void {
     this.selectedGroup.set(null);
+  }
+
+  constructor() {
+    effect(() => {
+      this.search();
+      this.modalidadFilter();
+      this.grupoFilter();
+      untracked(() => this.page.set(1));
+    });
+  }
+
+  goToPage(page: number): void {
+    const next = Math.min(Math.max(1, page), this.totalPages());
+    this.page.set(next);
   }
 
   limpiarFiltros(): void {

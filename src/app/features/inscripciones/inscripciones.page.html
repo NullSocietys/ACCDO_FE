@@ -22,7 +22,7 @@
           <dd>{{ overview().monto | currency: 'PEN':'symbol-narrow':'1.0-0' }}</dd>
         </div>
       </dl>
-      <a routerLink="/inscripciones/nueva" class="mast__cta">
+      <a routerLink="/admin/inscripciones/nueva" class="mast__cta">
         <app-button icon="plus" [fullWidth]="true">Nueva inscripción</app-button>
       </a>
     </div>
@@ -33,8 +33,6 @@
       icon="clipboardList"
       title="Sin inscripciones"
       description="Registre el primer grupo para comenzar la temporada."
-      actionLabel="Nueva inscripción"
-      (actioned)="goNew()"
     />
   } @else {
     @if (overview().pendientes > 0) {
@@ -118,9 +116,12 @@
         </div>
 
         <div class="folio__cols" aria-hidden="true">
-          <span>#</span>
-          <span>Grupo</span>
           <span>Tarifa</span>
+          <span>Grupo</span>
+          <span>Evento</span>
+          <span>Encargado</span>
+          <span>Elenco</span>
+          <span>Estado</span>
           <span></span>
         </div>
 
@@ -133,39 +134,38 @@
               [class.is-rechazada]="ins.estado === 'RECHAZADA'"
               [class.is-confirmada]="ins.estado === 'CONFIRMADA'"
             >
-              <span class="row__index">{{ rowIndex(i) }}</span>
-
-              <div class="row__body">
-                <div class="row__title">
-                  <h3>{{ ins.nombreGrupo }}</h3>
-                  <app-badge [tone]="statusTone(ins.estado)" [dot]="false">
-                    {{ statusLabel(ins.estado) }}
-                  </app-badge>
-                </div>
-                <ul class="row__facts">
-                  <li>
-                    <span class="k">Modalidad</span>
-                    <span class="v v--gold">{{ ins.categoriaNombre }}</span>
-                  </li>
-                  <li>
-                    <span class="k">Evento</span>
-                    <span class="v" [attr.title]="ins.eventoNombre">{{ ins.eventoNombre }}</span>
-                  </li>
-                  <li>
-                    <span class="k">Encargado</span>
-                    <span class="v" [attr.title]="ins.responsableNombre">{{ ins.responsableNombre }}</span>
-                  </li>
-                  <li>
-                    <span class="k">Elenco</span>
-                    <span class="v">{{ ins.cantidadIntegrantes }}</span>
-                  </li>
-                </ul>
-                <p class="row__code mono">{{ ins.codigo }} · {{ formatRegistro(ins) }}</p>
+              <!-- Tarifa -->
+              <div class="row__amount">
+                <b>{{ ins.total | currency: 'PEN':'symbol-narrow':'1.0-0' }}</b>
               </div>
 
-              <div class="row__amount">
-                <span class="k">Tarifa</span>
-                <b>{{ ins.total | currency: 'PEN':'symbol-narrow':'1.0-0' }}</b>
+              <!-- Nombre y Modalidad -->
+              <div class="row__cell">
+                <h3 class="row__title">{{ ins.nombreGrupo }}</h3>
+                <span class="row__sub">{{ ins.categoriaNombre }}</span>
+                <p class="row__code mono">{{ ins.codigo }}</p>
+              </div>
+
+              <!-- Evento -->
+              <div class="row__cell">
+                <span class="row__text" [attr.title]="ins.eventoNombre">{{ ins.eventoNombre }}</span>
+              </div>
+
+              <!-- Encargado -->
+              <div class="row__cell">
+                <span class="row__text" [attr.title]="ins.responsableNombre">{{ ins.responsableNombre }}</span>
+              </div>
+
+              <!-- Elenco -->
+              <div class="row__cell">
+                <span class="row__text">{{ ins.cantidadIntegrantes }}</span>
+              </div>
+
+              <!-- Estado -->
+              <div class="row__cell">
+                <app-badge [tone]="statusTone(ins.estado)" [dot]="false">
+                  {{ statusLabel(ins.estado) }}
+                </app-badge>
               </div>
 
               <div class="row__actions">
