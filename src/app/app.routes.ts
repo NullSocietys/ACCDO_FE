@@ -44,9 +44,19 @@ export const routes: Routes = [
         loadComponent: () => import('./features/pagos/pagos.page').then((m) => m.PagosPage),
       },
       {
+        path: 'usuarios',
+        loadComponent: () =>
+          import('./features/usuarios/usuarios.page').then((m) => m.UsuariosPage),
+      },
+      {
         path: 'resultados',
         loadComponent: () =>
           import('./features/resultados/resultados.page').then((m) => m.ResultadosPage),
+      },
+      {
+        path: 'reportes',
+        loadComponent: () =>
+          import('./features/reportes/reportes.page').then((m) => m.ReportesPage),
       },
       {
         path: 'bases',

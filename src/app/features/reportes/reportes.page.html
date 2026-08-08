@@ -1,0 +1,326 @@
+<div class="page">
+  <header class="mast">
+    <div class="mast__copy">
+      <p class="mast__eyebrow">Temporada · Nómina</p>
+      <h1>Reportes</h1>
+      <p class="mast__lead">Nómina general de todos los integrantes: cada uno con su modalidad y grupo.</p>
+    </div>
+    <div class="mast__aside">
+      <dl class="mast__pulse" aria-label="Resumen rápido">
+        <div>
+          <dt>Integrantes</dt>
+          <dd>{{ integrantes().length }}</dd>
+        </div>
+        <div>
+          <dt>Grupos</dt>
+          <dd>{{ mastGrupos() }}</dd>
+        </div>
+        <div class="mast__pulse--gold">
+          <dt>Modalidades</dt>
+          <dd>{{ mastModalidades() }}</dd>
+        </div>
+      </dl>
+      <div class="mast__actions">
+        <div class="view-toggle">
+          <button
+            class="view-toggle__btn"
+            [class.is-active]="vistaActual() === 'general'"
+            (click)="cambiarVista('general')"
+            type="button"
+          >
+            Listado general
+          </button>
+          <button
+            class="view-toggle__btn"
+            [class.is-active]="vistaActual() === 'modalidades'"
+            (click)="cambiarVista('modalidades')"
+            type="button"
+          >
+            Por modalidades
+          </button>
+        </div>
+        <app-button variant="outline" size="sm" icon="fileText" (clicked)="exportarPdf('general')">
+          PDF general
+        </app-button>
+        @if (vistaActual() === 'general') {
+          <app-button
+            variant="outline"
+            size="sm"
+            icon="download"
+            [disabled]="filtered().length === 0"
+            (clicked)="exportarPdf('filtrado')"
+          >
+            PDF por filtros
+          </app-button>
+        }
+      </div>
+    </div>
+  </header>
+
+  @if (integrantes().length === 0) {
+    <app-empty-state
+      icon="users"
+      title="Sin integrantes"
+      description="Cuando se registren inscripciones, la nómina general aparecerá aquí."
+    />
+  } @else {
+    <app-kpi-board label="Resumen general" [items]="kpis()" [columns]="4" />
+
+    @if (vistaActual() === 'general') {
+      <div class="filters-bar">
+        <div class="search-wrap">
+          <app-input
+            controlId="rep-search"
+            icon="search"
+            placeholder="Buscar integrante, DNI, grupo o modalidad…"
+            [value]="search()"
+            (valueChange)="search.set($event)"
+          />
+        </div>
+        <select
+          class="ui-select"
+          [ngModel]="modalidadFilter()"
+          (ngModelChange)="modalidadFilter.set($event)"
+          aria-label="Filtrar por modalidad"
+        >
+          <option value="">Todas las modalidades</option>
+          @for (mod of modalidades(); track mod) {
+            <option [value]="mod">{{ mod }}</option>
+          }
+        </select>
+        <select
+          class="ui-select"
+          [ngModel]="estadoFilter()"
+          (ngModelChange)="estadoFilter.set($event)"
+          aria-label="Filtrar por estado"
+        >
+          <option value="">Todos los estados</option>
+          @for (est of estados; track est) {
+            <option [value]="est">{{ statusLabel(est) }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="section-head">
+        <h2>Nómina general</h2>
+        <span>{{ filtered().length }} integrantes</span>
+      </div>
+
+      @if (filtered().length === 0) {
+        <app-empty-state
+          icon="search"
+          title="Sin resultados"
+          description="Ningún integrante coincide con los filtros aplicados."
+          actionLabel="Limpiar filtros"
+          actionIcon="x"
+          (actioned)="limpiarFiltros()"
+        />
+      } @else {
+        <div class="roster" role="list">
+          @for (row of filtered(); track row.id) {
+            <article class="who" role="listitem">
+              <div class="who__avatar" [class.is-m]="row.sexo === 'Varón'">
+                {{ row.iniciales }}
+              </div>
+              <div class="who__identity">
+                <strong>{{ row.nombre }}</strong>
+                <span class="mono">{{ row.dni }} · {{ row.edad }} años · {{ row.sexo }}</span>
+              </div>
+              <div class="who__group">
+                <strong>{{ row.grupo }}</strong>
+                <span>{{ row.modalidad }}</span>
+              </div>
+              <div class="who__code mono">{{ row.codigo }}</div>
+              <div class="who__estado">
+                <app-badge [tone]="statusTone(row.estado)" [dot]="false">
+                  {{ statusLabel(row.estado) }}
+                </app-badge>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    }
+
+    @if (vistaActual() === 'modalidades') {
+      <div class="section-head">
+        <h2>Reportes por modalidad</h2>
+        <span>{{ reportesModalidad().length }} modalidades en competencia</span>
+      </div>
+
+      <div class="modalidades-container">
+        @for (reporte of reportesModalidad(); track reporte.modalidad) {
+          <article class="modalidad-section">
+            <!-- Encabezado de modalidad -->
+            <div class="modalidad-header">
+              <div class="modalidad-info">
+                <div class="modalidad-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                    <path d="M4 22h16" />
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                  </svg>
+                </div>
+                <div class="modalidad-title-block">
+                  <h3 class="modalidad-name">{{ reporte.modalidad }}</h3>
+                  <p class="modalidad-subtitle">
+                    {{ reporte.totalGrupos }} {{ reporte.totalGrupos === 1 ? 'grupo' : 'grupos' }} inscrito{{ reporte.totalGrupos === 1 ? '' : 's' }} 
+                    · {{ reporte.totalParticipantes }} {{ reporte.totalParticipantes === 1 ? 'participante' : 'participantes' }}
+                  </p>
+                </div>
+              </div>
+              <div class="modalidad-actions">
+                <app-button
+                  variant="outline"
+                  size="sm"
+                  icon="download"
+                  (clicked)="exportarPdfPorModalidad(reporte)"
+                >
+                  Exportar PDF
+                </app-button>
+                <button
+                  class="expand-btn"
+                  type="button"
+                  [class.is-expanded]="modalidadExpandida() === reporte.modalidad"
+                  (click)="toggleModalidad(reporte.modalidad)"
+                  [attr.aria-expanded]="modalidadExpandida() === reporte.modalidad"
+                  [attr.aria-label]="modalidadExpandida() === reporte.modalidad ? 'Ocultar detalles' : 'Ver detalles'"
+                >
+                  {{ modalidadExpandida() === reporte.modalidad ? 'Ocultar' : 'Ver detalles' }}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Estadísticas resumidas -->
+            <div class="stats-grid">
+              <div class="stat-box stat-box--primary">
+                <div class="stat-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-label">Total Participantes</div>
+                  <div class="stat-number">{{ reporte.totalParticipantes }}</div>
+                  <div class="stat-detail">{{ reporte.varones }} varones · {{ reporte.mujeres }} mujeres</div>
+                </div>
+              </div>
+
+              <div class="stat-box stat-box--success">
+                <div class="stat-icon stat-icon--success">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-label">Confirmados</div>
+                  <div class="stat-number stat-number--success">{{ reporte.confirmados }}</div>
+                  <div class="stat-detail">
+                    {{ reporte.confirmados > 0 ? ((reporte.confirmados / reporte.totalParticipantes) * 100).toFixed(0) : 0 }}% del total
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-box stat-box--warning">
+                <div class="stat-icon stat-icon--warning">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-label">Pendientes</div>
+                  <div class="stat-number stat-number--warning">{{ reporte.pendientes }}</div>
+                  <div class="stat-detail">
+                    {{ reporte.pendientes > 0 ? ((reporte.pendientes / reporte.totalParticipantes) * 100).toFixed(0) : 0 }}% del total
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-box stat-box--info">
+                <div class="stat-icon stat-icon--info">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-label">Edad Promedio</div>
+                  <div class="stat-number stat-number--info">{{ reporte.edadPromedio }}</div>
+                  <div class="stat-detail">años de edad</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lista de participantes expandible -->
+            @if (modalidadExpandida() === reporte.modalidad) {
+              <div class="participants-section">
+                <div class="participants-header">
+                  <h4>Listado de participantes</h4>
+                  <span class="participants-count">{{ reporte.participantes.length }} registrados</span>
+                </div>
+
+                <div class="participants-list">
+                  @for (participante of reporte.participantes; track participante.id; let index = $index) {
+                    <div class="participant-row">
+                      <div class="participant-number">{{ index + 1 }}</div>
+                      <div class="participant-avatar" [class.is-male]="participante.sexo === 'Varón'">
+                        {{ participante.iniciales }}
+                      </div>
+                      <div class="participant-info">
+                        <div class="participant-name">{{ participante.nombre }}</div>
+                        <div class="participant-meta">
+                          <span class="meta-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                              <line x1="16" y1="2" x2="16" y2="6" />
+                              <line x1="8" y1="2" x2="8" y2="6" />
+                              <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            {{ participante.edad }} años
+                          </span>
+                          <span class="meta-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                              <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            {{ participante.sexo }}
+                          </span>
+                          <span class="meta-item meta-item--dni">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                            </svg>
+                            {{ participante.dni }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="participant-group">
+                        <div class="group-name">{{ participante.grupo }}</div>
+                        <div class="group-code">{{ participante.codigo }}</div>
+                      </div>
+                      <div class="participant-status">
+                        <app-badge [tone]="statusTone(participante.estado)" [dot]="true">
+                          {{ statusLabel(participante.estado) }}
+                        </app-badge>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </article>
+        }
+      </div>
+    }
+  }
+</div>

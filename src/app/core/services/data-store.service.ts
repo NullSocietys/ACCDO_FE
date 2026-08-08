@@ -1,46 +1,81 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+
+import { CONFIGURACION, DASHBOARD_STATS } from '../data/mock-data';
 import {
-  CATEGORIAS_DB,
-  CHART_INSCRIPCIONES,
-  CONFIGURACION,
-  DASHBOARD_STATS,
-  EVENTOS,
-  INSCRIPCIONES,
-  PAGOS,
-  PARTICIPANTES,
-  RESPONSABLES,
-  RESULTADOS,
-  USUARIOS,
-} from '../data/mock-data';
-import {
+  ActualizarRequest,
   Categoria,
+  CategoriaPayload,
+  ChartBar,
   Configuracion,
   Evento,
+  EventoPayload,
   Inscripcion,
+  InscripcionRequest,
   InscripcionView,
+  LoginRequest,
   Pago,
+  PagoRequest,
   PagoView,
   Participante,
+  ParticipanteRequest,
   ParticipanteView,
+  RegistroRequest,
   Responsable,
+  ResponsableRequest,
   Resultado,
+  ResultadoRequest,
   ResultadoView,
   Usuario,
 } from '../models';
+import { CategoriaApiService } from './api/categoria.api.service';
+import { EventoApiService } from './api/evento.api.service';
+import { InscripcionApiService } from './api/inscripcion.api.service';
+import { PagoApiService } from './api/pago.api.service';
+import { ParticipanteApiService } from './api/participante.api.service';
+import { ResponsableApiService } from './api/responsable.api.service';
+import { ResultadoApiService } from './api/resultado.api.service';
+import { UsuarioApiService } from './api/usuario.api.service';
 
+/**
+ * Orquestador de datos del frontend.
+ * Carga el catálogo desde el backend al inicio y expone mutaciones
+ * que llaman a los endpoints y actualizan las signals en memoria.
+ */
 @Injectable({ providedIn: 'root' })
 export class DataStoreService {
-  readonly usuarios = signal<Usuario[]>([...USUARIOS]);
-  readonly eventos = signal<Evento[]>([...EVENTOS]);
-  readonly categorias = signal<Categoria[]>([...CATEGORIAS_DB]);
-  readonly responsables = signal<Responsable[]>([...RESPONSABLES]);
-  readonly inscripciones = signal<Inscripcion[]>([...INSCRIPCIONES]);
-  readonly participantes = signal<Participante[]>([...PARTICIPANTES]);
-  readonly pagos = signal<Pago[]>([...PAGOS]);
-  readonly resultados = signal<Resultado[]>([...RESULTADOS]);
+  private readonly usuarioApi = inject(UsuarioApiService);
+  private readonly categoriaApi = inject(CategoriaApiService);
+  private readonly eventoApi = inject(EventoApiService);
+  private readonly inscripcionApi = inject(InscripcionApiService);
+  private readonly participanteApi = inject(ParticipanteApiService);
+  private readonly responsableApi = inject(ResponsableApiService);
+  private readonly pagoApi = inject(PagoApiService);
+  private readonly resultadoApi = inject(ResultadoApiService);
+
+  readonly cargando = signal(true);
+
+  readonly usuarios = signal<Usuario[]>([]);
+  readonly usuariosInactivos = signal<Usuario[]>([]);
+  readonly eventos = signal<Evento[]>([]);
+  readonly categorias = signal<Categoria[]>([]);
+  readonly responsables = signal<Responsable[]>([]);
+  readonly inscripciones = signal<Inscripcion[]>([]);
+  readonly participantes = signal<Participante[]>([]);
+  readonly pagos = signal<Pago[]>([]);
+  readonly resultados = signal<Resultado[]>([]);
   readonly configuracion = signal<Configuracion>({ ...CONFIGURACION });
   readonly stats = DASHBOARD_STATS;
-  readonly chart = CHART_INSCRIPCIONES;
+
+  /** Inscripciones por modalidad, calculado en vivo desde categorías e inscripciones reales. */
+  readonly chart = computed<ChartBar[]>(() =>
+    this.categorias().map((c) => ({
+      label: c.nombre.replace('UNIPERSONAL ', '').replace(' MACHOS Y CAPORALITAS', '').replace(' (LIBRE)', ''),
+      value: this.inscripciones().filter(
+        (i) => i.categoriaId === c.id && i.activo && i.estado !== 'RECHAZADA',
+      ).length,
+    })),
+  );
 
   readonly inscripcionesView = computed((): InscripcionView[] =>
     this.inscripciones()
@@ -67,6 +102,386 @@ export class DataStoreService {
       .map((r) => this.toResultadoView(r))
       .filter((r): r is ResultadoView => r !== null),
   );
+
+  constructor() {
+    void this.loadAll();
+  }
+
+  /** Carga completa del catálogo: maestros + dependencias de cada inscripción. */
+  async loadAll(): Promise<void> {
+    this.cargando.set(true);
+    try {
+      const [usuarios, usuariosInactivos, eventos, categorias, responsables, inscripciones] =
+        await Promise.all([
+          firstValueFrom(this.usuarioApi.listar()),
+          firstValueFrom(this.usuarioApi.listarInactivos()),
+          firstValueFrom(this.eventoApi.listar()),
+          firstValueFrom(this.categoriaApi.listar()),
+          firstValueFrom(this.responsableApi.listar()),
+          firstValueFrom(this.inscripcionApi.listar()),
+        ]);
+      this.usuarios.set(usuarios);
+      this.usuariosInactivos.set(usuariosInactivos);
+      this.eventos.set(eventos);
+      this.categorias.set(categorias);
+      this.responsables.set(responsables);
+      this.inscripciones.set(inscripciones);
+      await this.cargarHijos(inscripciones.map((i) => i.id));
+    } catch (err) {
+      console.error('No se pudo cargar el catálogo del backend:', err);
+      throw err;
+    } finally {
+      this.cargando.set(false);
+    }
+  }
+
+  /** Carga participantes, pagos y resultados de cada inscripción (endpoints por inscripción). */
+  private async cargarHijos(inscripcionIds: string[]): Promise<void> {
+    const [participantes, pagos, resultados] = await Promise.all([
+      this.agruparPorInscripcion(inscripcionIds, (id) =>
+        firstValueFrom(this.participanteApi.listar(id)),
+      ),
+      this.agruparPorInscripcion(inscripcionIds, (id) => firstValueFrom(this.pagoApi.listarPorInscripcion(id))),
+      this.agruparPorInscripcion(inscripcionIds, (id) =>
+        firstValueFrom(this.resultadoApi.listarPorInscripcion(id)),
+      ),
+    ]);
+    this.participantes.set(participantes.flat());
+    this.pagos.set(pagos.flat());
+    this.resultados.set(resultados.flat());
+  }
+
+  private async agruparPorInscripcion<T>(
+    ids: string[],
+    fn: (id: string) => Promise<T[]>,
+  ): Promise<T[][]> {
+    const resultados = await Promise.all(ids.map((id) => fn(id).catch(() => [] as T[])));
+    return resultados;
+  }
+
+  // ============================================================
+  // USUARIOS / AUTH
+  // ============================================================
+
+  async registrar(datos: RegistroRequest): Promise<Usuario> {
+    const usuario = await firstValueFrom(this.usuarioApi.registrar(datos));
+    this.usuarios.update((list) => [usuario, ...list]);
+    return usuario;
+  }
+
+  async obtenerUsuario(id: string): Promise<Usuario> {
+    return firstValueFrom(this.usuarioApi.obtener(id));
+  }
+
+  async login(datos: LoginRequest): Promise<Usuario> {
+    return firstValueFrom(this.usuarioApi.login(datos));
+  }
+
+  async actualizarUsuario(id: string, datos: ActualizarRequest): Promise<Usuario> {
+    const usuario = await firstValueFrom(this.usuarioApi.actualizar(id, datos));
+    this.usuarios.update((list) => list.map((u) => (u.id === id ? usuario : u)));
+    this.usuariosInactivos.update((list) => list.map((u) => (u.id === id ? usuario : u)));
+    return usuario;
+  }
+
+  async eliminarLogicoUsuario(id: string): Promise<Usuario> {
+    const usuario = await firstValueFrom(this.usuarioApi.eliminarLogico(id));
+    this.usuarios.update((list) => list.filter((u) => u.id !== id));
+    this.usuariosInactivos.update((list) => [usuario, ...list]);
+    return usuario;
+  }
+
+  async restaurarUsuario(id: string): Promise<Usuario> {
+    const usuario = await firstValueFrom(this.usuarioApi.restaurar(id));
+    this.usuariosInactivos.update((list) => list.filter((u) => u.id !== id));
+    this.usuarios.update((list) => [usuario, ...list]);
+    return usuario;
+  }
+
+  async eliminarFisicoUsuario(id: string, inactivo = false): Promise<void> {
+    await firstValueFrom(this.usuarioApi.eliminarFisico(id));
+    if (inactivo) {
+      this.usuariosInactivos.update((list) => list.filter((u) => u.id !== id));
+    } else {
+      this.usuarios.update((list) => list.filter((u) => u.id !== id));
+    }
+  }
+
+  // ============================================================
+  // CATEGORIAS
+  // ============================================================
+
+  async addCategoria(payload: CategoriaPayload): Promise<Categoria> {
+    const categoria = await firstValueFrom(this.categoriaApi.crear(payload));
+    this.categorias.update((list) => [...list, categoria]);
+    return categoria;
+  }
+
+  async updateCategoria(id: string, payload: CategoriaPayload): Promise<Categoria> {
+    const categoria = await firstValueFrom(this.categoriaApi.actualizar(id, payload));
+    this.categorias.update((list) => list.map((c) => (c.id === id ? categoria : c)));
+    return categoria;
+  }
+
+  async removeCategoria(id: string): Promise<void> {
+    await firstValueFrom(this.categoriaApi.eliminarLogico(id));
+    this.categorias.update((list) => list.map((c) => (c.id === id ? { ...c, activo: false } : c)));
+  }
+
+  async restaurarCategoria(id: string): Promise<Categoria> {
+    const categoria = await firstValueFrom(this.categoriaApi.restaurar(id));
+    this.categorias.update((list) => list.map((c) => (c.id === id ? categoria : c)));
+    return categoria;
+  }
+
+  async eliminarFisicoCategoria(id: string): Promise<void> {
+    await firstValueFrom(this.categoriaApi.eliminarFisico(id));
+    this.categorias.update((list) => list.filter((c) => c.id !== id));
+  }
+
+  // ============================================================
+  // EVENTOS
+  // ============================================================
+
+  async addEvento(payload: EventoPayload): Promise<Evento> {
+    const evento = await firstValueFrom(this.eventoApi.crear(payload));
+    this.eventos.update((list) => [evento, ...list]);
+    return evento;
+  }
+
+  async updateEvento(id: string, payload: EventoPayload): Promise<Evento> {
+    const evento = await firstValueFrom(this.eventoApi.actualizar(id, payload));
+    this.eventos.update((list) => list.map((e) => (e.id === id ? evento : e)));
+    return evento;
+  }
+
+  async removeEvento(id: string): Promise<void> {
+    await firstValueFrom(this.eventoApi.eliminarLogico(id));
+    this.eventos.update((list) =>
+      list.map((e) => (e.id === id ? { ...e, activo: false, estado: 'CANCELADO' as const } : e)),
+    );
+  }
+
+  async cambiarEstadoEvento(id: string, estado: string): Promise<Evento> {
+    const evento = await firstValueFrom(this.eventoApi.cambiarEstado(id, estado));
+    this.eventos.update((list) => list.map((e) => (e.id === id ? evento : e)));
+    return evento;
+  }
+
+  async restaurarEvento(id: string): Promise<Evento> {
+    const evento = await firstValueFrom(this.eventoApi.restaurar(id));
+    this.eventos.update((list) => list.map((e) => (e.id === id ? evento : e)));
+    return evento;
+  }
+
+  async eliminarFisicoEvento(id: string): Promise<void> {
+    await firstValueFrom(this.eventoApi.eliminarFisico(id));
+    this.eventos.update((list) => list.filter((e) => e.id !== id));
+  }
+
+  // ============================================================
+  // INSCRIPCIONES
+  // ============================================================
+
+  /** Crea la inscripción con responsable y participantes, y opcionalmente el pago. */
+  async crearInscripcion(
+    req: InscripcionRequest,
+    pago?: Omit<PagoRequest, 'inscripcionId'>,
+  ): Promise<Inscripcion> {
+    const inscripcion = await firstValueFrom(this.inscripcionApi.crear(req));
+    this.inscripciones.update((list) => [...list, inscripcion]);
+
+    try {
+      const responsable = await firstValueFrom(
+        this.responsableApi.obtener(inscripcion.responsableId),
+      );
+      this.responsables.update((list) =>
+        list.some((r) => r.id === responsable.id)
+          ? list.map((r) => (r.id === responsable.id ? responsable : r))
+          : [...list, responsable],
+      );
+    } catch {
+      /* el responsable se vuelve a cargar en la próxima sincronización */
+    }
+
+    const [participantes, pagos] = await Promise.all([
+      firstValueFrom(this.participanteApi.listar(inscripcion.id)),
+      firstValueFrom(this.pagoApi.listarPorInscripcion(inscripcion.id)),
+    ]);
+    if (participantes) this.participantes.update((list) => [...list, ...participantes]);
+    if (pagos) this.pagos.update((list) => [...list, ...pagos]);
+
+    if (pago) {
+      await this.registrarPago({ ...pago, inscripcionId: inscripcion.id });
+    }
+    return inscripcion;
+  }
+
+  async cambiarEstadoInscripcion(id: string, estado: string): Promise<Inscripcion> {
+    const inscripcion = await firstValueFrom(this.inscripcionApi.cambiarEstado(id, estado));
+    this.inscripciones.update((list) => list.map((i) => (i.id === id ? inscripcion : i)));
+    return inscripcion;
+  }
+
+  async removeInscripcion(id: string): Promise<void> {
+    await firstValueFrom(this.inscripcionApi.eliminarLogico(id));
+    this.inscripciones.update((list) => list.map((i) => (i.id === id ? { ...i, activo: false } : i)));
+  }
+
+  async restaurarInscripcion(id: string): Promise<Inscripcion> {
+    const inscripcion = await firstValueFrom(this.inscripcionApi.restaurar(id));
+    this.inscripciones.update((list) => list.map((i) => (i.id === id ? inscripcion : i)));
+    return inscripcion;
+  }
+
+  async eliminarFisicoInscripcion(id: string): Promise<void> {
+    await firstValueFrom(this.inscripcionApi.eliminarFisico(id));
+    this.inscripciones.update((list) => list.filter((i) => i.id !== id));
+  }
+
+  // ============================================================
+  // PARTICIPANTES
+  // ============================================================
+
+  async addParticipante(inscripcionId: string, p: ParticipanteRequest): Promise<Participante> {
+    const participante = await firstValueFrom(this.participanteApi.agregar(inscripcionId, p));
+    this.participantes.update((list) => [...list, participante]);
+    return participante;
+  }
+
+  async removeParticipante(inscripcionId: string, participanteId: string): Promise<void> {
+    await firstValueFrom(this.participanteApi.eliminar(inscripcionId, participanteId));
+    this.participantes.update((list) =>
+      list.map((p) => (p.id === participanteId ? { ...p, activo: false } : p)),
+    );
+  }
+
+  async restaurarParticipante(inscripcionId: string, participanteId: string): Promise<Participante> {
+    const participante = await firstValueFrom(
+      this.participanteApi.restaurar(inscripcionId, participanteId),
+    );
+    this.participantes.update((list) => list.map((p) => (p.id === participanteId ? participante : p)));
+    return participante;
+  }
+
+  async eliminarFisicoParticipante(inscripcionId: string, participanteId: string): Promise<void> {
+    await firstValueFrom(this.participanteApi.eliminarFisico(inscripcionId, participanteId));
+    this.participantes.update((list) => list.filter((p) => p.id !== participanteId));
+  }
+
+  // ============================================================
+  // RESPONSABLES
+  // ============================================================
+
+  async addResponsable(req: ResponsableRequest): Promise<Responsable> {
+    const responsable = await firstValueFrom(this.responsableApi.crear(req));
+    this.responsables.update((list) => [...list, responsable]);
+    return responsable;
+  }
+
+  async updateResponsable(id: string, req: ResponsableRequest): Promise<Responsable> {
+    const responsable = await firstValueFrom(this.responsableApi.actualizar(id, req));
+    this.responsables.update((list) => list.map((r) => (r.id === id ? responsable : r)));
+    return responsable;
+  }
+
+  async removeResponsable(id: string): Promise<void> {
+    await firstValueFrom(this.responsableApi.eliminarLogico(id));
+    this.responsables.update((list) => list.map((r) => (r.id === id ? { ...r, activo: false } : r)));
+  }
+
+  async restaurarResponsable(id: string): Promise<Responsable> {
+    const responsable = await firstValueFrom(this.responsableApi.restaurar(id));
+    this.responsables.update((list) => list.map((r) => (r.id === id ? responsable : r)));
+    return responsable;
+  }
+
+  async eliminarFisicoResponsable(id: string): Promise<void> {
+    await firstValueFrom(this.responsableApi.eliminarFisico(id));
+    this.responsables.update((list) => list.filter((r) => r.id !== id));
+  }
+
+  // ============================================================
+  // PAGOS
+  // ============================================================
+
+  async registrarPago(req: PagoRequest): Promise<Pago> {
+    const pago = await firstValueFrom(this.pagoApi.registrar(req));
+    this.pagos.update((list) => [...list, pago]);
+    return pago;
+  }
+
+  async confirmarPago(id: string): Promise<Pago> {
+    const pago = await firstValueFrom(this.pagoApi.confirmar(id));
+    this.pagos.update((list) => list.map((p) => (p.id === id ? pago : p)));
+    return pago;
+  }
+
+  async rechazarPago(id: string, motivo: string): Promise<Pago> {
+    const pago = await firstValueFrom(this.pagoApi.rechazar(id, motivo));
+    this.pagos.update((list) => list.map((p) => (p.id === id ? pago : p)));
+    return pago;
+  }
+
+  async removePago(id: string): Promise<void> {
+    await firstValueFrom(this.pagoApi.eliminarLogico(id));
+    this.pagos.update((list) => list.map((p) => (p.id === id ? { ...p, activo: false } : p)));
+  }
+
+  async restaurarPago(id: string): Promise<Pago> {
+    const pago = await firstValueFrom(this.pagoApi.restaurar(id));
+    this.pagos.update((list) => list.map((p) => (p.id === id ? pago : p)));
+    return pago;
+  }
+
+  async eliminarFisicoPago(id: string): Promise<void> {
+    await firstValueFrom(this.pagoApi.eliminarFisico(id));
+    this.pagos.update((list) => list.filter((p) => p.id !== id));
+  }
+
+  // ============================================================
+  // RESULTADOS
+  // ============================================================
+
+  async addResultado(req: ResultadoRequest): Promise<Resultado> {
+    const resultado = await firstValueFrom(this.resultadoApi.registrar(req));
+    this.resultados.update((list) => [...list, resultado]);
+    return resultado;
+  }
+
+  async updateResultado(id: string, req: ResultadoRequest): Promise<Resultado> {
+    const resultado = await firstValueFrom(this.resultadoApi.actualizar(id, req));
+    this.resultados.update((list) => list.map((r) => (r.id === id ? resultado : r)));
+    return resultado;
+  }
+
+  async removeResultado(id: string): Promise<void> {
+    await firstValueFrom(this.resultadoApi.eliminar(id));
+    this.resultados.update((list) => list.map((r) => (r.id === id ? { ...r, activo: false } : r)));
+  }
+
+  async restaurarResultado(id: string): Promise<Resultado> {
+    const resultado = await firstValueFrom(this.resultadoApi.restaurar(id));
+    this.resultados.update((list) => list.map((r) => (r.id === id ? resultado : r)));
+    return resultado;
+  }
+
+  async eliminarFisicoResultado(id: string): Promise<void> {
+    await firstValueFrom(this.resultadoApi.eliminarFisico(id));
+    this.resultados.update((list) => list.filter((r) => r.id !== id));
+  }
+
+  // ============================================================
+  // CONFIGURACION (sin tabla en backend; se conserva local)
+  // ============================================================
+
+  saveConfig(config: Configuracion): void {
+    this.configuracion.set(config);
+  }
+
+  // ============================================================
+  // LOOKUPS Y VISTAS
+  // ============================================================
 
   categoriaById(id: string): Categoria | undefined {
     return this.categorias().find((c) => c.id === id);
@@ -138,55 +553,5 @@ export class DataStoreService {
       eventoNombre: view.eventoNombre,
       codigoInscripcion: view.codigo,
     };
-  }
-
-  addEvento(evento: Evento): void {
-    this.eventos.update((list) => [evento, ...list]);
-  }
-
-  updateEvento(evento: Evento): void {
-    this.eventos.update((list) => list.map((e) => (e.id === evento.id ? evento : e)));
-  }
-
-  removeEvento(id: string): void {
-    this.eventos.update((list) =>
-      list.map((e) => (e.id === id ? { ...e, activo: false, estado: 'CANCELADO' as const } : e)),
-    );
-  }
-
-  addResponsable(responsable: Responsable): void {
-    this.responsables.update((list) => [responsable, ...list]);
-  }
-
-  addInscripcion(
-    inscripcion: Inscripcion,
-    participantes: Participante[],
-    pago: Pago,
-    responsable?: Responsable,
-  ): void {
-    if (responsable) {
-      this.addResponsable(responsable);
-    }
-    this.inscripciones.update((list) => [inscripcion, ...list]);
-    this.participantes.update((list) => [...participantes, ...list]);
-    this.pagos.update((list) => [pago, ...list]);
-  }
-
-  removeInscripcion(id: string): void {
-    this.inscripciones.update((list) =>
-      list.map((i) => (i.id === id ? { ...i, activo: false } : i)),
-    );
-  }
-
-  updatePago(pago: Pago): void {
-    this.pagos.update((list) => list.map((p) => (p.id === pago.id ? pago : p)));
-  }
-
-  addResultado(resultado: Resultado): void {
-    this.resultados.update((list) => [resultado, ...list]);
-  }
-
-  saveConfig(config: Configuracion): void {
-    this.configuracion.set(config);
   }
 }

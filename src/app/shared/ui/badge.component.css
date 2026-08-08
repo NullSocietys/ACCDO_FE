@@ -9,7 +9,7 @@ span {
   gap: 6px;
   padding: 3px 8px;
   border-radius: 0;
-  font-family: var(--font-mono, ui-monospace, monospace);
+  font-family: var(--font-sans);
   font-size: 10px;
   font-weight: 550;
   letter-spacing: 0.08em;
@@ -24,7 +24,7 @@ span {
 .dot {
   width: 5px;
   height: 5px;
-  border-radius: 0;
+  border-radius: 2px;
   flex-shrink: 0;
   background: currentColor;
   opacity: 0.9;

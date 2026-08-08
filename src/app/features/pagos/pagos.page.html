@@ -14,7 +14,7 @@
       </div>
       <div>
         <dt>OK</dt>
-        <dd>{{ overview().verificados }}</dd>
+        <dd>{{ overview().confirmados }}</dd>
       </div>
       <div class="mast__pulse--gold">
         <dt>Ingresos</dt>
@@ -86,9 +86,12 @@
         </div>
 
         <div class="folio__cols" aria-hidden="true">
-          <span>#</span>
-          <span>Elenco</span>
           <span>Monto</span>
+          <span>Grupo</span>
+          <span>Método</span>
+          <span>Encargado</span>
+          <span>Operación</span>
+          <span>Estado</span>
           <span></span>
         </div>
 
@@ -99,41 +102,39 @@
               role="listitem"
               [class.is-pendiente]="pago.estado === 'PENDIENTE'"
               [class.is-rechazado]="pago.estado === 'RECHAZADO'"
-              [class.is-verificado]="pago.estado === 'VERIFICADO'"
+              [class.is-verificado]="pago.estado === 'CONFIRMADO'"
             >
-              <span class="row__index">{{ rowIndex(i) }}</span>
-
-              <div class="row__body">
-                <div class="row__title">
-                  <h3>{{ pago.nombreGrupo }}</h3>
-                  <app-badge [tone]="statusTone(pago.estado)" [dot]="false">
-                    {{ statusLabel(pago.estado) }}
-                  </app-badge>
-                </div>
-                <ul class="row__facts">
-                  <li>
-                    <span class="k">Método</span>
-                    <span class="v v--gold">{{ statusLabel(pago.metodoPago) }}</span>
-                  </li>
-                  <li>
-                    <span class="k">Encargado</span>
-                    <span class="v">{{ pago.responsableNombre }}</span>
-                  </li>
-                  <li>
-                    <span class="k">Fecha</span>
-                    <span class="v">{{ formatFecha(pago.fechaPago) }}</span>
-                  </li>
-                  <li>
-                    <span class="k">Operación</span>
-                    <span class="v mono">{{ pago.numeroOperacion || '—' }}</span>
-                  </li>
-                </ul>
-                <p class="row__code mono">{{ pago.codigo }}</p>
+              <!-- Monto -->
+              <div class="row__amount">
+                <b>{{ pago.monto | currency: 'PEN':'symbol-narrow':'1.0-0' }}</b>
               </div>
 
-              <div class="row__amount">
-                <span class="k">Monto</span>
-                <b>{{ pago.monto | currency: 'PEN':'symbol-narrow':'1.0-0' }}</b>
+              <!-- Grupo -->
+              <div class="row__cell">
+                <h3>{{ pago.nombreGrupo }}</h3>
+                <span class="row__sub">{{ pago.codigo }}</span>
+              </div>
+
+              <!-- Método -->
+              <div class="row__cell">
+                <span class="row__text row__text--gold">{{ statusLabel(pago.metodoPago) }}</span>
+              </div>
+
+              <!-- Encargado -->
+              <div class="row__cell">
+                <span class="row__text" [attr.title]="pago.responsableNombre">{{ pago.responsableNombre }}</span>
+              </div>
+
+              <!-- Operación -->
+              <div class="row__cell">
+                <span class="row__text mono">{{ pago.numeroOperacion || '—' }}</span>
+              </div>
+
+              <!-- Estado -->
+              <div class="row__cell">
+                <app-badge [tone]="statusTone(pago.estado)" [dot]="false">
+                  {{ statusLabel(pago.estado) }}
+                </app-badge>
               </div>
 
               <div class="row__actions">
@@ -147,19 +148,21 @@
                 </app-button>
                 @if (pago.estado === 'PENDIENTE') {
                   <app-button
-                    variant="ghost"
-                    size="icon"
+                    variant="outline"
+                    size="sm"
                     icon="circle-check"
-                    ariaLabel="Aceptar pago"
                     (clicked)="accept(pago)"
-                  />
+                  >
+                    Aprobar
+                  </app-button>
                   <app-button
-                    variant="ghost"
-                    size="icon"
+                    variant="outline"
+                    size="sm"
                     icon="x"
-                    ariaLabel="Rechazar pago"
                     (clicked)="reject(pago)"
-                  />
+                  >
+                    Rechazar
+                  </app-button>
                 }
               </div>
             </article>
@@ -234,8 +237,12 @@
           <dd class="gold">{{ statusLabel(pago.metodoPago) }}</dd>
         </div>
         <div>
-          <dt>Fecha</dt>
-          <dd>{{ formatFecha(pago.fechaPago) }}</dd>
+          <dt>Registrado</dt>
+          <dd>{{ formatFecha(pago.createdAt) }}</dd>
+        </div>
+        <div>
+          <dt>Confirmado</dt>
+          <dd>{{ pago.fechaPago ? formatFecha(pago.fechaPago) : 'Pendiente de confirmar' }}</dd>
         </div>
         <div>
           <dt>Código</dt>

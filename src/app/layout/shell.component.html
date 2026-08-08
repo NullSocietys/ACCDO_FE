@@ -18,6 +18,14 @@
         <strong>Chicote de Oro</strong>
         <span>Inscripciones Caporales</span>
       </div>
+      <button
+        class="collapse-btn"
+        type="button"
+        [attr.aria-label]="collapsed() ? 'Expandir menú' : 'Colapsar menú'"
+        (click)="toggleSidebar()"
+      >
+        <app-icon [name]="collapsed() ? 'chevronRight' : 'chevronLeft'" [size]="15" />
+      </button>
     </div>
 
     <nav class="nav">
@@ -40,6 +48,7 @@
     </nav>
 
     <div class="sidebar-footer">
+
       <div class="admin">
         <div class="admin-avatar" aria-hidden="true">AD</div>
         <div class="admin-meta">
@@ -55,32 +64,6 @@
   </aside>
 
   <div class="main">
-    <header class="navbar">
-      <div class="navbar-left">
-        <button
-          class="icon-btn"
-          type="button"
-          [attr.aria-label]="collapsed() ? 'Expandir menú' : 'Colapsar menú'"
-          (click)="toggleSidebar()"
-        >
-          <app-icon [name]="mobileOpen() ? 'x' : 'menu'" [size]="17" />
-        </button>
-        <div class="page-title-wrap">
-          <span class="page-eyebrow">{{ sectionLabel() }}</span>
-          <div class="page-title">{{ pageTitle() }}</div>
-        </div>
-      </div>
-      <div class="navbar-right">
-        <label class="search">
-          <app-icon name="search" [size]="15" />
-          <input type="search" placeholder="Buscar..." aria-label="Buscar en el sistema" />
-        </label>
-        <button class="icon-btn" type="button" aria-label="Notificaciones">
-          <app-icon name="bell" [size]="17" />
-        </button>
-      </div>
-    </header>
-
     <main id="main-content" class="content" [class.navigating]="navigating()" tabindex="-1">
       <div class="route-view">
         <router-outlet />

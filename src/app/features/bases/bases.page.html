@@ -1,13 +1,30 @@
 <div class="page">
-  <div class="page-header">
-    <div class="page-header__meta">
+  <header class="mast">
+    <div class="mast__copy">
+      <p class="mast__eyebrow">Concurso · Reglamento</p>
       <h1>Bases del concurso</h1>
-      <p>
-        VII Concurso Nacional de Caporales “Chicote de Oro 2026” · Domingo 16 de agosto ·
+      <p class="mast__lead">
+        VII Concurso Nacional de Caporales "Chicote de Oro 2026" · Domingo 16 de agosto ·
         Semifinal y Final · Coliseo de Imperial, Cañete · 10:00 am.
       </p>
     </div>
-  </div>
+    <div class="mast__aside">
+      <dl class="mast__pulse" aria-label="Resumen rápido">
+        <div>
+          <dt>Fecha</dt>
+          <dd>16 ago</dd>
+        </div>
+        <div>
+          <dt>Sorteo</dt>
+          <dd>14 ago</dd>
+        </div>
+        <div class="mast__pulse--gold">
+          <dt>Sede</dt>
+          <dd>Imperial</dd>
+        </div>
+      </dl>
+    </div>
+  </header>
 
   <app-kpi-board label="Datos clave de inscripción" [items]="kpis" [columns]="4" />
 

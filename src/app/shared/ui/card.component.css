@@ -2,7 +2,7 @@
   display: block;
   background: var(--color-card);
   border: 1px solid var(--color-border);
-  border-radius: 0;
+  border-radius: var(--radius-lg);
   box-shadow: none;
   transition: border-color var(--transition);
 }

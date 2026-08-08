@@ -101,11 +101,11 @@
   --space-2xl: 2.5rem;
   --space-3xl: 3.5rem;
 
-  /* Swiss Minimal — sharp geometry, no soft SaaS radius/shadow */
-  --radius-sm: 0;
-  --radius-md: 0;
-  --radius-lg: 0;
-  --radius-xl: 0;
+  /* Minimal rounded — clean geometry but not harsh */
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
 
   --shadow-sm: none;
   --shadow-md: none;
@@ -119,7 +119,7 @@
   /* Layout — full-bleed content with fluid gutters (no empty side gutters) */
   --content-gutter: clamp(1rem, 1.8vw, 1.75rem);
   --content-gutter-y: clamp(1.25rem, 2vw, 1.75rem);
-  --section-gap: clamp(1rem, 1.5vw, 1.35rem);
+  --section-gap: clamp(1.25rem, 1.8vw, 1.5rem);
 
   /* Component tokens */
   --badge-radius: 0;
@@ -272,6 +272,12 @@ img {
   max-width: none;
   margin: 0;
   animation: page-enter var(--transition-slow) both;
+}
+
+/* El componente que Angular inserta tras router-outlet hereda el flex del route-view */
+.route-view > router-outlet + * {
+  flex: 1;
+  min-height: 0;
 }
 
 .page-header {

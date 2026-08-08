@@ -26,6 +26,13 @@ export class ResultadosPage {
   readonly store = inject(DataStoreService);
   private readonly toast = inject(ToastService);
 
+  readonly mast = computed(() => {
+    const res = this.store.resultadosView();
+    const maxPuntaje = res.reduce((max, r) => Math.max(max, r.puntaje), 0);
+    const eventos = new Set(res.map((r) => r.eventoId)).size;
+    return { total: res.length, maxPuntaje, eventos };
+  });
+
   readonly eventoId = signal(this.store.eventos()[0]?.id ?? '');
   readonly modalOpen = signal(false);
   readonly form = signal({
@@ -60,29 +67,29 @@ export class ResultadosPage {
     this.modalOpen.set(true);
   }
 
-  save(): void {
+  async save(): Promise<void> {
     const data = this.form();
     if (!data.inscripcionId || data.puntaje <= 0) {
       this.toast.warning('Seleccione una inscripción y un puntaje válido');
       return;
     }
-    const resultado: Resultado = {
-      id: crypto.randomUUID(),
-      inscripcionId: data.inscripcionId,
-      puesto: data.puesto,
-      puntaje: data.puntaje,
-      observaciones: data.observaciones,
-      activo: true,
-      createdAt: new Date().toISOString(),
-    };
-    this.store.addResultado(resultado);
-    this.modalOpen.set(false);
-    this.form.set({
-      inscripcionId: '',
-      puesto: 1,
-      puntaje: 0,
-      observaciones: '',
-    });
-    this.toast.success('Resultado registrado');
+    try {
+      await this.store.addResultado({
+        inscripcionId: data.inscripcionId,
+        puesto: data.puesto,
+        puntaje: data.puntaje,
+        observaciones: data.observaciones || undefined,
+      });
+      this.modalOpen.set(false);
+      this.form.set({
+        inscripcionId: '',
+        puesto: 1,
+        puntaje: 0,
+        observaciones: '',
+      });
+      this.toast.success('Resultado registrado');
+    } catch (err) {
+      this.toast.error('No se pudo registrar', (err as Error).message);
+    }
   }
 }

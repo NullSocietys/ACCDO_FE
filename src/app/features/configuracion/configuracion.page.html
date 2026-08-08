@@ -1,13 +1,16 @@
 <div class="page">
-  <div class="page-header">
-    <div class="page-header__meta">
+  <header class="mast">
+    <div class="mast__copy">
+      <p class="mast__eyebrow">Sistema · Ajustes</p>
       <h1>Configuración</h1>
-      <p>Datos de la asociación, medios de pago y mensajes automáticos.</p>
+      <p class="mast__lead">Datos de la asociación, medios de pago y mensajes automáticos.</p>
     </div>
-    <div class="page-actions">
-      <app-button icon="save" [loading]="saving()" (clicked)="save()">Guardar cambios</app-button>
+    <div class="mast__aside">
+      <div class="mast__actions">
+        <app-button icon="save" [loading]="saving()" [fullWidth]="true" (clicked)="save()">Guardar cambios</app-button>
+      </div>
     </div>
-  </div>
+  </header>
 
   <app-card title="Datos de la asociación" description="Información pública y de contacto">
     <div class="form-grid">

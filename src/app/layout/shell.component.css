@@ -3,7 +3,8 @@
    No shadows, gradients, or decorative chrome. */
 
 .shell {
-  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   transition: grid-template-columns 220ms ease;
@@ -40,13 +41,38 @@
 /* Brand — asymmetric Swiss block */
 .brand {
   display: grid;
-  grid-template-columns: calc(var(--sb-unit) * 5) minmax(0, 1fr);
+  grid-template-columns: calc(var(--sb-unit) * 5) minmax(0, 1fr) auto;
   gap: calc(var(--sb-unit) * 1.5);
   align-items: center;
   padding: calc(var(--sb-unit) * 2.5) calc(var(--sb-unit) * 2.5);
   background: var(--sb-paper);
   border-bottom: 2px solid var(--sb-gold-deep);
   min-height: var(--navbar-height);
+}
+
+.collapse-btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: var(--sb-quiet);
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 200ms ease, border-color 200ms ease, background 200ms ease;
+}
+
+.collapse-btn:hover {
+  color: var(--sb-text);
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.collapse-btn:focus-visible {
+  outline: 2px solid var(--sb-gold);
+  outline-offset: 2px;
 }
 
 .brand-mark {
@@ -292,24 +318,9 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
   background: var(--color-background);
-}
-
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  height: var(--navbar-height);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 0 var(--content-gutter);
-  background: var(--color-background);
-  border-bottom: 1px solid var(--color-border);
-  backdrop-filter: none;
-  box-shadow: none;
 }
 
 .navbar-left {
@@ -414,11 +425,22 @@
 }
 
 .content {
-  padding: var(--content-gutter-y) var(--content-gutter) 2.5rem;
+  padding: var(--content-gutter-y) var(--content-gutter) var(--content-gutter-y);
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   position: relative;
   width: 100%;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.route-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .content.navigating .route-view {
@@ -426,19 +448,21 @@
   transition: opacity 160ms ease;
 }
 
-.route-view {
-  transition: opacity 220ms ease;
-}
-
 .mobile-overlay {
   display: none;
 }
 
-/* Collapsed rail */
 .shell.collapsed .brand {
   grid-template-columns: 1fr;
+  gap: 16px;
   justify-items: center;
+  padding-block: 16px;
   padding-inline: 12px;
+}
+
+.shell.collapsed .sidebar-footer {
+  padding: 12px;
+  align-items: center;
 }
 
 .shell.collapsed .brand-text,

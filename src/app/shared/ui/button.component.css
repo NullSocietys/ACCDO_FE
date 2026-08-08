@@ -16,7 +16,7 @@ button {
   justify-content: center;
   gap: 8px;
   border: 1px solid transparent;
-  border-radius: 0;
+  border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-weight: 550;
   letter-spacing: -0.01em;

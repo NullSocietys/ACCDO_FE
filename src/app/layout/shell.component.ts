@@ -55,16 +55,18 @@ export class ShellComponent {
     {
       label: 'Gestión',
       items: [
+        { label: 'Usuarios', path: '/admin/usuarios', icon: 'user' },
         { label: 'Eventos', path: '/admin/eventos', icon: 'calendar' },
         { label: 'Inscripciones', path: '/admin/inscripciones', icon: 'clipboardList' },
         { label: 'Participantes', path: '/admin/participantes', icon: 'users' },
         { label: 'Pagos', path: '/admin/pagos', icon: 'creditCard' },
+        { label: 'Resultados', path: '/admin/resultados', icon: 'trophy' },
+        { label: 'Reportes', path: '/admin/reportes', icon: 'fileText' },
       ],
     },
     {
       label: 'Sistema',
       items: [
-        { label: 'Resultados', path: '/admin/resultados', icon: 'trophy' },
         { label: 'Bases', path: '/admin/bases', icon: 'fileText' },
         { label: 'Configuración', path: '/admin/configuracion', icon: 'settings' },
       ],
@@ -73,12 +75,14 @@ export class ShellComponent {
 
   private readonly titles: Record<string, { title: string; section: string }> = {
     '/admin': { title: 'Dashboard', section: 'General' },
+    '/admin/usuarios': { title: 'Usuarios', section: 'Gestión' },
     '/admin/eventos': { title: 'Eventos', section: 'Gestión' },
     '/admin/inscripciones': { title: 'Inscripciones', section: 'Gestión' },
     '/admin/inscripciones/nueva': { title: 'Nueva inscripción', section: 'Gestión' },
     '/admin/participantes': { title: 'Participantes', section: 'Gestión' },
     '/admin/pagos': { title: 'Pagos', section: 'Gestión' },
-    '/admin/resultados': { title: 'Resultados', section: 'Sistema' },
+    '/admin/resultados': { title: 'Resultados', section: 'Gestión' },
+    '/admin/reportes': { title: 'Reportes', section: 'Gestión' },
     '/admin/bases': { title: 'Bases del concurso', section: 'Sistema' },
     '/admin/configuracion': { title: 'Configuración', section: 'Sistema' },
   };
@@ -119,6 +123,5 @@ export class ShellComponent {
     if (main) {
       main.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }

@@ -1,3 +1,113 @@
+.page {
+  --rule: var(--color-border);
+  --ink: var(--stone-900);
+  --quiet: var(--stone-500);
+  --paper: var(--color-card);
+  --field: var(--stone-50);
+  --accent: var(--gold-700);
+}
+
+/* —— Mast —— */
+.mast {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
+  gap: 24px 40px;
+  align-items: end;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.mast__copy { min-width: 0; }
+
+.mast__eyebrow {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.mast h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3.2vw, 2.65rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+  color: var(--ink);
+}
+
+.mast__lead {
+  margin: 10px 0 0;
+  max-width: 44ch;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--quiet);
+}
+
+.mast__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.mast__pulse {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.mast__pulse > div {
+  padding: 14px 16px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  border-radius: 6px;
+  min-width: 0;
+}
+
+.mast__pulse dt {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--quiet);
+}
+
+.mast__pulse dd {
+  margin: 0;
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mast__pulse--gold dd { color: var(--accent); }
+
+.mast__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: stretch;
+}
+
+.mast__actions > app-button {
+  display: flex;
+}
+
+@media (max-width: 720px) {
+  .mast { grid-template-columns: 1fr; gap: 18px; }
+  .mast__pulse { grid-template-columns: 1fr; }
+}
+
 .ui-select {
   width: 100%;
   min-height: 40px;

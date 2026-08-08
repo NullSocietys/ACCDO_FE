@@ -65,22 +65,22 @@ export class PagosPage {
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
     { key: 'todos', label: 'Todos' },
     { key: 'PENDIENTE', label: 'Pendientes' },
-    { key: 'VERIFICADO', label: 'Verificados' },
+    { key: 'CONFIRMADO', label: 'Confirmados' },
     { key: 'RECHAZADO', label: 'Rechazados' },
   ];
 
   readonly overview = computed(() => {
     const list = this.store.pagosView();
     const pendientes = list.filter((p) => p.estado === 'PENDIENTE').length;
-    const verificados = list.filter((p) => p.estado === 'VERIFICADO');
+    const confirmados = list.filter((p) => p.estado === 'CONFIRMADO');
     const rechazados = list.filter((p) => p.estado === 'RECHAZADO').length;
-    const ingresos = verificados.reduce((sum, p) => sum + p.monto, 0);
+    const ingresos = confirmados.reduce((sum, p) => sum + p.monto, 0);
     const total = list.length;
 
     return {
       total,
       pendientes,
-      verificados: verificados.length,
+      confirmados: confirmados.length,
       rechazados,
       ingresos,
     };
@@ -152,6 +152,7 @@ export class PagosPage {
   }
 
   formatFecha(fecha: string): string {
+    if (!fecha) return '—';
     const d = Number(fecha.slice(8, 10));
     const m = MESES[Number(fecha.slice(5, 7)) - 1] ?? '';
     const y = fecha.slice(0, 4);
@@ -201,11 +202,16 @@ export class PagosPage {
       confirmLabel: 'Aceptar',
     });
     if (!ok) return;
-    this.store.updatePago(toPagoEntity(pago, 'VERIFICADO'));
-    if (this.selected()?.id === pago.id) {
-      this.selected.set({ ...pago, estado: 'VERIFICADO' });
+    try {
+      await this.store.confirmarPago(pago.id);
+      if (this.selected()?.id === pago.id) {
+        this.selected.set({ ...pago, estado: 'CONFIRMADO' });
+      }
+      this.toast.success('Pago confirmado', pago.codigo);
+      this.toast.info('Correo enviado', 'Confirmación de inscripción enviada al correo del inscrito');
+    } catch (err) {
+      this.toast.error('No se pudo confirmar', (err as Error).message);
     }
-    this.toast.success('Pago verificado', pago.codigo);
   }
 
   async reject(pago: PagoView): Promise<void> {
@@ -216,10 +222,14 @@ export class PagosPage {
       tone: 'danger',
     });
     if (!ok) return;
-    this.store.updatePago(toPagoEntity(pago, 'RECHAZADO'));
-    if (this.selected()?.id === pago.id) {
-      this.selected.set({ ...pago, estado: 'RECHAZADO' });
+    try {
+      await this.store.rechazarPago(pago.id, 'Rechazado por el administrador');
+      if (this.selected()?.id === pago.id) {
+        this.selected.set({ ...pago, estado: 'RECHAZADO' });
+      }
+      this.toast.warning('Pago rechazado', pago.codigo);
+    } catch (err) {
+      this.toast.error('No se pudo rechazar', (err as Error).message);
     }
-    this.toast.warning('Pago rechazado', pago.codigo);
   }
 }
