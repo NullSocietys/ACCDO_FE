@@ -36,11 +36,12 @@
         <nav class="site-nav" id="primaryNav" aria-label="Navegación principal">
           <ul class="nav-list">
             <li><a href="#hero">Galería</a></li>
-            <li><a href="#experiencia">La experiencia</a></li>
+            <li><a href="#experiencia">El concurso</a></li>
+            <li><a href="#inscripcion">Inscripción</a></li>
             <li><a href="#contacto">Contacto</a></li>
           </ul>
         </nav>
-        <a class="btn btn-gold header-cta" href="#contacto">Participar</a>
+        <a class="btn btn-gold header-cta" href="https://wa.me/51926266295" target="_blank" rel="noopener noreferrer">Inscribirme</a>
       </div>
     </div>
   </header>
@@ -96,22 +97,25 @@
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
         </button>
 
-        <div class="hero-top hero-anim" style="animation-delay:.1s">
-          <span class="hero-tag">★ VII Concurso Nacional 2026 · Dom 16 ago · Coliseo de Imperial, Cañete · 10:00 am</span>
+        <div class="hero-top hero-anim">
+          <span class="hero-tag">VII Concurso Nacional 2026 · Dom 16 ago · Coliseo de Imperial, Cañete · 10:00 am</span>
         </div>
 
         <div class="hero-bottom">
           <div class="hero-content">
             <div class="hero-content-grid">
-              <div class="hero-media hero-anim" style="animation-delay:.2s">
-                <img class="hero-logo" src="logo/logo.png" alt="" width="960" height="955" fetchpriority="high" decoding="async">
+              <div class="hero-media hero-anim">
+                <div class="product-stage" data-tilt>
+                  <div class="product-stage__glow" aria-hidden="true"></div>
+                  <img class="hero-logo" src="logo/logo.png" alt="" width="960" height="955" fetchpriority="high" decoding="async">
+                </div>
               </div>
 
               <div class="hero-text">
-                <h1 class="hero-title hero-anim" style="animation-delay:.25s">
+                <h1 class="hero-title hero-anim">
                   <span class="hero-brand-text">Chicote de Oro<span class="hero-brand-sub">Elegancia en movimiento</span></span>
                 </h1>
-                <p class="hero-sub hero-anim" style="animation-delay:.4s">
+                <p class="hero-sub hero-anim">
                   Vive la pasión por la danza en un escenario de lujo: concursos, categorías y resultados
                   que celebran el talento con elegancia dorada.
                 </p>
@@ -121,12 +125,15 @@
 
           <div class="hero-divider" aria-hidden="true"></div>
 
-          <div class="hero-side hero-anim" style="animation-delay:.55s">
-            <span class="hero-side-label">Reserva tu lugar</span>
+          <div class="hero-side hero-anim">
+            <span class="hero-side-label">Inscripciones hasta el 12 de agosto</span>
             <div class="hero-actions">
-              <a class="btn btn-gold" href="#experiencia">
-                <span>Conocer más</span>
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              <a class="btn btn-gold" href="https://wa.me/51926266295" target="_blank" rel="noopener noreferrer">
+                <span>Inscribirme ahora</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+              <a class="btn btn-outline" href="#experiencia">
+                <span>Ver el concurso</span>
               </a>
             </div>
           </div>
@@ -158,7 +165,8 @@
 
         <div class="program-editorial">
           <!-- Foto editorial principal a todo el ancho -->
-          <div class="prog-media reveal">
+          <div class="prog-media reveal product-frame" data-tilt>
+            <div class="product-frame__depth" aria-hidden="true"></div>
             <img src="fotos/ballets/ballet4.png" alt="Ballet sobre el escenario — VII Concurso Nacional de Caporales" width="2000" height="1414" fetchpriority="high" decoding="async">
             <div class="prog-media__veil" aria-hidden="true"></div>
             <div class="prog-media__body">
@@ -341,7 +349,7 @@
               <div class="rate-item__index" aria-hidden="true">02</div>
               <div class="rate-item__body">
                 <span class="rate-item__badge">Unipersonal</span>
-                <h3 class="rate-item__name">Té de Oro</h3>
+                <h3 class="rate-item__name">Caporalita de Oro</h3>
               </div>
               <div class="rate-item__price">
                 <span class="rate-item__currency">S/</span>
@@ -944,21 +952,34 @@
             <h2 class="cta-hero__title">¿Listo para <em>brillar</em>?</h2>
             <p class="cta-hero__text">Inscríbete por Yape al <strong>926 266 295</strong> antes del 12 de agosto y sé parte del VII Concurso Nacional de Caporales.</p>
             <div class="cta-hero__actions">
-              <a class="btn btn-gold" href="https://wa.me/51926266295" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+              <a class="btn btn-gold" href="https://wa.me/51926266295" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
                 <span>Inscribirme por WhatsApp</span>
               </a>
-              <a class="btn btn-outline" href="#inscripcion">
-                <span>Ver proceso de inscripción</span>
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              <a class="btn btn-outline" href="#costos">
+                <span>Ver tarifas</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
             </div>
+            <p class="cta-hero__urgency">Cupos por modalidad · Sorteo oficial viernes 14 ago · 9:00 pm</p>
           </div>
         </div>
       </div>
     </section>
 
   </main>
+
+  <aside class="convert-bar" id="convertBar" aria-label="Inscripción rápida">
+    <div class="convert-bar__inner">
+      <div class="convert-bar__copy">
+        <span class="convert-bar__kicker">Inscripciones abiertas</span>
+        <p>Hasta el <strong>12 de agosto</strong> · Yape <strong>926 266 295</strong></p>
+      </div>
+      <a class="btn btn-gold convert-bar__cta" href="https://wa.me/51926266295" target="_blank" rel="noopener noreferrer">
+        Inscribirme
+      </a>
+    </div>
+  </aside>
 
   <!-- ===================== PIE DE PÁGINA ===================== -->
   <footer class="site-footer">
