@@ -26,7 +26,6 @@
     </div>
   </header>
 
-  <app-kpi-board label="Datos clave de inscripción" [items]="kpis" [columns]="4" />
 
   <div class="bases-layout">
     <nav class="toc" aria-label="Artículos de las bases">
@@ -53,11 +52,13 @@
         <div class="tariff-grid">
           @for (m of modalidades; track m.codigo) {
             <article class="tariff">
-              <span class="tariff__code">{{ m.codigo }}</span>
+              <div class="tariff__top">
+                <span class="tariff__code">{{ m.codigo }}</span>
+                <p class="tariff__cost">
+                  {{ m.costo | currency: 'PEN':'symbol-narrow':'1.0-0' }}
+                </p>
+              </div>
               <h3>{{ m.modalidad }}</h3>
-              <p class="tariff__cost">
-                {{ m.costo | currency: 'PEN':'symbol-narrow':'1.0-0' }}
-              </p>
             </article>
           }
         </div>

@@ -15,7 +15,7 @@ import { ModalComponent } from '../../shared/ui/modal.component';
 type EstadoFiltro = 'todos' | PagoEstado;
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 function toPagoEntity(pago: PagoView, estado: PagoEstado): Pago {
   return {

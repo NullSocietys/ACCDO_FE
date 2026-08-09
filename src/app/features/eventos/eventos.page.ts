@@ -24,6 +24,7 @@ const emptyForm = (): Omit<Evento, 'id'> => ({
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const DIAS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+const PAGE_SIZE = 10;
 
 type EstadoFiltro = 'todos' | EventoEstado;
 
@@ -54,6 +55,8 @@ export class EventosPage {
   readonly modalOpen = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly form = signal(emptyForm());
+  readonly page = signal(1);
+  readonly pageSize = PAGE_SIZE;
 
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
     { key: 'todos', label: 'Todos' },
@@ -80,6 +83,36 @@ export class EventosPage {
           e.lugar.toLowerCase().includes(q) ||
           e.descripcion.toLowerCase().includes(q)),
     );
+  });
+
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filtrados().length / this.pageSize)),
+  );
+
+  readonly pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = Math.min(this.page(), total);
+    const window = 5;
+    let start = Math.max(1, current - Math.floor(window / 2));
+    const end = Math.min(total, start + window - 1);
+    start = Math.max(1, end - window + 1);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  readonly paged = computed(() => {
+    const list = this.filtrados();
+    const p = Math.min(Math.max(1, this.page()), this.totalPages());
+    const start = (p - 1) * this.pageSize;
+    return list.slice(start, start + this.pageSize);
+  });
+
+  readonly rangeLabel = computed(() => {
+    const total = this.filtrados().length;
+    if (total === 0) return '0 resultados';
+    const p = Math.min(this.page(), this.totalPages());
+    const from = (p - 1) * this.pageSize + 1;
+    const to = Math.min(p * this.pageSize, total);
+    return `${from}–${to} de ${total}`;
   });
 
   readonly featured = computed(() => {
@@ -161,9 +194,15 @@ export class EventosPage {
     return `En ${dias} días`;
   }
 
+  goToPage(page: number): void {
+    const next = Math.min(Math.max(1, page), this.totalPages());
+    this.page.set(next);
+  }
+
   limpiarFiltros(): void {
     this.busqueda.set('');
     this.estadoFiltro.set('todos');
+    this.page.set(1);
   }
 
   rowIndex(localIndex: number): string {

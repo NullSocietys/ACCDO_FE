@@ -1,6 +1,11 @@
 /* Swiss Minimal — Caporales caja
    Ink + stone + gold accent only. Hairlines. Folio index. No soft shadows. */
 
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
 .pagos {
   --folio-gap: 16px;
   --rule: var(--color-border);
@@ -57,42 +62,60 @@
 .mast__pulse {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
+  gap: 8px;
   margin: 0;
-  border: 1px solid var(--rule);
-  background: var(--paper);
 }
 
 .mast__pulse > div {
-  padding: 12px 14px;
-  border-right: 1px solid var(--rule);
-}
-
-.mast__pulse > div:last-child {
-  border-right: none;
+  padding: 9px 16px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  border-radius: 6px;
+  min-width: 0;
 }
 
 .mast__pulse dt {
-  margin: 0 0 6px;
-  font-size: 10px;
+  margin: 0 0 4px;
+  font-size: 11px;
   font-weight: 650;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--quiet);
 }
 
 .mast__pulse dd {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
   font-weight: 700;
   letter-spacing: -0.04em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mast__pulse--gold dd {
   color: var(--accent);
+}
+
+.mast__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.mast__cta {
+  display: flex;
+  width: 100%;
+}
+
+.mast__cta > :first-child,
+.mast__cta app-button {
+  flex: 1 1 auto;
+  width: 100%;
 }
 
 /* —— Attention strip —— */
@@ -268,16 +291,17 @@
   color: var(--stone-400);
 }
 
+/* Lista de tarjetas: 10 ranuras iguales — cada card ocupa 1/10 de la altura */
 .folio__list {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+  display: grid;
+  grid-template-rows: repeat(10, minmax(0, 1fr));
 }
 
 /* Row: Swiss asymmetric grid */
 .row {
+  overflow: hidden;
   display: grid;
   grid-template-columns: 80px minmax(140px, 1.5fr) 100px minmax(120px, 1fr) 100px 100px minmax(120px, auto);
   gap: 8px 12px;
@@ -362,12 +386,12 @@
 
 .row__amount b {
   display: block;
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: -0.04em;
+  font-size: 0.9rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
-  line-height: 1.05;
+  line-height: 1.2;
 }
 
 .row__actions {
@@ -537,35 +561,56 @@
 @media (max-width: 960px) {
   .folio__cols,
   .row {
-    grid-template-columns: 40px minmax(0, 1fr) 108px;
+    grid-template-columns: 72px minmax(0, 1fr) auto;
   }
 
-  .folio__cols span:nth-child(4) {
+  .folio__cols span:nth-child(4),
+  .folio__cols span:nth-child(5),
+  .folio__cols span:nth-child(7),
+  .row__cell:nth-of-type(4),
+  .row__cell:nth-of-type(5) {
     display: none;
   }
 
-  .row {
-    grid-template-areas:
-      'idx body amount'
-      'idx actions actions';
+  .folio__cols span:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1 / span 2;
   }
 
-  .row__index {
-    grid-area: idx;
+  .folio__cols span:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
   }
 
-  .row__body {
-    grid-area: body;
+  .folio__cols span:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
   }
 
-  .row__amount {
-    grid-area: amount;
+  .folio__cols span:nth-child(6) {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .row__cell:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .row__cell:nth-of-type(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .row__cell:nth-of-type(6) {
+    grid-column: 3;
+    grid-row: 1;
   }
 
   .row__actions {
-    grid-area: actions;
+    grid-column: 3;
+    grid-row: 2;
     justify-content: flex-start;
-    padding-top: 2px;
   }
 
   .row__facts {
@@ -576,7 +621,7 @@
 @media (max-width: 720px) {
   .mast {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 14px;
   }
 
   .mast__pulse {
@@ -600,24 +645,28 @@
   }
 
   .row {
-    grid-template-columns: 36px minmax(0, 1fr);
-    gap: 10px 12px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    gap: 2px 0;
+  }
+
+  .row__cell:nth-of-type(2),
+  .row__cell:nth-of-type(3),
+  .row__cell:nth-of-type(6),
+  .row__actions {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .row__amount {
-    grid-column: 2;
     text-align: left;
     display: flex;
     align-items: baseline;
     gap: 10px;
   }
 
-  .row__amount .k {
-    margin: 0;
-  }
-
   .row__actions {
-    grid-column: 2;
+    justify-content: flex-start;
   }
 
   .sheet__grid {

@@ -7,20 +7,27 @@
         Verificación de comprobantes Yape para los elencos del concurso.
       </p>
     </div>
-    <dl class="mast__pulse" aria-label="Resumen rápido">
-      <div>
-        <dt>Cola</dt>
-        <dd>{{ overview().pendientes }}</dd>
+    <div class="mast__aside">
+      <dl class="mast__pulse" aria-label="Resumen rápido">
+        <div>
+          <dt>Cola</dt>
+          <dd>{{ overview().pendientes }}</dd>
+        </div>
+        <div>
+          <dt>OK</dt>
+          <dd>{{ overview().confirmados }}</dd>
+        </div>
+        <div class="mast__pulse--gold">
+          <dt>Total</dt>
+          <dd>{{ overview().total }}</dd>
+        </div>
+      </dl>
+      <div class="mast__cta">
+        <app-button icon="wallet" [fullWidth]="true">
+          Ingresos · {{ overview().ingresos | currency: 'PEN':'symbol-narrow':'1.0-0' }}
+        </app-button>
       </div>
-      <div>
-        <dt>OK</dt>
-        <dd>{{ overview().confirmados }}</dd>
-      </div>
-      <div class="mast__pulse--gold">
-        <dt>Ingresos</dt>
-        <dd>{{ overview().ingresos | currency: 'PEN':'symbol-narrow':'1.0-0' }}</dd>
-      </div>
-    </dl>
+    </div>
   </header>
 
   @if (store.pagosView().length === 0) {

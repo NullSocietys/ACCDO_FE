@@ -1,12 +1,13 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { jsPDF } from 'jspdf';
+import autoTable, { type CellInput, type RowInput } from 'jspdf-autotable';
 import { DataStoreService } from '../../core/services/data-store.service';
+import { ToastService } from '../../core/services/toast.service';
 import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
-import { KpiBoardComponent } from '../../shared/ui/kpi-board.component';
-import { KpiItem } from '../../shared/ui/kpi-board.types';
 
 interface IntegranteRow {
   id: string;
@@ -42,13 +43,13 @@ interface ReporteModalidad {
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
-    KpiBoardComponent,
   ],
   styleUrl: './reportes.page.css',
   templateUrl: './reportes.page.html',
 })
 export class ReportesPage {
   readonly store = inject(DataStoreService);
+  private readonly toast = inject(ToastService);
   readonly statusTone = statusTone;
   readonly statusLabel = statusLabel;
 
@@ -56,7 +57,12 @@ export class ReportesPage {
   readonly modalidadFilter = signal('');
   readonly estadoFilter = signal('');
   readonly vistaActual = signal<'general' | 'modalidades'>('general');
+  readonly exportEstado = signal('CONFIRMADA');
   readonly modalidadExpandida = signal<string | null>(null);
+  readonly modalidadPage = signal(1);
+  readonly modalidadPageSize = 5;
+  readonly seccionesPage = signal(1);
+  readonly seccionesPageSize = 2;
 
   readonly mastGrupos = computed(() => new Set(this.integrantes().map((r) => r.codigo)).size);
   readonly mastModalidades = computed(() => new Set(this.integrantes().map((r) => r.modalidad)).size);
@@ -107,44 +113,101 @@ export class ReportesPage {
     });
   });
 
-  readonly kpis = computed((): KpiItem[] => {
-    const all = this.integrantes();
-    const grupos = new Set(all.map((r) => r.codigo)).size;
-    const confirmados = all.filter((r) => r.estado === 'CONFIRMADA').length;
-    const varones = all.filter((r) => r.sexo === 'Varón').length;
-    const mujeres = all.length - varones;
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filtered().length / this.pageSize)),
+  );
 
-    return [
-      {
-        label: 'Integrantes',
-        value: all.length,
-        hint: 'Bailarines registrados',
-        icon: 'users',
-        tone: 'gold',
-      },
-      {
-        label: 'Grupos',
-        value: grupos,
-        hint: 'Elencos inscritos',
-        icon: 'users-round',
-        tone: 'ink',
-      },
-      {
-        label: 'Modalidades',
-        value: new Set(all.map((r) => r.modalidad)).size,
-        hint: 'En competencia',
-        icon: 'trophy',
-        tone: 'warn',
-      },
-      {
-        label: 'Composición',
-        value: `${varones} · ${mujeres}`,
-        hint: 'Varones · Mujeres',
-        icon: 'user',
-        tone: 'ink',
-        money: true,
-      },
-    ];
+  readonly pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = Math.min(this.page(), total);
+    const window = 5;
+    let start = Math.max(1, current - Math.floor(window / 2));
+    const end = Math.min(total, start + window - 1);
+    start = Math.max(1, end - window + 1);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  readonly paged = computed(() => {
+    const list = this.filtered();
+    const p = Math.min(Math.max(1, this.page()), this.totalPages());
+    const start = (p - 1) * this.pageSize;
+    return list.slice(start, start + this.pageSize);
+  });
+
+  readonly rangeLabel = computed(() => {
+    const total = this.filtered().length;
+    if (total === 0) return '0 resultados';
+    const p = Math.min(this.page(), this.totalPages());
+    const from = (p - 1) * this.pageSize + 1;
+    const to = Math.min(p * this.pageSize, total);
+    return `${from}–${to} de ${total}`;
+  });
+
+  readonly seccionesTotalPages = computed(() =>
+    Math.max(1, Math.ceil(this.reportesModalidad().length / this.seccionesPageSize)),
+  );
+
+  readonly seccionesPageNumbers = computed(() => {
+    const total = this.seccionesTotalPages();
+    const current = Math.min(this.seccionesPage(), total);
+    const window = 5;
+    let start = Math.max(1, current - Math.floor(window / 2));
+    const end = Math.min(total, start + window - 1);
+    start = Math.max(1, end - window + 1);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  readonly seccionesPaged = computed(() => {
+    const list = this.reportesModalidad();
+    const p = Math.min(Math.max(1, this.seccionesPage()), this.seccionesTotalPages());
+    const start = (p - 1) * this.seccionesPageSize;
+    return list.slice(start, start + this.seccionesPageSize);
+  });
+
+  readonly seccionesRangeLabel = computed(() => {
+    const total = this.reportesModalidad().length;
+    if (total === 0) return '0 modalidades';
+    const p = Math.min(this.seccionesPage(), this.seccionesTotalPages());
+    const from = (p - 1) * this.seccionesPageSize + 1;
+    const to = Math.min(p * this.seccionesPageSize, total);
+    return `${from}–${to} de ${total}`;
+  });
+
+  readonly expanded = computed((): ReporteModalidad | null => {
+    const mod = this.modalidadExpandida();
+    return mod ? this.reportesModalidad().find((r) => r.modalidad === mod) ?? null : null;
+  });
+
+  readonly expandedTotalPages = computed(() => {
+    const r = this.expanded();
+    return r ? Math.max(1, Math.ceil(r.participantes.length / this.modalidadPageSize)) : 1;
+  });
+
+  readonly expandedPageNumbers = computed(() => {
+    const total = this.expandedTotalPages();
+    const current = Math.min(this.modalidadPage(), total);
+    const window = 5;
+    let start = Math.max(1, current - Math.floor(window / 2));
+    const end = Math.min(total, start + window - 1);
+    start = Math.max(1, end - window + 1);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  readonly expandedPaged = computed((): IntegranteRow[] => {
+    const r = this.expanded();
+    if (!r) return [];
+    const p = Math.min(Math.max(1, this.modalidadPage()), this.expandedTotalPages());
+    const start = (p - 1) * this.modalidadPageSize;
+    return r.participantes.slice(start, start + this.modalidadPageSize);
+  });
+
+  readonly expandedRangeLabel = computed(() => {
+    const r = this.expanded();
+    if (!r || r.participantes.length === 0) return '0 registrados';
+    const p = Math.min(Math.max(1, this.modalidadPage()), this.expandedTotalPages());
+    const from = (p - 1) * this.modalidadPageSize + 1;
+    const to = Math.min(p * this.modalidadPageSize, r.participantes.length);
+    return `${from}–${to} de ${r.participantes.length}`;
   });
 
   readonly reportesModalidad = computed((): ReporteModalidad[] => {
@@ -179,6 +242,23 @@ export class ReportesPage {
     });
   });
 
+  readonly page = signal(1);
+  readonly pageSize = 10;
+
+  constructor() {
+    effect(() => {
+      this.search();
+      this.modalidadFilter();
+      this.estadoFilter();
+      untracked(() => this.page.set(1));
+    });
+  }
+
+  goToPage(page: number): void {
+    const next = Math.min(Math.max(1, page), this.totalPages());
+    this.page.set(next);
+  }
+
   limpiarFiltros(): void {
     this.search.set('');
     this.modalidadFilter.set('');
@@ -190,18 +270,37 @@ export class ReportesPage {
     if (vista === 'general') {
       this.modalidadExpandida.set(null);
     }
+    this.modalidadPage.set(1);
+    this.seccionesPage.set(1);
   }
 
   toggleModalidad(modalidad: string): void {
     this.modalidadExpandida.set(this.modalidadExpandida() === modalidad ? null : modalidad);
+    this.modalidadPage.set(1);
+  }
+
+  goToModalidadPage(page: number): void {
+    const next = Math.min(Math.max(1, page), this.expandedTotalPages());
+    this.modalidadPage.set(next);
+  }
+
+  goToSeccionesPage(page: number): void {
+    const next = Math.min(Math.max(1, page), this.seccionesTotalPages());
+    this.seccionesPage.set(next);
+    this.modalidadExpandida.set(null);
+    this.modalidadPage.set(1);
   }
 
   exportarPdfPorModalidad(reporte: ReporteModalidad): void {
-    if (reporte.participantes.length === 0) return;
-    this.exportarPdfTitulo(
+    const filas = reporte.participantes.filter((r) => this.porExportEstado(r));
+    if (filas.length === 0) return;
+    const estado = this.exportEstado()
+      ? ` · Estado: ${this.statusLabel(this.exportEstado())}`
+      : '';
+    void this.exportarPdfTitulo(
       'Reporte por modalidad',
-      reporte.participantes,
-      `Modalidad: ${reporte.modalidad}`,
+      filas,
+      `${this.notaModalidad(reporte.modalidad)}${estado}`,
     );
   }
 
@@ -210,30 +309,46 @@ export class ReportesPage {
   exportarPdfModalidad(): void {
     const mod = this.modalidadPdf();
     if (!mod) return;
-    const rows = this.integrantes().filter((r) => r.modalidad === mod);
+    const rows = this.integrantes().filter(
+      (r) => r.modalidad === mod && this.porExportEstado(r),
+    );
     if (rows.length === 0) return;
-    this.exportarPdfTitulo('Reporte por modalidad', rows, `Modalidad: ${mod}`);
+    const estado = this.exportEstado()
+      ? ` · Estado: ${this.statusLabel(this.exportEstado())}`
+      : '';
+    void this.exportarPdfTitulo('Reporte por modalidad', rows, `${this.notaModalidad(mod)}${estado}`);
   }
 
-  exportarPdf(tipo: 'general' | 'filtrado'): void {
-    const rows = tipo === 'general' ? this.integrantes() : this.filtered();
-    if (rows.length === 0) return;
-
-    const titulo =
-      tipo === 'general'
-        ? 'Reporte general de integrantes'
-        : 'Reporte de integrantes (filtrado)';
-    const filtro = this.modalidadFilter()
-      ? `Modalidad: ${this.modalidadFilter()}`
-      : this.estadoFilter()
-        ? `Estado: ${this.statusLabel(this.estadoFilter())}`
-        : this.search()
-          ? `Búsqueda: ${this.search()}`
-          : '';
-    this.exportarPdfTitulo(titulo, rows, filtro);
+  private porExportEstado(r: IntegranteRow): boolean {
+    return !this.exportEstado() || r.estado === this.exportEstado();
   }
 
-  private exportarPdfTitulo(titulo: string, rows: IntegranteRow[], nota: string): void {
+  private notaModalidad(mod: string): string {
+    return `Modalidad: ${mod}`;
+  }
+
+  exportarPdf(): void {
+    const rows = this.filtered().filter((r) => this.porExportEstado(r));
+    if (rows.length === 0) return;
+
+    const titulo = 'Reporte general de integrantes';
+
+    const partes: string[] = [];
+    if (this.modalidadFilter()) partes.push(this.notaModalidad(this.modalidadFilter()));
+    if (this.estadoFilter()) partes.push(`Estado: ${this.statusLabel(this.estadoFilter())}`);
+    if (this.search()) partes.push(`Búsqueda: ${this.search()}`);
+    if (this.exportEstado()) partes.push(`Estado: ${this.statusLabel(this.exportEstado())}`);
+    const nota = partes.join(' · ');
+
+    void this.exportarPdfTitulo(titulo, rows, nota, true);
+  }
+
+  private async exportarPdfTitulo(
+    titulo: string,
+    rows: IntegranteRow[],
+    nota: string,
+    agruparPorModalidad = false,
+  ): Promise<void> {
     const hoy = new Date().toLocaleDateString('es-PE', {
       day: '2-digit',
       month: 'long',
@@ -242,124 +357,167 @@ export class ReportesPage {
     const grupos = new Set(rows.map((r) => r.codigo)).size;
     const modalidades = new Set(rows.map((r) => r.modalidad)).size;
 
-    const filas = rows
-      .map(
-        (r, i) => `
-        <tr>
-          <td>${i + 1}</td>
-          <td>${r.nombre}</td>
-          <td>${r.dni}</td>
-          <td>${r.edad}</td>
-          <td>${r.sexo}</td>
-          <td>${r.grupo}</td>
-          <td>${r.modalidad}</td>
-          <td class="mono">${r.codigo}</td>
-          <td>${this.statusLabel(r.estado)}</td>
-        </tr>`,
-      )
-      .join('');
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 14;
 
-    const win = window.open('', '_blank', 'width=860,height=1000');
-    if (!win) return;
-    win.document.write(`
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8" />
-<title>${titulo}</title>
-<style>
-  @page { size: A4 landscape; margin: 12mm; }
-  * { box-sizing: border-box; }
-  body {
-    font-family: 'Geist', system-ui, sans-serif;
-    font-size: 10px;
-    color: #1c1917;
-    margin: 0;
-    padding: 0 4px;
+    // Logo con proporción real del PNG (960×955): sin aplastar.
+    let logoW = 17.6;
+    let logoH = logoW;
+    try {
+      const logoUrl = new URL('logo/LogoV1.png', document.baseURI).href;
+      const blob = await fetch(logoUrl).then((r) => r.blob());
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+      const img = await new Promise<HTMLImageElement>((resolve) => {
+        const im = new Image();
+        im.onload = () => resolve(im);
+        im.onerror = () => resolve(im);
+        im.src = dataUrl;
+      });
+      const ratio = img.naturalHeight / img.naturalWidth || 1;
+      logoH = logoW * ratio;
+      if (logoH > 20) {
+        logoH = 20;
+        logoW = logoH / ratio;
+      }
+      doc.addImage(dataUrl, 'PNG', margin, margin - 3, logoW, logoH);
+    } catch {
+      /* sin logo */
+    }
+    const titleX = margin + logoW + 3.5;
+
+    // Línea 1: marca a la izquierda, fecha a la derecha (sin colisión).
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(28, 25, 23);
+    doc.text('Chicote de Oro', titleX, margin + 3);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(120, 113, 108);
+    doc.text(`Generado el ${hoy}`, pageW - margin, margin + 3, { align: 'right' });
+
+    // Línea 2: título del reporte.
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(68, 64, 60);
+    doc.text(titulo, titleX, margin + 8.5);
+
+    // Línea 3: resumen de integrantes, grupos, modalidades y filtros aplicados.
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(120, 113, 108);
+    const sub = `${rows.length} integrantes · ${grupos} grupos · ${modalidades} modalidades${nota ? ' · ' + nota : ''}`;
+    doc.text(doc.splitTextToSize(sub, pageW - margin - titleX), titleX, margin + 13);
+
+    // Línea dorada bajo el encabezado.
+    doc.setDrawColor(176, 141, 60);
+    doc.setLineWidth(1);
+    doc.line(margin, margin + 17, pageW - margin, margin + 17);
+
+    const head = agruparPorModalidad
+      ? ['#', 'Integrante', 'DNI', 'Edad', 'Sexo', 'Grupo', 'Código', 'Estado']
+      : ['#', 'Integrante', 'DNI', 'Edad', 'Sexo', 'Grupo', 'Modalidad', 'Código', 'Estado'];
+
+    const body = this.filasPdf(rows, agruparPorModalidad);
+
+    autoTable(doc, {
+      startY: margin + 21,
+      head: [head],
+      body,
+      theme: 'grid',
+      margin: { left: margin, right: margin },
+      styles: {
+        font: 'helvetica',
+        fontSize: 8.5,
+        cellPadding: 2.2,
+        textColor: [28, 25, 23],
+        lineColor: [214, 211, 209],
+        lineWidth: 0.15,
+      },
+      headStyles: {
+        fillColor: [28, 25, 23],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 8,
+        cellPadding: 2.6,
+      },
+      alternateRowStyles: { fillColor: [250, 250, 249] },
+      columnStyles: {
+        0: { cellWidth: 9, halign: 'center' },
+        2: { cellWidth: 20, halign: 'center' },
+        3: { cellWidth: 10, halign: 'center' },
+        4: { cellWidth: 13, halign: 'center' },
+      },
+      didDrawPage: (data) => {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(120, 113, 108);
+        doc.text(
+          `Documento generado desde el panel de administración · Chicote de Oro — Página ${data.pageNumber}`,
+          pageW / 2,
+          pageH - 6,
+          { align: 'center' },
+        );
+      },
+    });
+
+    const slug = titulo.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    doc.save(`chicote-de-oro-${slug}.pdf`);
+    this.toast.success('PDF descargado');
   }
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    border-bottom: 3px solid #b08d3c;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
+
+  private filasPdf(rows: IntegranteRow[], agruparPorModalidad: boolean): RowInput[] {
+    const body: RowInput[] = [];
+    let n = 0;
+
+    if (agruparPorModalidad) {
+      const porModalidad = new Map<string, IntegranteRow[]>();
+      for (const r of rows) {
+        const lista = porModalidad.get(r.modalidad) ?? [];
+        lista.push(r);
+        porModalidad.set(r.modalidad, lista);
+      }
+
+      for (const mod of [...porModalidad.keys()].sort((a, b) => a.localeCompare(b, 'es'))) {
+        const lista = porModalidad.get(mod)!;
+        const gruposMod = new Set(lista.map((r) => r.codigo)).size;
+        body.push([
+          {
+            content: `${mod} — ${lista.length} integrantes · ${gruposMod} grupos`,
+            colSpan: 8,
+            styles: {
+              fillColor: [176, 141, 60],
+              textColor: [255, 255, 255],
+              fontStyle: 'bold',
+              fontSize: 8.5,
+            },
+          } satisfies CellInput,
+        ]);
+        for (const r of lista) {
+          n += 1;
+          body.push(this.filaPdf(n, r, false));
+        }
+      }
+    } else {
+      for (const r of rows) {
+        n += 1;
+        body.push(this.filaPdf(n, r, true));
+      }
+    }
+    return body;
   }
-  header h1 {
-    margin: 0 0 4px;
-    font-size: 17px;
-    letter-spacing: -0.02em;
-  }
-  header p { margin: 0; font-size: 11px; color: #44403c; }
-  .meta {
-    text-align: right;
-    font-size: 11px;
-    color: #44403c;
-    line-height: 1.5;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 8px;
-  }
-  thead { display: table-header-group; }
-  tr { page-break-inside: avoid; }
-  th, td {
-    padding: 6px 8px;
-    border: 1px solid #d6d3d1;
-    text-align: left;
-    vertical-align: top;
-  }
-  th {
-    background: #1c1917;
-    color: #fff;
-    font-weight: 600;
-    font-size: 9.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  td.mono { font-family: 'Geist Mono', monospace; }
-  tr:nth-child(even) td { background: #fafaf9; }
-  footer {
-    margin-top: 10px;
-    font-size: 10px;
-    color: #78716c;
-  }
-  @media print { body { padding: 0; } }
-</style>
-</head>
-<body>
-  <header>
-    <div>
-      <h1>Chicote de Oro · ${titulo}</h1>
-      <p>${rows.length} integrantes · ${grupos} grupos · ${modalidades} modalidades${nota ? ' · ' + nota : ''}</p>
-    </div>
-    <div class="meta">Generado el ${hoy}</div>
-  </header>
-  <table>
-    <thead>
-      <tr>
-        <th style="width:24px">#</th>
-        <th>Integrante</th>
-        <th>DNI</th>
-        <th>Edad</th>
-        <th>Sexo</th>
-        <th>Grupo</th>
-        <th>Modalidad</th>
-        <th>Código</th>
-        <th>Estado</th>
-      </tr>
-    </thead>
-    <tbody>
-${filas}
-    </tbody>
-  </table>
-  <footer>Documento generado desde el panel de administración · Chicote de Oro</footer>
-</body>
-</html>`,
-    );
-    win.document.close();
-    win.focus();
-    win.print();
+
+  private filaPdf(index: number, r: IntegranteRow, conModalidad: boolean): RowInput {
+    const fila: CellInput[] = [index, r.nombre, r.dni, r.edad, r.sexo, r.grupo];
+    if (conModalidad) fila.push(r.modalidad);
+    fila.push(r.codigo, this.statusLabel(r.estado));
+    return fila;
   }
 }

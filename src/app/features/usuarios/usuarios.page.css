@@ -2,6 +2,11 @@
    Layout fijo al viewport (sin scroll). Paginación integrada en el folio.
    Ink + stone + gold. Avatar como firma. Hairlines. */
 
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
 .usuarios {
   --rule: var(--color-border);
   --ink: var(--stone-900);
@@ -115,8 +120,8 @@
 }
 
 @media (max-width: 720px) {
-  .mast { grid-template-columns: 1fr; gap: 18px; }
-  .mast__pulse { grid-template-columns: 1fr; }
+  .mast { grid-template-columns: 1fr; gap: 14px; }
+  .mast__pulse { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 /* —— Controls —— */
@@ -180,7 +185,7 @@
   min-width: 0;
 }
 
-/* —— Folio: ocupa el espacio restante —— */
+/* —— Folio: ocupa la altura disponible, sin scroll —— */
 .folio {
   flex: 1;
   min-height: 0;
@@ -232,31 +237,35 @@
   color: var(--stone-400);
 }
 
-/* Lista de filas ocupa el espacio flexible */
+/* Lista de tarjetas: 10 ranuras iguales — cada card ocupa 1/10 de la altura */
 .folio__list {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+  display: grid;
+  grid-template-rows: repeat(10, minmax(0, 1fr));
+  gap: 4px;
+  padding: 6px 8px;
 }
 
 .row {
+  overflow: hidden;
   display: grid;
   grid-template-columns: 44px minmax(140px, 1.2fr) minmax(140px, 1fr) 92px 92px 148px;
   gap: 8px 12px;
   align-items: center;
-  padding: 3px 14px;
-  border-bottom: 1px solid var(--rule);
-  transition: background 180ms ease;
-}
-
-.row:last-child {
-  border-bottom: none;
+  padding: 6px 16px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
 }
 
 .row:hover {
-  background: var(--field);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
 }
 
 .row.is-inactivo {
@@ -335,73 +344,65 @@
   align-items: center;
 }
 
-/* —— Paginación —— */
-.pagination {
+/* —— Pager (mismo diseño que el resto de módulos) —— */
+.pager {
   flex-shrink: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
-  padding: 5px 18px;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px;
+  margin-top: 1px;
+  border: 0;
   border-top: 1px solid var(--rule);
-  background: var(--field);
+  background: transparent;
 }
 
-.pag-btn {
+.pager__range {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--quiet);
+  font-variant-numeric: tabular-nums;
+}
+
+.pager__controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pager__page {
   appearance: none;
-  border: 1px solid var(--rule);
-  background: var(--paper);
-  color: var(--stone-600);
+  border: 1px solid transparent;
+  background: transparent;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 6px;
   font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  min-width: 32px;
-  height: 24px;
-  padding: 0 8px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    color 150ms ease,
-    border-color 150ms ease,
-    background 150ms ease;
-}
-
-.pag-btn:hover:not(:disabled) {
-  color: var(--ink);
-  border-color: var(--stone-400);
-  background: var(--stone-50);
-}
-
-.pag-btn--active {
-  background: var(--ink);
-  color: #ffffff;
-  border-color: var(--ink);
-  font-weight: 700;
-}
-
-.pag-btn--arrow {
-  font-size: 16px;
-  padding: 0 6px;
-}
-
-.pag-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.pag-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.pag-info {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
+  font-weight: 650;
   color: var(--quiet);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+
+.pager__page:hover {
+  color: var(--ink);
+  border-color: var(--rule);
+  background: var(--paper);
+}
+
+.pager__page.is-active {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.pager__page:focus-visible {
+  outline: 2px solid var(--gold-600);
+  outline-offset: 2px;
 }
 
 /* —— Modal form sheet —— */
@@ -421,22 +422,34 @@
 
 /* —— Responsive —— */
 @media (max-width: 960px) {
-  .row__facts {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .folio__cols,
   .row {
-    grid-template-columns: 40px 40px minmax(0, 1fr);
+    grid-template-columns: 40px minmax(0, 1fr) auto;
   }
 
-  .folio__cols span:last-child {
+  .folio__cols span:nth-child(4),
+  .row__cell:nth-of-type(4) {
     display: none;
   }
 
+  .row__cell:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .row__cell:nth-of-type(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .row__cell:nth-of-type(5) {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
   .row__actions {
-    grid-column: 2 / -1;
-    justify-content: flex-start;
+    grid-column: 3;
+    grid-row: 2;
   }
 
   .controls {
@@ -450,17 +463,36 @@
   }
 
   .row {
-    grid-template-columns: 36px minmax(0, 1fr);
-    gap: 8px 10px;
+    grid-template-columns: 40px minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
+    gap: 4px 10px;
   }
 
   .row__avatar {
-    grid-column: 2;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: start;
   }
 
-  .row__body,
+  .row__cell:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .row__cell:nth-of-type(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .row__cell:nth-of-type(5) {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
   .row__actions {
     grid-column: 2;
+    grid-row: 4;
+    justify-content: flex-start;
   }
 
   .sheet__grid--form {
@@ -471,7 +503,7 @@
 @media (prefers-reduced-motion: reduce) {
   .row,
   .tabs__btn,
-  .pag-btn {
+  .pager__page {
     transition: none;
   }
 }

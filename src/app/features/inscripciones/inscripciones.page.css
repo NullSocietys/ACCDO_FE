@@ -1,6 +1,11 @@
 /* Swiss Minimal — Caporales nómina
    Ink + stone + gold accent. Hairlines. Folio index. No soft shadows. */
 
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
 .insc {
   --rule: var(--color-border);
   --ink: var(--stone-900);
@@ -8,6 +13,12 @@
   --paper: var(--color-card);
   --field: var(--stone-50);
   --accent: var(--gold-700);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--section-gap);
+  overflow: hidden;
 }
 
 /* —— Masthead —— */
@@ -93,8 +104,8 @@
 .mast__pulse--gold dd { color: var(--accent); }
 
 @media (max-width: 720px) {
-  .mast { grid-template-columns: 1fr; gap: 18px; }
-  .mast__pulse { grid-template-columns: 1fr; }
+  .mast { grid-template-columns: 1fr; gap: 14px; }
+  .mast__pulse { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 .mast__cta {
@@ -238,13 +249,19 @@
   max-width: none;
 }
 
-/* —— Folio —— */
+/* —— Folio: ocupa la altura disponible, sin scroll —— */
 .folio {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--rule);
   background: var(--paper);
+  overflow: hidden;
 }
 
 .folio__head {
+  flex-shrink: 0;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -271,6 +288,7 @@
 }
 
 .folio__cols {
+  flex-shrink: 0;
   display: grid;
   grid-template-columns: 80px minmax(170px, 1.5fr) minmax(110px, 1fr) minmax(110px, 1fr) 52px 88px 148px;
   gap: 8px 12px;
@@ -283,12 +301,16 @@
   color: var(--stone-400);
 }
 
+/* Lista de tarjetas: 10 ranuras iguales — cada card ocupa 1/10 de la altura */
 .folio__list {
-  display: flex;
-  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(10, minmax(0, 1fr));
 }
 
 .row {
+  overflow: hidden;
   display: grid;
   grid-template-columns: 80px minmax(170px, 1.5fr) minmax(110px, 1fr) minmax(110px, 1fr) 52px 88px 148px;
   gap: 8px 12px;
@@ -369,12 +391,12 @@
 
 .row__amount b {
   display: block;
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.04em;
+  font-size: 0.9rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
-  line-height: 1.05;
+  line-height: 1.2;
 }
 
 .row__actions {
@@ -388,6 +410,7 @@
 
 /* —— Pager —— */
 .pager {
+  flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

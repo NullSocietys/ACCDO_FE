@@ -1,6 +1,11 @@
 /* Swiss Minimal — Caporales agenda
    Ink + stone + gold. Oversized date as signature. Hairlines. No soft shadows. */
 
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
 .eventos {
   --rule: var(--color-border);
   --ink: var(--stone-900);
@@ -111,9 +116,9 @@
 .mast__pulse--gold dd { color: var(--accent); }
 
 @media (max-width: 720px) {
-  .mast { grid-template-columns: 1fr; gap: 18px; }
-  .mast__pulse { grid-template-columns: 1fr; }
-  .mast__pulse > div { padding: 16px 20px; }
+  .mast { grid-template-columns: 1fr; gap: 14px; }
+  .mast__pulse { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mast__pulse > div { padding: 8px 10px; }
 }
 
 /* —— Live / featured (Swiss poster block) —— */
@@ -297,7 +302,7 @@
   min-width: 0;
 }
 
-/* —— Folio agenda —— */
+/* —— Folio agenda: ocupa la altura disponible, sin scroll —— */
 .folio {
   flex: 1;
   min-height: 0;
@@ -352,12 +357,13 @@
 .folio__list {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+  display: grid;
+  grid-template-rows: repeat(10, minmax(0, 1fr));
+  gap: 4px;
 }
 
 .row {
+  overflow: hidden;
   display: grid;
   grid-template-columns: 60px minmax(130px, 1.5fr) minmax(110px, 1fr) 72px 52px 88px 148px;
   gap: 8px 12px;
@@ -495,6 +501,65 @@
   padding-top: 0;
 }
 
+/* —— Pager (mismo diseño que el resto de módulos) —— */
+.pager {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 12px;
+  border-top: 1px solid var(--rule);
+  background: var(--field);
+}
+
+.pager__range {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--quiet);
+  font-variant-numeric: tabular-nums;
+}
+
+.pager__controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pager__page {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--quiet);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+
+.pager__page:hover {
+  color: var(--ink);
+  border-color: var(--rule);
+  background: var(--paper);
+}
+
+.pager__page.is-active {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.pager__page:focus-visible {
+  outline: 2px solid var(--gold-600);
+  outline-offset: 2px;
+}
+
 /* —— Modal form sheet —— */
 .sheet__grid--form {
   display: grid;
@@ -532,15 +597,55 @@
 
   .folio__cols,
   .row {
-    grid-template-columns: 40px 64px minmax(0, 1fr);
+    grid-template-columns: 56px minmax(0, 1fr) auto;
   }
 
-  .folio__cols span:last-child {
+  .folio__cols span:nth-child(4),
+  .folio__cols span:nth-child(5),
+  .folio__cols span:nth-child(7),
+  .row__cell:nth-of-type(4),
+  .row__cell:nth-of-type(5) {
     display: none;
   }
 
+  .folio__cols span:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .folio__cols span:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .folio__cols span:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .folio__cols span:nth-child(6) {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .row__cell:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .row__cell:nth-of-type(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .row__cell:nth-of-type(6) {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
   .row__actions {
-    grid-column: 2 / -1;
+    grid-column: 3;
+    grid-row: 2;
     justify-content: flex-start;
   }
 
@@ -556,12 +661,7 @@
   }
 
   .live {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .live__cta {
-    grid-column: 1;
+    display: none;
   }
 
   .folio__cols {
@@ -569,12 +669,20 @@
   }
 
   .row {
-    grid-template-columns: 36px minmax(0, 1fr);
-    gap: 10px 12px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    gap: 2px 0;
+  }
+
+  .row__cell:nth-of-type(2),
+  .row__cell:nth-of-type(3),
+  .row__cell:nth-of-type(6),
+  .row__actions {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .row__date {
-    grid-column: 2;
     flex-direction: row;
     align-items: baseline;
     gap: 8px;
@@ -584,9 +692,8 @@
     font-size: 1.25rem;
   }
 
-  .row__body,
   .row__actions {
-    grid-column: 2;
+    justify-content: flex-start;
   }
 
   .row__desc {

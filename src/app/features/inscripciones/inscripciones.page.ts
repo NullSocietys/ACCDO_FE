@@ -26,7 +26,7 @@ interface DetailMember {
 }
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-inscripciones-page',

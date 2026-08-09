@@ -436,6 +436,16 @@
   flex-direction: column;
 }
 
+/* En Bases el scroll interno ya maneja el contenido: ocultamos la barra de página (scroll sigue activo). */
+.content:has(app-bases-page) {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.content:has(app-bases-page)::-webkit-scrollbar {
+  display: none;
+}
+
 .route-view {
   flex: 1;
   min-height: 0;

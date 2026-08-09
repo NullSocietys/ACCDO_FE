@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { CATEGORIAS } from '../../core/data/mock-data';
 import { Sexo } from '../../core/models';
 import { DataStoreService } from '../../core/services/data-store.service';
@@ -39,6 +40,7 @@ interface GroupCard {
   selector: 'app-participantes-page',
   imports: [
     FormsModule,
+    RouterLink,
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,

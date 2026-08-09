@@ -77,9 +77,24 @@ export class UsuariosPage {
     return this.filtrados().slice(start, start + PAGE_SIZE);
   });
 
-  readonly paginas = computed(() =>
-    Array.from({ length: this.totalPaginas() }, (_, i) => i + 1),
-  );
+  readonly pageNumbers = computed(() => {
+    const total = this.totalPaginas();
+    const current = Math.min(this.paginaActual(), total);
+    const window = 5;
+    let start = Math.max(1, current - Math.floor(window / 2));
+    const end = Math.min(total, start + window - 1);
+    start = Math.max(1, end - window + 1);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  });
+
+  readonly rangeLabel = computed(() => {
+    const total = this.filtrados().length;
+    if (total === 0) return '0 resultados';
+    const p = Math.min(this.paginaActual(), this.totalPaginas());
+    const from = (p - 1) * this.pageSize + 1;
+    const to = Math.min(p * this.pageSize, total);
+    return `${from}–${to} de ${total}`;
+  });
 
   readonly overview = computed(() => ({
     total: this.store.usuarios().length,
