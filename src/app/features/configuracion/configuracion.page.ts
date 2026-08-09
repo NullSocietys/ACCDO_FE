@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { Configuracion } from '../../core/models';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -20,6 +20,19 @@ export class ConfiguracionPage {
   readonly form = signal<Configuracion>({ ...this.store.configuracion() });
   readonly saving = signal(false);
 
+  /** No hay configuración guardada en el servidor (evita mostrar datos falsos). */
+  readonly sinConfig = computed(() => !this.store.configuracion().id);
+
+  constructor() {
+    // Sincroniza el formulario cuando llega la configuración real del backend.
+    effect(() => {
+      const c = this.store.configuracion();
+      if (c.id && !this.form().id) {
+        this.form.set({ ...c });
+      }
+    });
+  }
+
   patch(partial: Partial<Configuracion>): void {
     this.form.update((f) => ({ ...f, ...partial }));
   }
@@ -29,12 +42,15 @@ export class ConfiguracionPage {
     if (file) this.patch({ logoUrl: file.name });
   }
 
-  save(): void {
+  async save(): Promise<void> {
     this.saving.set(true);
-    window.setTimeout(() => {
-      this.store.saveConfig(this.form());
-      this.saving.set(false);
+    try {
+      await this.store.saveConfig(this.form());
       this.toast.success('Configuración guardada');
-    }, 500);
+    } catch (err) {
+      this.toast.error('No se pudo guardar', (err as Error).message);
+    } finally {
+      this.saving.set(false);
+    }
   }
 }

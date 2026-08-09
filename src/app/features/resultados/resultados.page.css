@@ -1,4 +1,14 @@
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
 .page {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   --rule: var(--color-border);
   --ink: var(--stone-900);
   --quiet: var(--stone-500);
@@ -7,13 +17,32 @@
   --accent: var(--gold-700);
 }
 
+/* Cuerpo con scroll interno: el mast queda fijo y solo esto hace scroll. */
+.res-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 14px;
+  /* Barra de scroll invisible (el scroll sigue funcionando). */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.res-body::-webkit-scrollbar {
+  display: none;
+}
+
 /* —— Mast —— */
 .mast {
+  flex-shrink: 0;
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
   gap: 24px 40px;
   align-items: end;
-  padding-bottom: 16px;
+  padding-bottom: 8px;
   border-bottom: 2px solid var(--ink);
 }
 
@@ -60,7 +89,7 @@
 }
 
 .mast__pulse > div {
-  padding: 14px 16px;
+  padding: 9px 16px;
   border: 1px solid var(--rule);
   background: var(--paper);
   border-radius: 6px;
@@ -68,7 +97,7 @@
 }
 
 .mast__pulse dt {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   font-size: 11px;
   font-weight: 650;
   letter-spacing: 0.06em;
@@ -104,6 +133,8 @@
 }
 
 @media (max-width: 720px) {
+  .page { overflow: visible; }
+  .res-body { overflow: visible; flex: none; padding-top: 12px; }
   .mast { grid-template-columns: 1fr; gap: 18px; }
   .mast__pulse { grid-template-columns: 1fr; }
 }

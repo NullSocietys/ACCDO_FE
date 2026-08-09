@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import { CONFIGURACION, DASHBOARD_STATS } from '../data/mock-data';
+import { DASHBOARD_STATS } from '../data/mock-data';
 import {
   ActualizarRequest,
   Categoria,
@@ -34,8 +34,27 @@ import { InscripcionApiService } from './api/inscripcion.api.service';
 import { PagoApiService } from './api/pago.api.service';
 import { ParticipanteApiService } from './api/participante.api.service';
 import { ResponsableApiService } from './api/responsable.api.service';
+import { ConfiguracionApiService } from './api/configuracion.api.service';
 import { ResultadoApiService } from './api/resultado.api.service';
 import { UsuarioApiService } from './api/usuario.api.service';
+
+/** Configuración vacía: no se muestran datos falsos hasta que el backend los provea. */
+const CONFIGURACION_VACIA: Configuracion = {
+  nombreAsociacion: '',
+  telefono: '',
+  correo: '',
+  direccion: '',
+  cuentaBancaria: '',
+  numeroYape: '',
+  numeroPlin: '',
+  coordinadoraGeneral: '',
+  logoUrl: '',
+  mensajeConfirmacion: '',
+  fechaLimiteInscripcion: '',
+  fechaSorteo: '',
+  horaSorteo: '',
+  horaInicioConcurso: '',
+};
 
 /**
  * Orquestador de datos del frontend.
@@ -52,6 +71,7 @@ export class DataStoreService {
   private readonly responsableApi = inject(ResponsableApiService);
   private readonly pagoApi = inject(PagoApiService);
   private readonly resultadoApi = inject(ResultadoApiService);
+  private readonly configuracionApi = inject(ConfiguracionApiService);
 
   readonly cargando = signal(true);
 
@@ -64,7 +84,7 @@ export class DataStoreService {
   readonly participantes = signal<Participante[]>([]);
   readonly pagos = signal<Pago[]>([]);
   readonly resultados = signal<Resultado[]>([]);
-  readonly configuracion = signal<Configuracion>({ ...CONFIGURACION });
+  readonly configuracion = signal<Configuracion>({ ...CONFIGURACION_VACIA });
   readonly stats = DASHBOARD_STATS;
 
   /** Inscripciones por modalidad, calculado en vivo desde categorías e inscripciones reales. */
@@ -127,6 +147,7 @@ export class DataStoreService {
       this.responsables.set(responsables);
       this.inscripciones.set(inscripciones);
       await this.cargarHijos(inscripciones.map((i) => i.id));
+      await this.cargarConfiguracion();
     } catch (err) {
       console.error('No se pudo cargar el catálogo del backend:', err);
       throw err;
@@ -157,6 +178,17 @@ export class DataStoreService {
   ): Promise<T[][]> {
     const resultados = await Promise.all(ids.map((id) => fn(id).catch(() => [] as T[])));
     return resultados;
+  }
+
+  /** Carga la configuración vigente desde el backend (si la tabla existe). */
+  private async cargarConfiguracion(): Promise<void> {
+    const configs = await firstValueFrom(this.configuracionApi.listar()).catch(
+      () => [] as Configuracion[],
+    );
+    const activa = configs.find((c) => c.activo) ?? configs[0];
+    if (activa) {
+      this.configuracion.set({ ...CONFIGURACION_VACIA, ...activa });
+    }
   }
 
   // ============================================================
@@ -472,11 +504,16 @@ export class DataStoreService {
   }
 
   // ============================================================
-  // CONFIGURACION (sin tabla en backend; se conserva local)
+  // CONFIGURACION
   // ============================================================
 
-  saveConfig(config: Configuracion): void {
-    this.configuracion.set(config);
+  /** Crea o actualiza la configuración en el backend y sincroniza la signal. */
+  async saveConfig(config: Configuracion): Promise<Configuracion> {
+    const guardada = config.id
+      ? await firstValueFrom(this.configuracionApi.actualizar(config.id, config))
+      : await firstValueFrom(this.configuracionApi.crear(config));
+    this.configuracion.set({ ...config, ...guardada });
+    return guardada;
   }
 
   // ============================================================

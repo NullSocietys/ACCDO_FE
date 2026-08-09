@@ -12,6 +12,14 @@
     </div>
   </header>
 
+  <div class="cfg-body">
+  @if (sinConfig()) {
+    <p class="cfg-hint" role="status">
+      Aún no hay configuración guardada en el servidor. Completa los datos y presiona
+      “Guardar cambios” para crearla.
+    </p>
+  }
+
   <app-card title="Datos de la asociación" description="Información pública y de contacto">
     <div class="form-grid">
       <div class="field form-span-2">
@@ -158,4 +166,5 @@
       </div>
     </div>
   </app-card>
+  </div>
 </div>

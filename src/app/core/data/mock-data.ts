@@ -1,6 +1,5 @@
 import {
   ChartBar,
-  Configuracion,
   Evento,
   Inscripcion,
   Pago,
@@ -458,24 +457,6 @@ export const RESULTADOS: Resultado[] = [
     createdAt: '2026-08-16T18:10:00',
   },
 ];
-
-export const CONFIGURACION: Configuracion = {
-  nombreAsociacion: 'AsociaciÃ³n Cultural Chicote de Oro',
-  telefono: '926 266 295',
-  correo: 'contacto@chicotedeoro.pe',
-  direccion: 'Tacna, PerÃº',
-  cuentaBancaria: 'BCP 191-2345678-0-12',
-  numeroYape: '926 266 295',
-  numeroPlin: '926 266 295',
-  coordinadoraGeneral: 'Martha Bravo',
-  logoUrl: '',
-  mensajeConfirmacion:
-    'Su inscripciÃ³n fue registrada. Espere la verificaciÃ³n del voucher Yape.',
-  fechaLimiteInscripcion: '2026-08-12',
-  fechaSorteo: '2026-08-14',
-  horaSorteo: '21:00',
-  horaInicioConcurso: '10:00',
-};
 
 export const DASHBOARD_STATS: StatCard[] = [
   {

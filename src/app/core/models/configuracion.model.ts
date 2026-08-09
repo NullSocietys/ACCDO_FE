@@ -1,6 +1,7 @@
-/** Configuración del concurso — no tiene tabla SQL (se mantiene local por ahora). */
+/** Configuración de la asociación — tabla SQL configuracion. */
 
 export interface Configuracion {
+  id?: string;
   nombreAsociacion: string;
   telefono: string;
   correo: string;
@@ -15,4 +16,6 @@ export interface Configuracion {
   fechaSorteo: string;
   horaSorteo: string;
   horaInicioConcurso: string;
+  activo?: boolean;
+  createdAt?: string;
 }
