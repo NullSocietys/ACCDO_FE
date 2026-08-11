@@ -9,7 +9,9 @@ import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.c
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
+import { LoadMoreComponent } from '../../shared/ui/load-more.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
+import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 const emptyForm = (): Omit<Evento, 'id'> => ({
   nombre: '',
@@ -17,7 +19,7 @@ const emptyForm = (): Omit<Evento, 'id'> => ({
   fecha: '',
   hora: '',
   lugar: '',
-  estado: 'PROXIMO',
+  estado: 'ACTIVO',
   activo: true,
   createdAt: new Date().toISOString(),
 });
@@ -37,7 +39,9 @@ type EstadoFiltro = 'todos' | EventoEstado;
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
+    LoadMoreComponent,
     ModalComponent,
+    SkeletonComponent,
   ],
   styleUrl: './eventos.page.css',
   templateUrl: './eventos.page.html',
@@ -54,15 +58,23 @@ export class EventosPage {
   readonly estadoFiltro = signal<EstadoFiltro>('todos');
   readonly modalOpen = signal(false);
   readonly editingId = signal<string | null>(null);
+  readonly estadoOriginal = signal<string | null>(null);
   readonly form = signal(emptyForm());
-  readonly page = signal(1);
+  readonly errores = signal<Record<string, string>>({});
   readonly pageSize = PAGE_SIZE;
+  /** Carga fluida: cuántos eventos se muestran hasta el momento. */
+  readonly visible = signal(PAGE_SIZE);
+  /** Esqueleto de carga inicial (igual que el dashboard). */
+  readonly cargando = signal(true);
+
+  constructor() {
+    window.setTimeout(() => this.cargando.set(false), 500);
+  }
 
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
     { key: 'todos', label: 'Todos' },
     { key: 'ACTIVO', label: 'Activos' },
-    { key: 'PROXIMO', label: 'Próximos' },
-    { key: 'FINALIZADO', label: 'Finalizados' },
+    { key: 'CERRADO', label: 'Cerrados' },
     { key: 'CANCELADO', label: 'Cancelados' },
   ];
 
@@ -85,35 +97,22 @@ export class EventosPage {
     );
   });
 
-  readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filtrados().length / this.pageSize)),
-  );
+  readonly paged = computed(() => this.filtrados().slice(0, this.visible()));
 
-  readonly pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = Math.min(this.page(), total);
-    const window = 5;
-    let start = Math.max(1, current - Math.floor(window / 2));
-    const end = Math.min(total, start + window - 1);
-    start = Math.max(1, end - window + 1);
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
+  readonly hasMore = computed(() => this.visible() < this.filtrados().length);
 
-  readonly paged = computed(() => {
-    const list = this.filtrados();
-    const p = Math.min(Math.max(1, this.page()), this.totalPages());
-    const start = (p - 1) * this.pageSize;
-    return list.slice(start, start + this.pageSize);
-  });
+  readonly remaining = computed(() => Math.max(0, this.filtrados().length - this.visible()));
 
   readonly rangeLabel = computed(() => {
     const total = this.filtrados().length;
     if (total === 0) return '0 resultados';
-    const p = Math.min(this.page(), this.totalPages());
-    const from = (p - 1) * this.pageSize + 1;
-    const to = Math.min(p * this.pageSize, total);
-    return `${from}–${to} de ${total}`;
+    const to = Math.min(this.visible(), total);
+    return `1–${to} de ${total}`;
   });
+
+  loadMore(): void {
+    this.visible.update((v) => Math.min(v + this.pageSize, this.filtrados().length));
+  }
 
   readonly featured = computed(() => {
     const activos = this.ordenados().filter((e) => e.estado === 'ACTIVO' && e.activo);
@@ -132,7 +131,7 @@ export class EventosPage {
     return {
       total: eventos.length,
       activos: eventos.filter((e) => e.estado === 'ACTIVO').length,
-      proximos: eventos.filter((e) => e.estado === 'PROXIMO').length,
+      cerrados: eventos.filter((e) => e.estado === 'CERRADO').length,
       grupos: this.store.inscripcionesView().filter((i) => i.estado !== 'RECHAZADA').length,
     };
   });
@@ -179,7 +178,7 @@ export class EventosPage {
   }
 
   countdownLabel(evento: Evento): string | null {
-    if (evento.estado === 'FINALIZADO' || evento.estado === 'CANCELADO') return null;
+    if (evento.estado === 'CERRADO' || evento.estado === 'CANCELADO') return null;
     const target = new Date(
       Number(evento.fecha.slice(0, 4)),
       Number(evento.fecha.slice(5, 7)) - 1,
@@ -194,15 +193,10 @@ export class EventosPage {
     return `En ${dias} días`;
   }
 
-  goToPage(page: number): void {
-    const next = Math.min(Math.max(1, page), this.totalPages());
-    this.page.set(next);
-  }
-
   limpiarFiltros(): void {
     this.busqueda.set('');
     this.estadoFiltro.set('todos');
-    this.page.set(1);
+    this.visible.set(PAGE_SIZE);
   }
 
   rowIndex(localIndex: number): string {
@@ -211,32 +205,80 @@ export class EventosPage {
 
   openCreate(): void {
     this.editingId.set(null);
+    this.estadoOriginal.set(null);
     this.form.set(emptyForm());
+    this.errores.set({});
     this.modalOpen.set(true);
   }
 
   openEdit(evento: Evento): void {
     this.editingId.set(evento.id);
+    this.estadoOriginal.set(evento.estado);
     const { id: _id, ...rest } = evento;
-    this.form.set(rest);
+    // El backend serializa la hora con segundos ("HH:mm:ss"); el input time espera "HH:mm".
+    const hora = rest.hora ?? '';
+    this.form.set({ ...rest, hora: /^\d{2}:\d{2}$/.test(hora) ? hora : hora.slice(0, 5) });
+    this.errores.set({});
     this.modalOpen.set(true);
   }
 
   patch(partial: Partial<Omit<Evento, 'id'>>): void {
     this.form.update((f) => ({ ...f, ...partial }));
+    this.errores.update((e) => {
+      const clave = Object.keys(partial)[0];
+      if (!clave) return e;
+      const nuevo = { ...e };
+      delete nuevo[clave];
+      return nuevo;
+    });
+  }
+
+  private validar(): boolean {
+    const d = this.form();
+    const e: Record<string, string> = {};
+
+    if (!d.nombre.trim()) {
+      e['nombre'] = 'El nombre es obligatorio.';
+    } else if (d.nombre.trim().length < 2) {
+      e['nombre'] = 'El nombre debe tener al menos 2 caracteres.';
+    }
+
+    if (!d.fecha) {
+      e['fecha'] = 'La fecha es obligatoria.';
+    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) {
+      e['fecha'] = 'Formato de fecha no válido.';
+    }
+
+    if (!d.hora) {
+      e['hora'] = 'La hora es obligatoria.';
+    } else if (!/^\d{2}:\d{2}$/.test(d.hora)) {
+      e['hora'] = 'Formato de hora no válido (HH:mm).';
+    }
+
+    if (!d.lugar.trim()) {
+      e['lugar'] = 'El lugar es obligatorio.';
+    } else if (d.lugar.trim().length < 2) {
+      e['lugar'] = 'El lugar debe tener al menos 2 caracteres.';
+    }
+
+    this.errores.set(e);
+    return Object.keys(e).length === 0;
   }
 
   async save(): Promise<void> {
-    const data = this.form();
-    if (!data.nombre || !data.fecha || !data.hora || !data.lugar) {
-      this.toast.warning('Complete los campos obligatorios');
+    if (!this.validar()) {
+      this.toast.warning('Revisa los campos marcados en el formulario');
       return;
     }
+    const data = this.form();
     const { createdAt: _c, ...payload } = data;
     const id = this.editingId();
     try {
       if (id) {
         await this.store.updateEvento(id, payload);
+        if (this.estadoOriginal() !== this.form().estado) {
+          await this.store.cambiarEstadoEvento(id, this.form().estado);
+        }
         this.toast.success('Evento actualizado');
       } else {
         await this.store.addEvento(payload);

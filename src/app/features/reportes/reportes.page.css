@@ -6,6 +6,9 @@
 .page {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   --rule: var(--color-border);
   --ink: var(--stone-900);
   --quiet: var(--stone-500);
@@ -16,10 +19,11 @@
 
 /* —— Mast —— */
 .mast {
+  flex-shrink: 0;
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
   gap: 24px 40px;
-  align-items: end;
+  align-items: start;
   padding-bottom: 8px;
   border-bottom: 2px solid var(--ink);
 }
@@ -125,11 +129,16 @@
 }
 
 @media (max-width: 720px) {
+  .page { overflow: visible; }
+  .roster,
+  .roster__list,
+  .modalidades-container { overflow: visible; flex: none; }
   .mast { grid-template-columns: 1fr; gap: 18px; }
   .mast__pulse { grid-template-columns: 1fr; }
 }
 
 .filters-bar {
+  flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -155,6 +164,7 @@
 }
 
 .section-head {
+  flex-shrink: 0;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -185,8 +195,25 @@
   gap: 4px;
 }
 
+/* Lista con scroll interno: el mast y el paginador quedan fijos. */
+.roster__list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  /* Barra de scroll invisible (el scroll sigue funcionando). */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.roster__list::-webkit-scrollbar {
+  display: none;
+}
+
 .who {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: 40px minmax(0, 1.4fr) minmax(0, 1fr) auto auto;
   align-items: center;
@@ -439,14 +466,23 @@
 /* Modalidades container */
 .modalidades-container {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-y: auto;
+  /* Barra de scroll invisible (el scroll sigue funcionando). */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modalidades-container::-webkit-scrollbar {
+  display: none;
 }
 
 /* Modalidad section */
 .modalidad-section {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);

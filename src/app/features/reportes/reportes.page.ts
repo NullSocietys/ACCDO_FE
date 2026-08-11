@@ -8,6 +8,8 @@ import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.c
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
+import { LoadMoreComponent } from '../../shared/ui/load-more.component';
+import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 interface IntegranteRow {
   id: string;
@@ -43,6 +45,8 @@ interface ReporteModalidad {
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
+    LoadMoreComponent,
+    SkeletonComponent,
   ],
   styleUrl: './reportes.page.css',
   templateUrl: './reportes.page.html',
@@ -56,13 +60,17 @@ export class ReportesPage {
   readonly search = signal('');
   readonly modalidadFilter = signal('');
   readonly estadoFilter = signal('');
+  /** Esqueleto de carga inicial (igual que el dashboard). */
+  readonly cargando = signal(true);
   readonly vistaActual = signal<'general' | 'modalidades'>('general');
   readonly exportEstado = signal('CONFIRMADA');
   readonly modalidadExpandida = signal<string | null>(null);
-  readonly modalidadPage = signal(1);
   readonly modalidadPageSize = 5;
-  readonly seccionesPage = signal(1);
+  /** Carga fluida: participantes visibles en la sección expandida. */
+  readonly modalidadVisible = signal(this.modalidadPageSize);
   readonly seccionesPageSize = 2;
+  /** Carga fluida: secciones de modalidad visibles. */
+  readonly seccionesVisible = signal(this.seccionesPageSize);
 
   readonly mastGrupos = computed(() => new Set(this.integrantes().map((r) => r.codigo)).size);
   readonly mastModalidades = computed(() => new Set(this.integrantes().map((r) => r.modalidad)).size);
@@ -113,102 +121,62 @@ export class ReportesPage {
     });
   });
 
-  readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filtered().length / this.pageSize)),
+  readonly paged = computed(() => this.filtered().slice(0, this.visible()));
+
+  readonly hasMore = computed(() => this.visible() < this.filtered().length);
+
+  readonly remaining = computed(() => Math.max(0, this.filtered().length - this.visible()));
+
+  loadMore(): void {
+    this.visible.update((v) => Math.min(v + this.pageSize, this.filtered().length));
+  }
+
+  readonly seccionesPaged = computed(() =>
+    this.reportesModalidad().slice(0, this.seccionesVisible()),
   );
 
-  readonly pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = Math.min(this.page(), total);
-    const window = 5;
-    let start = Math.max(1, current - Math.floor(window / 2));
-    const end = Math.min(total, start + window - 1);
-    start = Math.max(1, end - window + 1);
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
-  readonly paged = computed(() => {
-    const list = this.filtered();
-    const p = Math.min(Math.max(1, this.page()), this.totalPages());
-    const start = (p - 1) * this.pageSize;
-    return list.slice(start, start + this.pageSize);
-  });
-
-  readonly rangeLabel = computed(() => {
-    const total = this.filtered().length;
-    if (total === 0) return '0 resultados';
-    const p = Math.min(this.page(), this.totalPages());
-    const from = (p - 1) * this.pageSize + 1;
-    const to = Math.min(p * this.pageSize, total);
-    return `${from}–${to} de ${total}`;
-  });
-
-  readonly seccionesTotalPages = computed(() =>
-    Math.max(1, Math.ceil(this.reportesModalidad().length / this.seccionesPageSize)),
+  readonly seccionesHasMore = computed(
+    () => this.seccionesVisible() < this.reportesModalidad().length,
   );
 
-  readonly seccionesPageNumbers = computed(() => {
-    const total = this.seccionesTotalPages();
-    const current = Math.min(this.seccionesPage(), total);
-    const window = 5;
-    let start = Math.max(1, current - Math.floor(window / 2));
-    const end = Math.min(total, start + window - 1);
-    start = Math.max(1, end - window + 1);
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
+  readonly seccionesRemaining = computed(() =>
+    Math.max(0, this.reportesModalidad().length - this.seccionesVisible()),
+  );
 
-  readonly seccionesPaged = computed(() => {
-    const list = this.reportesModalidad();
-    const p = Math.min(Math.max(1, this.seccionesPage()), this.seccionesTotalPages());
-    const start = (p - 1) * this.seccionesPageSize;
-    return list.slice(start, start + this.seccionesPageSize);
-  });
-
-  readonly seccionesRangeLabel = computed(() => {
-    const total = this.reportesModalidad().length;
-    if (total === 0) return '0 modalidades';
-    const p = Math.min(this.seccionesPage(), this.seccionesTotalPages());
-    const from = (p - 1) * this.seccionesPageSize + 1;
-    const to = Math.min(p * this.seccionesPageSize, total);
-    return `${from}–${to} de ${total}`;
-  });
+  loadMoreSecciones(): void {
+    this.seccionesVisible.update((v) =>
+      Math.min(v + this.seccionesPageSize, this.reportesModalidad().length),
+    );
+  }
 
   readonly expanded = computed((): ReporteModalidad | null => {
     const mod = this.modalidadExpandida();
     return mod ? this.reportesModalidad().find((r) => r.modalidad === mod) ?? null : null;
   });
 
-  readonly expandedTotalPages = computed(() => {
-    const r = this.expanded();
-    return r ? Math.max(1, Math.ceil(r.participantes.length / this.modalidadPageSize)) : 1;
-  });
-
-  readonly expandedPageNumbers = computed(() => {
-    const total = this.expandedTotalPages();
-    const current = Math.min(this.modalidadPage(), total);
-    const window = 5;
-    let start = Math.max(1, current - Math.floor(window / 2));
-    const end = Math.min(total, start + window - 1);
-    start = Math.max(1, end - window + 1);
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
   readonly expandedPaged = computed((): IntegranteRow[] => {
     const r = this.expanded();
     if (!r) return [];
-    const p = Math.min(Math.max(1, this.modalidadPage()), this.expandedTotalPages());
-    const start = (p - 1) * this.modalidadPageSize;
-    return r.participantes.slice(start, start + this.modalidadPageSize);
+    return r.participantes.slice(0, this.modalidadVisible());
   });
 
-  readonly expandedRangeLabel = computed(() => {
+  readonly expandedHasMore = computed(() => {
     const r = this.expanded();
-    if (!r || r.participantes.length === 0) return '0 registrados';
-    const p = Math.min(Math.max(1, this.modalidadPage()), this.expandedTotalPages());
-    const from = (p - 1) * this.modalidadPageSize + 1;
-    const to = Math.min(p * this.modalidadPageSize, r.participantes.length);
-    return `${from}–${to} de ${r.participantes.length}`;
+    return !!r && this.modalidadVisible() < r.participantes.length;
   });
+
+  readonly expandedRemaining = computed(() => {
+    const r = this.expanded();
+    return r ? Math.max(0, r.participantes.length - this.modalidadVisible()) : 0;
+  });
+
+  loadMoreModalidad(): void {
+    const r = this.expanded();
+    if (!r) return;
+    this.modalidadVisible.update((v) =>
+      Math.min(v + this.modalidadPageSize, r.participantes.length),
+    );
+  }
 
   readonly reportesModalidad = computed((): ReporteModalidad[] => {
     const all = this.integrantes();
@@ -242,21 +210,18 @@ export class ReportesPage {
     });
   });
 
-  readonly page = signal(1);
   readonly pageSize = 10;
+  /** Carga fluida: cuántos integrantes del listado general se muestran. */
+  readonly visible = signal(this.pageSize);
 
   constructor() {
+    window.setTimeout(() => this.cargando.set(false), 500);
     effect(() => {
       this.search();
       this.modalidadFilter();
       this.estadoFilter();
-      untracked(() => this.page.set(1));
+      untracked(() => this.visible.set(this.pageSize));
     });
-  }
-
-  goToPage(page: number): void {
-    const next = Math.min(Math.max(1, page), this.totalPages());
-    this.page.set(next);
   }
 
   limpiarFiltros(): void {
@@ -270,25 +235,13 @@ export class ReportesPage {
     if (vista === 'general') {
       this.modalidadExpandida.set(null);
     }
-    this.modalidadPage.set(1);
-    this.seccionesPage.set(1);
+    this.modalidadVisible.set(this.modalidadPageSize);
+    this.seccionesVisible.set(this.seccionesPageSize);
   }
 
   toggleModalidad(modalidad: string): void {
     this.modalidadExpandida.set(this.modalidadExpandida() === modalidad ? null : modalidad);
-    this.modalidadPage.set(1);
-  }
-
-  goToModalidadPage(page: number): void {
-    const next = Math.min(Math.max(1, page), this.expandedTotalPages());
-    this.modalidadPage.set(next);
-  }
-
-  goToSeccionesPage(page: number): void {
-    const next = Math.min(Math.max(1, page), this.seccionesTotalPages());
-    this.seccionesPage.set(next);
-    this.modalidadExpandida.set(null);
-    this.modalidadPage.set(1);
+    this.modalidadVisible.set(this.modalidadPageSize);
   }
 
   exportarPdfPorModalidad(reporte: ReporteModalidad): void {

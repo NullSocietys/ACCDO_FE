@@ -11,7 +11,9 @@ import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.c
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
+import { LoadMoreComponent } from '../../shared/ui/load-more.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
+import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 type EstadoFiltro = 'todos' | InscripcionEstado;
 
@@ -38,7 +40,9 @@ const PAGE_SIZE = 10;
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
+    LoadMoreComponent,
     ModalComponent,
+    SkeletonComponent,
   ],
   styleUrl: './inscripciones.page.css',
   templateUrl: './inscripciones.page.html',
@@ -59,7 +63,10 @@ export class InscripcionesPage {
   readonly categoriaFilter = signal('');
   readonly estadoFiltro = signal<EstadoFiltro>('todos');
   readonly selected = signal<InscripcionView | null>(null);
-  readonly page = signal(1);
+  /** Carga fluida: cuántas inscripciones se muestran hasta el momento. */
+  readonly visible = signal(PAGE_SIZE);
+  /** Esqueleto de carga inicial (igual que el dashboard). */
+  readonly cargando = signal(true);
 
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
     { key: 'todos', label: 'Todos' },
@@ -99,35 +106,22 @@ export class InscripcionesPage {
     });
   });
 
-  readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filtered().length / this.pageSize)),
-  );
+  readonly paged = computed(() => this.filtered().slice(0, this.visible()));
 
-  readonly pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = Math.min(this.page(), total);
-    const window = 5;
-    let start = Math.max(1, current - Math.floor(window / 2));
-    const end = Math.min(total, start + window - 1);
-    start = Math.max(1, end - window + 1);
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
+  readonly hasMore = computed(() => this.visible() < this.filtered().length);
 
-  readonly paged = computed(() => {
-    const list = this.filtered();
-    const p = Math.min(Math.max(1, this.page()), this.totalPages());
-    const start = (p - 1) * this.pageSize;
-    return list.slice(start, start + this.pageSize);
-  });
+  readonly remaining = computed(() => Math.max(0, this.filtered().length - this.visible()));
 
   readonly rangeLabel = computed(() => {
     const total = this.filtered().length;
     if (total === 0) return '0 resultados';
-    const p = Math.min(this.page(), this.totalPages());
-    const from = (p - 1) * this.pageSize + 1;
-    const to = Math.min(p * this.pageSize, total);
-    return `${from}–${to} de ${total}`;
+    const to = Math.min(this.visible(), total);
+    return `1–${to} de ${total}`;
   });
+
+  loadMore(): void {
+    this.visible.update((v) => Math.min(v + this.pageSize, this.filtered().length));
+  }
 
   readonly modalDescription = computed(() => {
     const ins = this.selected();
@@ -153,12 +147,13 @@ export class InscripcionesPage {
   });
 
   constructor() {
+    window.setTimeout(() => this.cargando.set(false), 500);
     effect(() => {
       this.busqueda();
       this.eventoFilter();
       this.categoriaFilter();
       this.estadoFiltro();
-      untracked(() => this.page.set(1));
+      untracked(() => this.visible.set(PAGE_SIZE));
     });
   }
 
@@ -181,14 +176,8 @@ export class InscripcionesPage {
     return hora ? `${this.formatFecha(fecha)} · ${hora}` : this.formatFecha(fecha);
   }
 
-  goToPage(page: number): void {
-    const next = Math.min(Math.max(1, page), this.totalPages());
-    this.page.set(next);
-  }
-
   rowIndex(localIndex: number): string {
-    const p = Math.min(this.page(), this.totalPages());
-    return String((p - 1) * this.pageSize + localIndex + 1).padStart(2, '0');
+    return String(localIndex + 1).padStart(2, '0');
   }
 
   openDetail(ins: InscripcionView): void {

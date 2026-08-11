@@ -29,7 +29,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
   gap: 24px 40px;
-  align-items: end;
+  align-items: start;
   padding-bottom: 10px;
   border-bottom: 2px solid var(--ink);
 }
@@ -412,8 +412,27 @@
   gap: 16px;
 }
 
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
 .sheet__wide {
   grid-column: 1 / -1;
+}
+
+.sheet__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sheet__row .k {
+  margin-bottom: 0;
 }
 
 .sheet .k {

@@ -50,6 +50,32 @@ textarea {
   padding-left: 36px;
 }
 
+.has-toggle {
+  padding-right: 40px;
+}
+
+.pwd-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--stone-500);
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.pwd-toggle:hover {
+  color: var(--color-primary);
+  background: transparent;
+}
+
 input:hover,
 select:hover,
 textarea:hover {

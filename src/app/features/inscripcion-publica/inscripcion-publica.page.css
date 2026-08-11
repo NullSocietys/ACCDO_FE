@@ -1,0 +1,1291 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(1100px 520px at 78% -120px, rgba(212, 175, 55, 0.12), transparent 62%),
+    radial-gradient(900px 480px at -10% 110%, rgba(212, 175, 55, 0.05), transparent 60%),
+    #080808;
+  color: #fff;
+  font-family: 'Geist', system-ui, sans-serif;
+}
+
+.ipo-container {
+  width: min(1060px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+/* ============================================================
+   ENCABEZADO (altura fija, se descuenta del 100dvh)
+   ============================================================ */
+.ipo-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  height: 52px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  background: rgba(8, 8, 8, 0.92);
+  z-index: 10;
+}
+
+.ipo-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ipo-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.ipo-brand img {
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.ipo-brand__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.ipo-brand__text strong {
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.ipo-brand__text em {
+  font-style: normal;
+  font-size: 10.5px;
+  color: #d4af37;
+}
+
+.ipo-back {
+  color: #d3d3d3;
+  text-decoration: none;
+  font-size: 12.5px;
+  transition: color 0.2s;
+}
+
+.ipo-back:hover {
+  color: #d4af37;
+}
+
+/* ============================================================
+   MAIN: ocupa el resto de la pantalla, nunca hace scroll
+   ============================================================ */
+.ipo-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  padding: 22px 0 24px;
+}
+
+.ipo-layout {
+  flex: 0 1 auto;
+  min-width: 0;
+  width: calc(100% - 32px);
+  max-width: 1060px;
+  margin-inline: auto;
+  display: flex;
+  gap: 26px;
+}
+
+/* ============================================================
+   BARRA LATERAL: título + stepper vertical
+   ============================================================ */
+.ipo-side {
+  flex: 0 0 300px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.ipo-side__head {
+  margin-bottom: 20px;
+}
+
+.ipo-eyebrow {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 999px;
+  padding: 5px 12px;
+  margin-bottom: 12px;
+}
+
+.ipo-title {
+  font-size: clamp(22px, 2.6vw, 30px);
+  line-height: 1.12;
+  margin: 0 0 10px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ipo-title em {
+  font-style: normal;
+  color: #d4af37;
+}
+
+.ipo-sub {
+  color: #d3d3d3;
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.ipo-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ipo-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 11px 13px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  opacity: 0.66;
+  transition: opacity 0.25s, border-color 0.25s, background 0.25s;
+}
+
+.ipo-step.is-active {
+  opacity: 1;
+  border-color: rgba(212, 175, 55, 0.55);
+  background: rgba(212, 175, 55, 0.08);
+  box-shadow: 0 6px 22px rgba(212, 175, 55, 0.1);
+}
+
+.ipo-step.is-done {
+  opacity: 1;
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.ipo-step__num {
+  flex-shrink: 0;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+}
+
+.ipo-step.is-done .ipo-step__num {
+  background: #d4af37;
+  color: #080808;
+}
+
+.ipo-step__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ipo-step__body strong {
+  font-size: 12.5px;
+}
+
+.ipo-step__body em {
+  font-style: normal;
+  font-size: 11px;
+  color: #d3d3d3;
+  line-height: 1.35;
+}
+
+.ipo-side__help {
+  margin-top: auto;
+  padding: 13px 14px;
+  border-radius: 13px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  background: rgba(212, 175, 55, 0.05);
+  font-size: 12.5px;
+  color: #d3d3d3;
+  line-height: 1.55;
+}
+
+.ipo-side__help-title {
+  display: block;
+  color: #d4af37;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.ipo-side__help a {
+  color: #fbe8a6;
+}
+
+/* ============================================================
+   TARJETA: panel con scroll interno + acciones fijas
+   ============================================================ */
+.ipo-stage {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ipo-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 24px 26px 18px;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
+}
+
+.ipo-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  /* Barra de scroll invisible (el scroll sigue funcionando). */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.ipo-panel::-webkit-scrollbar {
+  display: none;
+}
+
+.ipo-panel__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  margin-bottom: 20px;
+}
+
+.ipo-panel__num {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  letter-spacing: 0.08em;
+}
+
+.ipo-panel__head h2 {
+  margin: 0 0 3px;
+  font-size: 18px;
+  color: #fff;
+}
+
+.ipo-panel__head p {
+  margin: 0;
+  color: #d3d3d3;
+  font-size: 12.5px;
+}
+
+/* ============================================================
+   PESTAÑAS CUENTA
+   ============================================================ */
+.ipo-tabs {
+  display: flex;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 11px;
+  padding: 5px;
+  margin-bottom: 18px;
+}
+
+.ipo-tab {
+  flex: 1;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #d3d3d3;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ipo-tab.is-active {
+  background: #d4af37;
+  color: #080808;
+  font-weight: 600;
+}
+
+/* ============================================================
+   CAMPOS
+   ============================================================ */
+.ipo-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.ipo-grid--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 640px) {
+  .ipo-grid--2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ipo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: #d3d3d3;
+}
+
+.ipo-field--full {
+  grid-column: 1 / -1;
+}
+
+.ipo-field input,
+.ipo-field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 13px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.ipo-field input::placeholder {
+  color: rgba(211, 211, 211, 0.7);
+}
+
+.ipo-field input:focus,
+.ipo-field select:focus {
+  outline: none;
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.06);
+}
+
+.ipo-field select option {
+  background: #121212;
+  color: #fff;
+}
+
+.ipo-field select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   VALIDACIÓN POR CAMPO
+   ============================================================ */
+.ipo-field.is-invalid input,
+.ipo-field.is-invalid select {
+  border-color: rgba(224, 100, 100, 0.65);
+  background: rgba(224, 100, 100, 0.05);
+}
+
+.ipo-categorias.is-invalid .ipo-cat {
+  border-color: rgba(224, 100, 100, 0.45);
+}
+
+.ipo-error-text {
+  display: block;
+  color: #ff9a9a;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.ipo-error-text--block {
+  margin-top: -6px;
+  margin-bottom: 8px;
+}
+
+.ipo-count-error {
+  margin: -8px 0 14px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(224, 100, 100, 0.08);
+  border: 1px solid rgba(224, 100, 100, 0.3);
+}
+
+.ipo-opcional {
+  font-style: normal;
+  font-size: 10px;
+  color: #a9a9a9;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   CONTRASEÑA: generador + mostrar/ocultar + medidor
+   ============================================================ */
+.ipo-field__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ipo-gen {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: transparent;
+  color: #fbe8a6;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ipo-gen:hover {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.ipo-password {
+  position: relative;
+}
+
+.ipo-password input {
+  padding-right: 42px;
+}
+
+.ipo-eye {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #d3d3d3;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.ipo-eye:hover {
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.ipo-fuerza {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.ipo-fuerza__bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.25s;
+}
+
+.ipo-fuerza em {
+  font-style: normal;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  min-width: 64px;
+  text-align: right;
+}
+
+.ipo-fuerza.is-debil .ipo-fuerza__bar:nth-child(1) {
+  background: #e06464;
+}
+
+.ipo-fuerza.is-debil em {
+  color: #e06464;
+}
+
+.ipo-fuerza.is-media .ipo-fuerza__bar:nth-child(-n + 2) {
+  background: #e8c25c;
+}
+
+.ipo-fuerza.is-media em {
+  color: #e8c25c;
+}
+
+.ipo-fuerza.is-fuerte .ipo-fuerza__bar {
+  background: #4cc878;
+}
+
+.ipo-fuerza.is-fuerte em {
+  color: #4cc878;
+}
+
+.ipo-fuerza em {
+  color: #a9a9a9;
+}
+
+/* ============================================================
+   CATEGORÍAS
+   ============================================================ */
+.ipo-categorias {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 9px;
+  margin: 16px 0 18px;
+}
+
+.ipo-cat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 12px 13px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ipo-cat:hover {
+  border-color: #d4af37;
+  transform: translateY(-2px);
+}
+
+.ipo-cat.is-active {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.ipo-cat__name {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.ipo-cat__meta {
+  font-size: 11px;
+  color: #d3d3d3;
+}
+
+.ipo-cat__price {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #d4af37;
+  margin-top: 5px;
+}
+
+.ipo-panel__scroll {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-right: -4px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ipo-panel__scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.ipo-panel__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================================
+   PARTICIPANTES
+   ============================================================ */
+.ipo-participante {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 15px;
+  margin: 0;
+  background: rgba(255, 255, 255, 0.02);
+  position: relative;
+  /* Altura natural: las tarjetas no se estiran para llenar el panel. */
+  flex: 0 0 auto;
+}
+
+.ipo-participante legend {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #d4af37;
+  padding: 0 8px;
+}
+
+.ipo-sexo {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ipo-sexo button {
+  flex: 1;
+  min-width: 88px;
+  padding: 9px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #d3d3d3;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ipo-sexo button.is-active {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.14);
+  color: #fbe8a6;
+  font-weight: 600;
+}
+
+.ipo-remove {
+  margin-top: 10px;
+  border: 0;
+  background: none;
+  color: #e06464;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 3px 0;
+}
+
+.ipo-remove:hover {
+  text-decoration: underline;
+}
+
+.ipo-add {
+  width: 100%;
+  padding: 11px;
+  border-radius: 11px;
+  border: 1px dashed rgba(212, 175, 55, 0.4);
+  background: transparent;
+  color: #d4af37;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ipo-add:hover {
+  background: rgba(212, 175, 55, 0.08);
+}
+
+/* ============================================================
+   RESUMEN + YAPE
+   ============================================================ */
+.ipo-resumen {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 24px;
+}
+
+.ipo-resumen__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 0;
+  font-size: 13.5px;
+}
+
+.ipo-resumen__row span {
+  color: #d3d3d3;
+}
+
+.ipo-resumen__row--total strong {
+  font-size: 18px;
+  color: #d4af37;
+}
+
+.ipo-yape {
+  display: flex;
+  flex-direction: column;
+}
+
+.ipo-yape__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ipo-yape__step {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 11px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.ipo-yape__step--box {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  padding: 13px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ipo-yape__num {
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(212, 175, 55, 0.18);
+  color: #d4af37;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.ipo-yape__step p {
+  margin: 0;
+  font-size: 13.5px;
+  color: #d3d3d3;
+  line-height: 1.5;
+}
+
+.ipo-yape__step p strong {
+  color: #fff;
+}
+
+.ipo-yape__numero {
+  align-self: flex-start;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #fbe8a6;
+}
+
+.ipo-yape__monto {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fbe8a6;
+}
+
+.ipo-yape__input {
+  max-width: 300px;
+  padding: 11px 13px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
+
+.ipo-yape__input:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+
+.ipo-voucher {
+  display: block;
+  margin-top: 10px;
+  padding: 13px;
+  text-align: center;
+  border: 1.5px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.ipo-voucher:hover {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.08);
+}
+.ipo-voucher.has-file {
+  border-style: solid;
+  border-color: #d4af37;
+}
+.ipo-voucher.is-invalid {
+  border-color: #ef4444;
+}
+.ipo-voucher__img {
+  display: block;
+  width: 100%;
+  max-height: 140px;
+  object-fit: contain;
+  border-radius: 9px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+.ipo-voucher__name {
+  display: block;
+  font-weight: 600;
+  color: #fff;
+}
+.ipo-voucher em {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-style: normal;
+  color: #d3d3d3;
+}
+.ipo-ficha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 460px;
+  margin: 4px auto 0;
+}
+
+.ipo-ficha__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ipo-ficha__label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #d3d3d3;
+}
+
+.ipo-ficha__codigo {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fbe8a6;
+  font-variant-numeric: tabular-nums;
+}
+
+.ipo-ficha__codigo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ipo-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.1);
+  color: #fbe8a6;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.ipo-copy:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: rgba(212, 175, 55, 0.65);
+}
+
+.ipo-copy:active {
+  transform: scale(0.95);
+}
+
+.ipo-registrar-otro {
+  margin-top: 18px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #a8a29e;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.ipo-registrar-otro:hover {
+  color: #fbe8a6;
+}
+
+.ipo-ficha__box em {
+  font-size: 11.5px;
+  font-style: normal;
+  color: #a8a29e;
+  text-align: center;
+  line-height: 1.45;
+}
+
+.ipo-estado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: rgba(212, 175, 55, 0.14);
+  color: #fbe8a6;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.ipo-estado-badge__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.ipo-estado-badge.is-confirmada {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.ipo-estado-badge.is-rechazada {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* ============================================================
+   HINTS / ERRORES
+   ============================================================ */
+.ipo-hint {
+  font-size: 12px;
+  color: #d3d3d3;
+  margin: 12px 0 0;
+  line-height: 1.5;
+}
+
+.ipo-hint--warn {
+  color: #fbe8a6;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(212, 175, 55, 0.06);
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+
+.ipo-error {
+  flex-shrink: 0;
+  margin-top: 14px;
+  padding: 10px 13px;
+  border-radius: 11px;
+  background: rgba(224, 100, 100, 0.1);
+  border: 1px solid rgba(224, 100, 100, 0.35);
+  color: #ffb4b4;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ipo-loading,
+.ipo-empty {
+  text-align: center;
+  padding: 26px 14px;
+  color: #d3d3d3;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 13px;
+  font-size: 13.5px;
+}
+
+.ipo-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ipo-empty strong {
+  color: #fbe8a6;
+}
+
+/* ============================================================
+   ACCIONES (pie fijo de la tarjeta)
+   ============================================================ */
+.ipo-actions {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ipo-actions--center {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.ipo-btn {
+  padding: 12px 20px;
+  border-radius: 11px;
+  border: 0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.15s, filter 0.15s, background 0.2s;
+}
+
+.ipo-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.ipo-btn--gold {
+  background: linear-gradient(135deg, #fbe8a6, #d4af37);
+  color: #1a1502;
+}
+
+.ipo-btn--gold:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.ipo-btn--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.ipo-btn--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================
+   ÉXITO — centrado vertical en la tarjeta
+   ============================================================ */
+.ipo-success {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow-y: auto;
+  padding: 20px;
+  background: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
+}
+
+.ipo-success__check svg circle {
+  stroke: #d4af37;
+  stroke-width: 2;
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: ipo-draw 0.8s ease forwards;
+}
+
+.ipo-success__check svg path {
+  stroke: #d4af37;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: ipo-draw 0.5s 0.4s ease forwards;
+}
+
+@keyframes ipo-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.ipo-success .ipo-title {
+  font-size: clamp(22px, 3vw, 32px);
+}
+
+.ipo-codigo {
+  min-width: min(380px, 100%);
+  margin: 24px auto;
+  padding: 20px;
+  border-radius: 15px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ipo-codigo span {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #d3d3d3;
+}
+
+.ipo-codigo strong {
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  color: #fbe8a6;
+}
+
+.ipo-codigo em {
+  font-style: normal;
+  font-size: 12px;
+  color: #d3d3d3;
+}
+
+/* ============================================================
+   MÓVIL: la barra lateral pasa arriba y los pasos van en fila
+   ============================================================ */
+@media (max-width: 900px) {
+  .ipo-main {
+    padding: 12px 0 14px;
+  }
+
+  .ipo-layout {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ipo-side {
+    flex: 0 0 auto;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .ipo-side__head {
+    margin-bottom: 12px;
+  }
+
+  .ipo-title {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+
+  .ipo-sub {
+    font-size: 12.5px;
+  }
+
+  .ipo-eyebrow {
+    font-size: 9.5px;
+    margin-bottom: 8px;
+  }
+
+  .ipo-side__help {
+    display: none;
+  }
+
+  .ipo-steps {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 6px;
+    scrollbar-width: none;
+    margin-bottom: 2px;
+  }
+
+  .ipo-step {
+    flex: 0 0 auto;
+    min-width: 108px;
+    padding: 9px 11px;
+  }
+
+  .ipo-step__body em {
+    display: none;
+  }
+
+  .ipo-card {
+    padding: 18px 16px 14px;
+    border-radius: 14px;
+  }
+}@media (max-width: 640px) {
+  .ipo-brand__text em {
+    display: none;
+  }
+
+  .ipo-back {
+    font-size: 11.5px;
+  }
+
+  /* Paso 2: cabecera más compacta y tarjetas de categoría en fila
+     (nombre · integrantes · precio) para que quepan más y se vea
+     el campo "Nombre del grupo" sin scroll excesivo. */
+  .ipo-panel__head {
+    margin-bottom: 14px;
+  }
+
+  .ipo-cat {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 13px;
+  }
+
+  .ipo-cat__meta {
+    flex: 1;
+  }
+
+  .ipo-cat__price {
+    margin-top: 0;
+  }
+}
+
+/* ============================================================
+   MUY ESTRECHO (≥300px): el resumen y los pasos Yape se apilan
+   ============================================================ */
+@media (max-width: 480px) {
+  .ipo-resumen {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .ipo-yape__row {
+    grid-template-columns: 1fr;
+  }
+
+  .ipo-ficha__codigo-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

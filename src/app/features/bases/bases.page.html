@@ -1,4 +1,10 @@
 <div class="page">
+  @if (cargando()) {
+    <div class="page-sk" aria-hidden="true">
+      <app-skeleton variant="card" [height]="120" />
+      <app-skeleton variant="table" [count]="8" />
+    </div>
+  } @else {
   <header class="mast">
     <div class="mast__copy">
       <p class="mast__eyebrow">Concurso · Reglamento</p>
@@ -174,4 +180,5 @@
       </section>
     </div>
   </div>
+  }
 </div>

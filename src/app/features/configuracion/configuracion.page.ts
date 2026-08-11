@@ -6,10 +6,11 @@ import { IconComponent } from '../../shared/icons/icon.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { CardComponent } from '../../shared/ui/card.component';
 import { InputComponent } from '../../shared/ui/input.component';
+import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 @Component({
   selector: 'app-configuracion-page',
-  imports: [IconComponent, ButtonComponent, CardComponent, InputComponent],
+  imports: [IconComponent, ButtonComponent, CardComponent, InputComponent, SkeletonComponent],
   styleUrl: './configuracion.page.css',
   templateUrl: './configuracion.page.html',
 })
@@ -19,11 +20,15 @@ export class ConfiguracionPage {
 
   readonly form = signal<Configuracion>({ ...this.store.configuracion() });
   readonly saving = signal(false);
+  readonly errores = signal<Record<string, string>>({});
+  /** Esqueleto de carga inicial (igual que el dashboard). */
+  readonly cargando = signal(true);
 
   /** No hay configuración guardada en el servidor (evita mostrar datos falsos). */
   readonly sinConfig = computed(() => !this.store.configuracion().id);
 
   constructor() {
+    window.setTimeout(() => this.cargando.set(false), 500);
     // Sincroniza el formulario cuando llega la configuración real del backend.
     effect(() => {
       const c = this.store.configuracion();
@@ -35,6 +40,13 @@ export class ConfiguracionPage {
 
   patch(partial: Partial<Configuracion>): void {
     this.form.update((f) => ({ ...f, ...partial }));
+    this.errores.update((e) => {
+      const clave = Object.keys(partial)[0] as keyof Configuracion;
+      if (!clave) return e;
+      const nuevo = { ...e };
+      delete nuevo[clave];
+      return nuevo;
+    });
   }
 
   onLogo(event: Event): void {
@@ -42,7 +54,62 @@ export class ConfiguracionPage {
     if (file) this.patch({ logoUrl: file.name });
   }
 
+  private validar(): boolean {
+    const d = this.form();
+    const e: Record<string, string> = {};
+
+    if (!d.nombreAsociacion?.trim()) {
+      e['nombreAsociacion'] = 'El nombre de la asociación es obligatorio.';
+    } else if (d.nombreAsociacion.trim().length > 150) {
+      e['nombreAsociacion'] = 'Máximo 150 caracteres.';
+    }
+
+    if (d.telefono && !/^\d{6,20}$/.test(d.telefono.trim())) {
+      e['telefono'] = 'Solo dígitos (6 a 20).';
+    }
+    if (d.correo && !/^\S+@\S+\.\S+$/.test(d.correo.trim())) {
+      e['correo'] = 'Correo no válido.';
+    }
+    if (d.direccion && d.direccion.trim() && d.direccion.trim().length > 200) {
+      e['direccion'] = 'Máximo 200 caracteres.';
+    }
+    if (d.cuentaBancaria && d.cuentaBancaria.trim() && d.cuentaBancaria.trim().length > 100) {
+      e['cuentaBancaria'] = 'Máximo 100 caracteres.';
+    }
+    if (d.numeroYape && !/^\d{9}$/.test(d.numeroYape.trim())) {
+      e['numeroYape'] = 'Debe ser un número de 9 dígitos.';
+    }
+    if (d.numeroPlin && !/^\d{9}$/.test(d.numeroPlin.trim())) {
+      e['numeroPlin'] = 'Debe ser un número de 9 dígitos.';
+    }
+    if (d.coordinadoraGeneral && d.coordinadoraGeneral.trim() && d.coordinadoraGeneral.trim().length > 100) {
+      e['coordinadoraGeneral'] = 'Máximo 100 caracteres.';
+    }
+    if (d.fechaLimiteInscripcion && !/^\d{4}-\d{2}-\d{2}$/.test(d.fechaLimiteInscripcion)) {
+      e['fechaLimiteInscripcion'] = 'Formato de fecha no válido.';
+    }
+    if (d.fechaSorteo && !/^\d{4}-\d{2}-\d{2}$/.test(d.fechaSorteo)) {
+      e['fechaSorteo'] = 'Formato de fecha no válido.';
+    }
+    if (d.horaSorteo && !/^\d{2}:\d{2}$/.test(d.horaSorteo)) {
+      e['horaSorteo'] = 'Formato de hora no válido (HH:mm).';
+    }
+    if (d.horaInicioConcurso && !/^\d{2}:\d{2}$/.test(d.horaInicioConcurso)) {
+      e['horaInicioConcurso'] = 'Formato de hora no válido (HH:mm).';
+    }
+    if (d.mensajeConfirmacion && d.mensajeConfirmacion.length > 1000) {
+      e['mensajeConfirmacion'] = 'Máximo 1000 caracteres.';
+    }
+
+    this.errores.set(e);
+    return Object.keys(e).length === 0;
+  }
+
   async save(): Promise<void> {
+    if (!this.validar()) {
+      this.toast.warning('Revisa los campos marcados en el formulario');
+      return;
+    }
     this.saving.set(true);
     try {
       await this.store.saveConfig(this.form());

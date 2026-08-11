@@ -1,7 +1,7 @@
 /** Módulo Eventos — tabla eventos. */
 
 /** eventos.estado */
-export type EventoEstado = 'ACTIVO' | 'PROXIMO' | 'FINALIZADO' | 'CANCELADO';
+export type EventoEstado = 'ACTIVO' | 'CERRADO' | 'CANCELADO';
 
 export interface Evento {
   id: string;

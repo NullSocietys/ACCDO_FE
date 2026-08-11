@@ -122,6 +122,18 @@
   background: var(--color-accent-soft);
   color: var(--color-accent-hover);
 }
+.upload.is-invalid {
+  border-color: var(--color-danger, #ef4444);
+}
+.upload-preview {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  margin-top: 10px;
+  background: white;
+}
 select.ui-select {
   width: 100%;
   min-height: 40px;

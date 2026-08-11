@@ -1,0 +1,145 @@
+<app-site-header [compact]="true" (cta)="contactarCoordinadora()"></app-site-header>
+
+<main class="ipo-main">
+  <div class="ipo-container">
+
+    @if (!desdeHeader()) {
+      <a class="ipo-back ipo-back--inline" routerLink="/inscribirse">← Volver a mi inscripción</a>
+    }
+
+    <div class="ipo-head">
+      <h1 class="ipo-title">Consulta tu <em>inscripción</em></h1>
+      <p class="ipo-sub">
+        Ingresa el código que recibiste al inscribirte para ver si tu pago ya fue
+        confirmado por la organización.
+      </p>
+    </div>
+
+    <!-- ============ BUSCADOR ============ -->
+    <div class="ipo-card ipo-card--compact">
+      <div class="ipo-search">
+        <input type="text" placeholder="Ej: CAP-2026-4F3A2B" maxlength="16"
+          [ngModel]="codigoInput()" (ngModelChange)="codigoInput.set($event)"
+          (keyup.enter)="buscar()">
+        <button type="button" class="ipo-btn ipo-btn--gold" (click)="buscar()" [disabled]="loading()">
+          {{ loading() ? 'Consultando…' : 'Consultar' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ RESULTADO ============ -->
+    @if (loading()) {
+      <div class="ipo-card ipo-card--compact ipo-center">
+        <span class="ipo-spinner" aria-hidden="true"></span>
+        <p>Consultando tu inscripción…</p>
+      </div>
+    }
+
+    @if (notFound() && !loading()) {
+      <div class="ipo-card ipo-card--compact ipo-center">
+        <div class="ipo-status ipo-status--error">
+          <span class="ipo-status__badge">✕</span>
+          <strong>No encontramos esa inscripción</strong>
+          <p>Verifica que el código sea correcto. Solo reciben uno al completar el formulario en línea.</p>
+          <button type="button" class="ipo-btn ipo-btn--ghost" routerLink="/inscribirse">
+            Inscribirme ahora
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (data() && !loading()) {
+      <div class="ipo-card">
+        <div class="ipo-result-box">
+          <div class="ipo-result-status">
+            @switch (data()!.estado) {
+              @case ('CONFIRMADA') {
+                <div class="ipo-status ipo-status--ok">
+                  <span class="ipo-status__badge">✓</span>
+                  <span class="ipo-status__kicker">Pago confirmado</span>
+                  <h2>¡Estás dentro! Tu inscripción fue confirmada.</h2>
+                  <p>Verifica tu orden de presentación y los detalles del evento en la portada. ¡Nos vemos en el coliseo!</p>
+                </div>
+              }
+              @case ('RECHAZADA') {
+                <div class="ipo-status ipo-status--error">
+                  <span class="ipo-status__badge">✕</span>
+                  <span class="ipo-status__kicker">Pago rechazado</span>
+                  <h2>Tu inscripción fue rechazada.</h2>
+                  <p>Contacta a la organización por WhatsApp <strong>926 266 295</strong> para regularizar tu situación.</p>
+                </div>
+              }
+              @default {
+                <div class="ipo-status ipo-status--pending">
+                  <span class="ipo-status__badge">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg>
+                  </span>
+                  <span class="ipo-status__kicker">Pago en revisión</span>
+                  <h2>Tu inscripción está pendiente de confirmación.</h2>
+                  <p>
+                    Ya registramos tu inscripción y tu Yape. Nuestro equipo revisa tu operación;
+                    esto puede tomar unos minutos o algunas horas. Esta página se actualiza sola.
+                  </p>
+                </div>
+              }
+            }
+          </div>
+
+          <div class="ipo-result-grid" [class.is-solo]="data()!.pagos.length === 0">
+            <!-- ============ DATOS ============ -->
+            <div class="ipo-result-col">
+              <div class="ipo-resumen">
+                <div class="ipo-resumen__row">
+                  <span>Código</span>
+                  <strong class="ipo-mono">{{ data()!.codigo }}</strong>
+                </div>
+              <div class="ipo-resumen__row">
+                <span>Grupo</span>
+                <strong>{{ data()!.nombreGrupo }}</strong>
+              </div>
+              <div class="ipo-resumen__row">
+                <span>Estado de la inscripción</span>
+                <strong>{{ data()!.estado }}</strong>
+              </div>
+              <div class="ipo-resumen__row">
+                <span>Total</span>
+                <strong>S/ {{ data()!.total }}</strong>
+              </div>
+              </div>
+            </div>
+
+            @if (data()!.pagos.length > 0) {
+              <div class="ipo-result-col">
+                <h3 class="ipo-pagos-title">Pagos registrados</h3>
+                <div class="ipo-pagos">
+                  @for (pago of data()!.pagos; track $index) {
+                    <div class="ipo-pago">
+                      <div class="ipo-pago__info">
+                        <strong>S/ {{ pago.monto }}</strong>
+                        <span>{{ pago.metodoPago }} · Op. {{ pago.numeroOperacion }}</span>
+                      </div>
+                      <span class="ipo-pago__estado" [class.is-confirmado]="pago.estado === 'CONFIRMADO'"
+                        [class.is-rechazado]="pago.estado === 'RECHAZADO'">
+                        {{ pago.estado }}
+                      </span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="ipo-actions ipo-actions--center">
+          <button type="button" class="ipo-btn ipo-btn--gold" (click)="buscar()">Actualizar estado</button>
+          <a class="ipo-btn ipo-btn--ghost" routerLink="/inscribirse">Volver a mi código</a>
+        </div>
+      </div>
+    }
+
+  </div>
+</main>
+
+<footer class="ipo-footer">
+  <p>© 2026 Chicote de Oro · Asociación Cultural · VII Concurso Nacional de Caporales</p>
+</footer>

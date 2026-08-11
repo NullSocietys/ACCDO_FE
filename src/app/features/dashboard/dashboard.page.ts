@@ -76,7 +76,7 @@ export class DashboardPage {
   readonly upcomingEventos = computed(() =>
     this.store
       .eventos()
-      .filter((e) => e.estado === 'ACTIVO' || e.estado === 'PROXIMO')
+      .filter((e) => e.estado === 'ACTIVO')
       .slice(0, 4),
   );
 

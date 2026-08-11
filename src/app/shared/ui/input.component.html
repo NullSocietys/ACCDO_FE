@@ -9,6 +9,9 @@
       [placeholder]="placeholder()"
       [rows]="rows()"
       [disabled]="disabled()"
+      autocomplete="off"
+      [attr.readonly]="true"
+      (focus)="($any($event.target)).removeAttribute('readonly')"
       [value]="value()"
       (input)="valueChange.emit(($any($event.target)).value)"
     ></textarea>
@@ -16,12 +19,27 @@
     <input
       [id]="controlId()"
       [name]="name() ?? undefined"
-      [type]="type()"
+      [type]="mostrado() ? 'text' : type()"
       [placeholder]="placeholder()"
       [class.has-icon]="!!icon()"
+      [class.has-toggle]="toggle() && type() === 'password'"
       [disabled]="disabled()"
+      [attr.autocomplete]="mostrado() || type() !== 'password' ? 'off' : 'new-password'"
+      [attr.readonly]="type() === 'date' || type() === 'time' ? null : true"
+      (focus)="($any($event.target)).removeAttribute('readonly')"
+      [attr.maxlength]="maxlength() ?? null"
       [value]="value()"
-      (input)="valueChange.emit(($any($event.target)).value)"
+      (input)="onInput($any($event.target))"
     />
+    @if (toggle() && type() === 'password') {
+      <button
+        type="button"
+        class="pwd-toggle"
+        [attr.aria-label]="mostrado() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+        (click)="mostrado.set(!mostrado())"
+      >
+        <app-icon [name]="mostrado() ? 'eyeOff' : 'eye'" [size]="16" />
+      </button>
+    }
   }
 </div>

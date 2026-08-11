@@ -6,6 +6,9 @@
 .page {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   --rule: var(--color-border);
   --ink: var(--stone-900);
   --quiet: var(--stone-500);
@@ -16,18 +19,19 @@
 
 /* —— Mast —— */
 .mast {
+  flex-shrink: 0;
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
   gap: 24px 40px;
-  align-items: end;
-  padding-bottom: 6px;
+  align-items: start;
+  padding-bottom: 8px;
   border-bottom: 2px solid var(--ink);
 }
 
 .mast__copy { min-width: 0; }
 
 .mast__eyebrow {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: 11px;
   font-weight: 650;
   letter-spacing: 0.14em;
@@ -45,7 +49,7 @@
 }
 
 .mast__lead {
-  margin: 6px 0 0;
+  margin: 10px 0 0;
   max-width: 44ch;
   font-size: 14px;
   line-height: 1.45;
@@ -111,6 +115,9 @@
 
 /* Mast responsive */
 @media (max-width: 720px) {
+  .page { overflow: visible; }
+  .folio { flex: none; }
+  .folio__list { overflow: visible; }
   .mast { grid-template-columns: 1fr; gap: 18px; }
   .mast__pulse { grid-template-columns: 1fr; }
 }
@@ -120,6 +127,7 @@
 }
 
 .filters-bar {
+  flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -201,10 +209,17 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  /* Barra de scroll invisible (el scroll sigue funcionando). */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.folio__list::-webkit-scrollbar {
+  display: none;
 }
 
 .row {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: minmax(130px, 1.5fr) minmax(110px, 1fr) minmax(100px, 0.8fr) minmax(110px, 1fr) 52px 88px 80px;
   gap: 8px 12px;

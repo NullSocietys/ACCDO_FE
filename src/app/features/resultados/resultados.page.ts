@@ -8,7 +8,9 @@ import { ButtonComponent } from '../../shared/ui/button.component';
 import { CardComponent } from '../../shared/ui/card.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
+import { LoadMoreComponent } from '../../shared/ui/load-more.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
+import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 @Component({
   selector: 'app-resultados-page',
@@ -19,7 +21,9 @@ import { ModalComponent } from '../../shared/ui/modal.component';
     CardComponent,
     EmptyStateComponent,
     InputComponent,
+    LoadMoreComponent,
     ModalComponent,
+    SkeletonComponent,
   ],
   styleUrl: './resultados.page.css',
   templateUrl: './resultados.page.html',
@@ -37,8 +41,11 @@ export class ResultadosPage {
 
   readonly eventoId = signal('');
   readonly modalOpen = signal(false);
+  /** Esqueleto de carga inicial (igual que el dashboard). */
+  readonly cargando = signal(true);
 
   constructor() {
+    window.setTimeout(() => this.cargando.set(false), 500);
     // Si el catálogo aún no terminó de cargar al abrir la página,
     // adopta el primer evento en cuanto esté disponible (sin pisar la selección del usuario).
     effect(() => {
@@ -48,10 +55,10 @@ export class ResultadosPage {
       }
     });
 
-    // Al cambiar de evento, vuelve a la primera página del resto de la tabla.
+    // Al cambiar de evento, reinicia el resto de la tabla (carga fluida).
     effect(() => {
       this.eventoId();
-      this.page.set(1);
+      this.restoVisible.set(this.pageSize);
     });
   }
 
@@ -61,6 +68,8 @@ export class ResultadosPage {
     puntaje: 0,
     observaciones: '',
   });
+
+  readonly errores = signal<Record<string, string>>({});
 
   readonly inscripcionesDelEvento = computed(() =>
     this.store.inscripcionesView().filter((i) => i.eventoId === this.eventoId()),
@@ -76,50 +85,40 @@ export class ResultadosPage {
   /** Podio: campeón (1.º), segundo y tercer lugar. */
   readonly podio = computed(() => this.filtered().slice(0, 3));
 
-  /** Resto de la tabla: todo desde el 4.º puesto, paginado de a 3 (4.º–6.º, 7.º–9.º, …). */
-  readonly page = signal(1);
+  /** Resto de la tabla: todo desde el 4.º puesto, con carga fluida (de a 3: 4.º–6.º, luego 7.º–9.º, …). */
   readonly pageSize = 3;
+  /** Carga fluida: cuántos puestos del resto se muestran hasta el momento. */
+  readonly restoVisible = signal(this.pageSize);
 
   readonly resto = computed(() => this.filtered().slice(3));
 
-  readonly restoTotalPages = computed(() =>
-    Math.max(1, Math.ceil(this.resto().length / this.pageSize)),
-  );
+  readonly pagedResto = computed(() => this.resto().slice(0, this.restoVisible()));
 
-  readonly pagedResto = computed(() => {
-    const list = this.resto();
-    const p = Math.min(Math.max(1, this.page()), this.restoTotalPages());
-    const start = (p - 1) * this.pageSize;
-    return list.slice(start, start + this.pageSize);
-  });
+  readonly restoHasMore = computed(() => this.restoVisible() < this.resto().length);
 
-  readonly restoPageNumbers = computed(() => {
-    const total = this.restoTotalPages();
-    const current = Math.min(this.page(), total);
-    const window = 5;
-    let start = Math.max(1, current - Math.floor(window / 2));
-    const end = Math.min(total, start + window - 1);
-    start = Math.max(1, end - window + 1);
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
+  readonly restoRemaining = computed(() => Math.max(0, this.resto().length - this.restoVisible()));
 
-  /** Rango en puestos absolutos (4–6 en la página 1, 7–9 en la 2, …). */
+  loadMoreResto(): void {
+    this.restoVisible.update((v) => Math.min(v + this.pageSize, this.resto().length));
+  }
+
+  /** Rango en puestos absolutos (4–6 al inicio, 4–9 tras cargar más, …). */
   readonly restoRangeLabel = computed(() => {
     const total = this.resto().length;
     if (total === 0) return '';
-    const p = Math.min(this.page(), this.restoTotalPages());
-    const from = 3 + (p - 1) * this.pageSize + 1;
-    const to = Math.min(3 + p * this.pageSize, 3 + total);
-    return `${from}–${to} de ${3 + total}`;
+    const to = Math.min(3 + this.restoVisible(), 3 + total);
+    return `4–${to} de ${3 + total}`;
   });
-
-  goToRestoPage(page: number): void {
-    const next = Math.min(Math.max(1, page), this.restoTotalPages());
-    this.page.set(next);
-  }
 
   patch(partial: Partial<ReturnType<ResultadosPage['form']>>): void {
     this.form.update((f) => ({ ...f, ...partial }));
+    this.errores.update((e) => {
+      const clave = Object.keys(partial)[0];
+      if (!clave) return e;
+      const nuevo = { ...e };
+      delete nuevo[clave];
+      return nuevo;
+    });
   }
 
   openCreate(): void {
@@ -129,15 +128,39 @@ export class ResultadosPage {
       puntaje: 0,
       observaciones: '',
     });
+    this.errores.set({});
     this.modalOpen.set(true);
   }
 
+  private validar(): boolean {
+    const d = this.form();
+    const e: Record<string, string> = {};
+
+    if (!d.inscripcionId) {
+      e['inscripcionId'] = 'Selecciona una inscripción.';
+    }
+    if (d.puesto < 1) {
+      e['puesto'] = 'El puesto debe ser al menos 1.';
+    }
+    if (d.puntaje <= 0) {
+      e['puntaje'] = 'El puntaje debe ser mayor a 0.';
+    } else if (d.puntaje > 25) {
+      e['puntaje'] = 'El puntaje máximo es 25.';
+    }
+    if (d.observaciones.length > 500) {
+      e['observaciones'] = 'Máximo 500 caracteres.';
+    }
+
+    this.errores.set(e);
+    return Object.keys(e).length === 0;
+  }
+
   async save(): Promise<void> {
-    const data = this.form();
-    if (!data.inscripcionId || data.puntaje <= 0) {
-      this.toast.warning('Seleccione una inscripción y un puntaje válido');
+    if (!this.validar()) {
+      this.toast.warning('Revisa los campos marcados en el formulario');
       return;
     }
+    const data = this.form();
     try {
       await this.store.addResultado({
         inscripcionId: data.inscripcionId,

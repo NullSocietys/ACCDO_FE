@@ -7,10 +7,12 @@
         </div>
         <h1>¡Gracias por inscribirse!</h1>
         <p class="success-msg">
-          Su inscripción fue registrada correctamente. En unos minutos le enviaremos
-          la confirmación a su correo.
+          Su inscripción fue registrada y está en revisión. Por favor espere la
+          confirmación de la coordinadora Martha Bravo (WhatsApp 926 266 295).<br />
+          Si es aprobada, recibirá su confirmación.
         </p>
         <div class="summary">
+          <div class="summary-row"><span>Estado</span><strong>{{ resultEstado() }}</strong></div>
           <div class="summary-row"><span>Código</span><strong>{{ resultCodigo() }}</strong></div>
           <div class="summary-row"><span>Grupo</span><strong>{{ step1().grupo }}</strong></div>
           <div class="summary-row"><span>Modalidad</span><strong>{{ step1().categoria }}</strong></div>
@@ -52,9 +54,10 @@
           <div class="form-grid">
             <div class="field">
               <label for="w-evento">Evento</label>
-              <select
+              <select autocomplete="off"
                 id="w-evento"
                 class="ui-select"
+                [class.is-invalid]="!!errores1()['eventoId']"
                 [ngModel]="step1().eventoId"
                 (ngModelChange)="patch1({ eventoId: $event })"
               >
@@ -63,12 +66,14 @@
                   <option [value]="ev.id">{{ ev.nombre }}</option>
                 }
               </select>
+              <span class="field-error">{{ errores1()['eventoId'] }}</span>
             </div>
             <div class="field">
               <label for="w-cat">Modalidad</label>
-              <select
+              <select autocomplete="off"
                 id="w-cat"
                 class="ui-select"
+                [class.is-invalid]="!!errores1()['categoria']"
                 [ngModel]="step1().categoria"
                 (ngModelChange)="onCategoria($event)"
               >
@@ -77,24 +82,35 @@
                   <option [value]="cat.nombre">{{ cat.nombre }}</option>
                 }
               </select>
+              <span class="field-error">{{ errores1()['categoria'] }}</span>
             </div>
             <div class="field">
               <label for="w-grupo">Nombre del grupo</label>
               <app-input
                 controlId="w-grupo"
                 [value]="step1().grupo"
+                [invalid]="!!errores1()['grupo']"
                 placeholder="Ej. Reyes del Chicote"
                 (valueChange)="patch1({ grupo: $event })"
               />
+              <span class="field-error">{{ errores1()['grupo'] }}</span>
             </div>
             <div class="field">
               <label for="w-cant">Cantidad de integrantes</label>
-              <app-input
-                controlId="w-cant"
-                type="number"
-                [value]="'' + (step1().cantidadIntegrantes || '')"
-                (valueChange)="patch1({ cantidadIntegrantes: Number($event) || 0 })"
-              />
+              <select autocomplete="off"
+                id="w-cant"
+                class="ui-select"
+                [class.is-invalid]="!!errores1()['cantidadIntegrantes']"
+                [ngModel]="step1().cantidadIntegrantes"
+                (ngModelChange)="patch1({ cantidadIntegrantes: Number($event) || 0 })"
+              >
+                <option [ngValue]="0">Seleccionar cantidad</option>
+                @for (n of cantidadesPermitidas(); track n) {
+                  <option [ngValue]="n">{{ n }}</option>
+                }
+              </select>
+              <span class="field-hint">{{ ayudaIntegrantes() }}</span>
+              <span class="field-error">{{ errores1()['cantidadIntegrantes'] }}</span>
             </div>
           </div>
         }
@@ -102,27 +118,32 @@
           <div class="form-grid">
             <div class="field">
               <label for="w-nom">Nombres</label>
-              <app-input controlId="w-nom" icon="user" [value]="step2().nombres" (valueChange)="patch2({ nombres: $event })" />
+              <app-input controlId="w-nom" icon="user" [value]="step2().nombres" [lettersOnly]="true" [invalid]="!!errores2()['nombres']" (valueChange)="patch2({ nombres: $event })" />
+              <span class="field-error">{{ errores2()['nombres'] }}</span>
             </div>
             <div class="field">
               <label for="w-ape">Apellidos</label>
-              <app-input controlId="w-ape" [value]="step2().apellidos" (valueChange)="patch2({ apellidos: $event })" />
+              <app-input controlId="w-ape" [value]="step2().apellidos" [lettersOnly]="true" [invalid]="!!errores2()['apellidos']" (valueChange)="patch2({ apellidos: $event })" />
+              <span class="field-error">{{ errores2()['apellidos'] }}</span>
             </div>
             <div class="field">
               <label for="w-dni">DNI</label>
-              <app-input controlId="w-dni" [value]="step2().dni" (valueChange)="patch2({ dni: $event })" />
+              <app-input controlId="w-dni" [value]="step2().dni" [digitsOnly]="true" [maxlength]="8" [invalid]="!!errores2()['dni']" (valueChange)="patch2({ dni: $event })" />
+              <span class="field-error">{{ errores2()['dni'] }}</span>
             </div>
             <div class="field">
               <label for="w-tel">Teléfono</label>
-              <app-input controlId="w-tel" type="tel" icon="phone" [value]="step2().telefono" (valueChange)="patch2({ telefono: $event })" />
+              <app-input controlId="w-tel" type="tel" icon="phone" [value]="step2().telefono" [digitsOnly]="true" [maxlength]="9" [invalid]="!!errores2()['telefono']" (valueChange)="patch2({ telefono: $event })" />
+              <span class="field-error">{{ errores2()['telefono'] }}</span>
             </div>
             <div class="field form-span-2">
               <label for="w-mail">Correo</label>
-              <app-input controlId="w-mail" type="email" icon="mail" [value]="step2().correo" (valueChange)="patch2({ correo: $event })" />
+              <app-input controlId="w-mail" type="email" icon="mail" [value]="step2().correo" [invalid]="!!errores2()['correo']" (valueChange)="patch2({ correo: $event })" />
+              <span class="field-error">{{ errores2()['correo'] }}</span>
             </div>
             <div class="field">
               <label for="w-dep">Departamento</label>
-              <select id="w-dep" class="ui-select" [ngModel]="step2().departamento" (ngModelChange)="onDepartamento($event)">
+              <select autocomplete="off" id="w-dep" class="ui-select" [ngModel]="step2().departamento" (ngModelChange)="onDepartamento($event)">
                 <option value="">Seleccionar</option>
                 @for (d of departamentos; track d) {
                   <option [value]="d">{{ d }}</option>
@@ -131,7 +152,7 @@
             </div>
             <div class="field">
               <label for="w-prov">Provincia</label>
-              <select id="w-prov" class="ui-select" [ngModel]="step2().provincia" (ngModelChange)="onProvincia($event)">
+              <select autocomplete="off" id="w-prov" class="ui-select" [ngModel]="step2().provincia" (ngModelChange)="onProvincia($event)">
                 <option value="">Seleccionar</option>
                 @for (p of provincias(); track p) {
                   <option [value]="p">{{ p }}</option>
@@ -140,7 +161,7 @@
             </div>
             <div class="field">
               <label for="w-dist">Distrito</label>
-              <select id="w-dist" class="ui-select" [ngModel]="step2().distrito" (ngModelChange)="patch2({ distrito: $event })">
+              <select autocomplete="off" id="w-dist" class="ui-select" [ngModel]="step2().distrito" (ngModelChange)="patch2({ distrito: $event })">
                 <option value="">Seleccionar</option>
                 @for (d of distritos(); track d) {
                   <option [value]="d">{{ d }}</option>
@@ -150,9 +171,15 @@
           </div>
         }
         @case (3) {
-          <div class="page-actions" style="margin-bottom: 12px">
-            <app-button variant="outline" icon="plus" (clicked)="addParticipante()">Agregar participante</app-button>
+          <div class="page-actions" style="margin-bottom: 12px; align-items: center">
+            <app-button variant="outline" icon="plus" [disabled]="participantes().length >= step1().cantidadIntegrantes" (clicked)="addParticipante()">Agregar participante</app-button>
+            <span class="field-hint" style="margin: 0">
+              Agregados {{ participantes().length }} de {{ step1().cantidadIntegrantes }}
+            </span>
           </div>
+                    @if (erroresGlobal()['integrantes']) {
+            <p class="field-error" style="margin: 0 0 12px">{{ erroresGlobal()['integrantes'] }}</p>
+          }
           <div class="table-wrap">
             <table class="data-table">
               <thead>
@@ -169,19 +196,19 @@
                 @for (p of participantes(); track $index; let i = $index) {
                   <tr>
                     <td>
-                      <input class="ui-select" [ngModel]="p.nombre" (ngModelChange)="updateParticipante(i, { nombre: $event })" aria-label="Nombre participante" />
+                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" [class.is-invalid]="!!erroresParticipantes()[i]" [ngModel]="p.nombre" (ngModelChange)="updateParticipante(i, { nombre: $event })" aria-label="Nombre participante" />
                     </td>
                     <td>
-                      <input class="ui-select" [ngModel]="p.apellido" (ngModelChange)="updateParticipante(i, { apellido: $event })" aria-label="Apellido participante" />
+                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" [ngModel]="p.apellido" (ngModelChange)="updateParticipante(i, { apellido: $event })" aria-label="Apellido participante" />
                     </td>
                     <td>
-                      <input class="ui-select" [ngModel]="p.dni" (ngModelChange)="updateParticipante(i, { dni: $event })" aria-label="DNI participante" />
+                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" [class.is-invalid]="!!erroresParticipantes()[i]" [value]="p.dni" (input)="dniParticipante($event, i)" maxlength="8" aria-label="DNI participante" placeholder="8 dígitos" />
                     </td>
                     <td>
-                      <input class="ui-select" type="number" [ngModel]="p.edad" (ngModelChange)="updateParticipante(i, { edad: $event === '' || $event === null ? null : +$event })" aria-label="Edad participante" />
+                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" type="number" [ngModel]="p.edad" (ngModelChange)="updateParticipante(i, { edad: $event === '' || $event === null ? null : +$event })" aria-label="Edad participante" />
                     </td>
                     <td>
-                      <select class="ui-select" [ngModel]="p.sexo" (ngModelChange)="updateParticipante(i, { sexo: $event })" aria-label="Sexo participante">
+                      <select autocomplete="off" class="ui-select" [ngModel]="p.sexo" (ngModelChange)="updateParticipante(i, { sexo: $event })" aria-label="Sexo participante">
                         <option value="">—</option>
                         <option value="M">M</option>
                         <option value="F">F</option>
@@ -195,6 +222,13 @@
               </tbody>
             </table>
           </div>
+          @if (erroresParticipantes() | keyvalue; as erroresFilas) {
+            @for (fila of erroresFilas; track fila.key) {
+              <p class="field-error">
+                Participante #{{ +fila.key + 1 }}: {{ fila.value }}
+              </p>
+            }
+          }
         }
         @case (4) {
           <div class="form-grid">
@@ -208,7 +242,7 @@
             </div>
             <div class="field">
               <label for="w-metodo">Método de pago</label>
-              <select id="w-metodo" class="ui-select" [ngModel]="pago().metodo" (ngModelChange)="patchPago({ metodo: $event })">
+              <select autocomplete="off" id="w-metodo" class="ui-select" [ngModel]="pago().metodo" (ngModelChange)="patchPago({ metodo: $event })">
                 <option value="YAPE">Yape (926 266 295)</option>
                 <option value="PLIN">Plin</option>
                 <option value="TRANSFERENCIA">Transferencia</option>
@@ -220,22 +254,28 @@
               <app-input
                 controlId="w-op"
                 [value]="pago().numeroOperacion"
+                [invalid]="!!erroresPago()['numeroOperacion']"
                 placeholder="Ej. YAP-123456"
                 (valueChange)="patchPago({ numeroOperacion: $event })"
               />
+              <span class="field-error">{{ erroresPago()['numeroOperacion'] }}</span>
             </div>
             <div class="field form-span-2">
-              <label>Voucher / comprobante</label>
-              <label class="upload" [class.has-file]="!!pago().comprobanteNombre">
-                <input type="file" accept="image/*,.pdf" class="sr-only" (change)="onFile($event)" />
+              <label>Voucher / comprobante (obligatorio)</label>
+              <label class="upload" [class.has-file]="!!pago().comprobanteNombre" [class.is-invalid]="!!erroresPago()['comprobante']">
+                <input autocomplete="off" type="file" accept="image/*,.pdf" class="sr-only" (change)="onFile($event)" />
                 <app-icon name="upload" [size]="20" />
+                @if (comprobantePreview()) {
+                  <img class="upload-preview" [src]="comprobantePreview()!" alt="Vista previa del voucher" />
+                }
                 <div style="margin-top: 8px; font-weight: 600">
-                  {{ pago().comprobanteNombre || 'Subir foto legible del voucher' }}
+                  {{ pago().comprobanteNombre || 'Subir foto del voucher (Yape)' }}
                 </div>
                 <div style="font-size: 12px; margin-top: 4px">
-                  Enviar también al WhatsApp 926 266 295 (Martha Bravo).
+                  Foto legible del Boucher. Enviar también al WhatsApp 926 266 295 (Martha Bravo).
                 </div>
               </label>
+              <span class="field-error">{{ erroresPago()['comprobante'] }}</span>
             </div>
             <div class="field form-span-2">
               <div class="summary" style="width: 100%">

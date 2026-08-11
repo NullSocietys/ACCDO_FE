@@ -1,4 +1,10 @@
 <div class="page eventos">
+  @if (cargando()) {
+    <div class="page-sk" aria-hidden="true">
+      <app-skeleton variant="card" [height]="120" />
+      <app-skeleton variant="table" [count]="8" />
+    </div>
+  } @else {
   <header class="mast">
     <div class="mast__copy">
       <p class="mast__eyebrow">Temporada · Agenda</p>
@@ -86,7 +92,7 @@
             class="tabs__btn"
             [class.is-active]="estadoFiltro() === f.key"
             [attr.aria-pressed]="estadoFiltro() === f.key"
-            (click)="estadoFiltro.set(f.key); page.set(1)"
+            (click)="estadoFiltro.set(f.key); visible.set(pageSize)"
           >
             {{ f.label }}
             <span class="tabs__n">{{ cuentaEstado(f.key) }}</span>
@@ -99,7 +105,7 @@
           icon="search"
           [value]="busqueda()"
           placeholder="Nombre o sede…"
-          (valueChange)="busqueda.set($event); page.set(1)"
+          (valueChange)="busqueda.set($event); visible.set(pageSize)"
         />
       </div>
     </div>
@@ -137,7 +143,7 @@
               role="listitem"
               [class.is-activo]="evento.estado === 'ACTIVO'"
               [class.is-cancelado]="evento.estado === 'CANCELADO'"
-              [class.is-proximo]="evento.estado === 'PROXIMO'"
+              [class.is-cerrado]="evento.estado === 'CERRADO'"
             >
               <!-- Fecha -->
               <div class="row__date" aria-hidden="true">
@@ -195,43 +201,14 @@
           }
         </div>
 
-        @if (totalPages() > 1) {
-          <nav class="pager" aria-label="Paginación de eventos">
-            <p class="pager__range">{{ rangeLabel() }}</p>
-            <div class="pager__controls">
-              <app-button
-                variant="outline"
-                size="icon"
-                icon="chevronLeft"
-                ariaLabel="Página anterior"
-                [disabled]="page() <= 1"
-                (clicked)="goToPage(page() - 1)"
-              />
-              @for (n of pageNumbers(); track n) {
-                <button
-                  type="button"
-                  class="pager__page"
-                  [class.is-active]="n === page()"
-                  [attr.aria-current]="n === page() ? 'page' : null"
-                  [attr.aria-label]="'Ir a página ' + n"
-                  (click)="goToPage(n)"
-                >
-                  {{ n }}
-                </button>
-              }
-              <app-button
-                variant="outline"
-                size="icon"
-                icon="chevronRight"
-                ariaLabel="Página siguiente"
-                [disabled]="page() >= totalPages()"
-                (clicked)="goToPage(page() + 1)"
-              />
-            </div>
-          </nav>
-        }
+        <app-load-more
+          [hasMore]="hasMore()"
+          [remaining]="remaining()"
+          (loadMore)="loadMore()"
+        />
       </section>
     }
+  }
   }
 </div>
 
@@ -249,9 +226,11 @@
         <app-input
           controlId="ev-nombre"
           [value]="form().nombre"
+          [invalid]="!!errores()['nombre']"
           placeholder="Nombre del evento"
           (valueChange)="patch({ nombre: $event })"
         />
+        <span class="field-error">{{ errores()['nombre'] }}</span>
       </div>
       <div class="sheet__wide">
         <label class="k" for="ev-desc">Descripción</label>
@@ -269,8 +248,10 @@
           controlId="ev-fecha"
           type="date"
           [value]="form().fecha"
+          [invalid]="!!errores()['fecha']"
           (valueChange)="patch({ fecha: $event })"
         />
+        <span class="field-error">{{ errores()['fecha'] }}</span>
       </div>
       <div>
         <label class="k" for="ev-hora">Hora</label>
@@ -278,8 +259,10 @@
           controlId="ev-hora"
           type="time"
           [value]="form().hora"
+          [invalid]="!!errores()['hora']"
           (valueChange)="patch({ hora: $event })"
         />
+        <span class="field-error">{{ errores()['hora'] }}</span>
       </div>
       <div class="sheet__wide">
         <label class="k" for="ev-lugar">Lugar</label>
@@ -287,21 +270,22 @@
           controlId="ev-lugar"
           icon="mapPin"
           [value]="form().lugar"
+          [invalid]="!!errores()['lugar']"
           placeholder="Sede o escenario"
           (valueChange)="patch({ lugar: $event })"
         />
+        <span class="field-error">{{ errores()['lugar'] }}</span>
       </div>
       <div class="sheet__wide">
         <label class="k" for="ev-estado">Estado</label>
-        <select
+        <select autocomplete="off"
           id="ev-estado"
           class="ui-select"
           [ngModel]="form().estado"
           (ngModelChange)="patch({ estado: $event })"
         >
           <option value="ACTIVO">Activo</option>
-          <option value="PROXIMO">Próximo</option>
-          <option value="FINALIZADO">Finalizado</option>
+          <option value="CERRADO">Cerrado</option>
           <option value="CANCELADO">Cancelado</option>
         </select>
       </div>

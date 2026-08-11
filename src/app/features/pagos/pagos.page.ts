@@ -10,7 +10,9 @@ import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.c
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
+import { LoadMoreComponent } from '../../shared/ui/load-more.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
+import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 type EstadoFiltro = 'todos' | PagoEstado;
 
@@ -43,7 +45,9 @@ function toPagoEntity(pago: PagoView, estado: PagoEstado): Pago {
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
+    LoadMoreComponent,
     ModalComponent,
+    SkeletonComponent,
   ],
   styleUrl: './pagos.page.css',
   templateUrl: './pagos.page.html',
@@ -59,7 +63,10 @@ export class PagosPage {
 
   readonly busqueda = signal('');
   readonly estadoFiltro = signal<EstadoFiltro>('todos');
-  readonly page = signal(1);
+  /** Carga fluida: cuántos pagos se muestran hasta el momento. */
+  readonly visible = signal(PAGE_SIZE);
+  /** Esqueleto de carga inicial (igual que el dashboard). */
+  readonly cargando = signal(true);
   readonly selected = signal<PagoView | null>(null);
 
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
@@ -102,35 +109,22 @@ export class PagosPage {
     });
   });
 
-  readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filtered().length / this.pageSize)),
-  );
+  readonly paged = computed(() => this.filtered().slice(0, this.visible()));
 
-  readonly pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = Math.min(this.page(), total);
-    const window = 5;
-    let start = Math.max(1, current - Math.floor(window / 2));
-    const end = Math.min(total, start + window - 1);
-    start = Math.max(1, end - window + 1);
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
+  readonly hasMore = computed(() => this.visible() < this.filtered().length);
 
-  readonly paged = computed(() => {
-    const list = this.filtered();
-    const p = Math.min(Math.max(1, this.page()), this.totalPages());
-    const start = (p - 1) * this.pageSize;
-    return list.slice(start, start + this.pageSize);
-  });
+  readonly remaining = computed(() => Math.max(0, this.filtered().length - this.visible()));
 
   readonly rangeLabel = computed(() => {
     const total = this.filtered().length;
     if (total === 0) return '0 resultados';
-    const p = Math.min(this.page(), this.totalPages());
-    const from = (p - 1) * this.pageSize + 1;
-    const to = Math.min(p * this.pageSize, total);
-    return `${from}–${to} de ${total}`;
+    const to = Math.min(this.visible(), total);
+    return `1–${to} de ${total}`;
   });
+
+  loadMore(): void {
+    this.visible.update((v) => Math.min(v + this.pageSize, this.filtered().length));
+  }
 
   readonly modalDescription = computed(() => {
     const pago = this.selected();
@@ -139,10 +133,11 @@ export class PagosPage {
   });
 
   constructor() {
+    window.setTimeout(() => this.cargando.set(false), 500);
     effect(() => {
       this.busqueda();
       this.estadoFiltro();
-      untracked(() => this.page.set(1));
+      untracked(() => this.visible.set(PAGE_SIZE));
     });
   }
 
@@ -173,13 +168,8 @@ export class PagosPage {
     }
   }
 
-  goToPage(page: number): void {
-    this.page.set(Math.min(Math.max(1, page), this.totalPages()));
-  }
-
   rowIndex(localIndex: number): string {
-    const p = Math.min(this.page(), this.totalPages());
-    return String((p - 1) * this.pageSize + localIndex + 1).padStart(2, '0');
+    return String(localIndex + 1).padStart(2, '0');
   }
 
   limpiarFiltros(): void {

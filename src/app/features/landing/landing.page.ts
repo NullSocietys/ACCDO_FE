@@ -6,9 +6,12 @@ import {
   OnInit,
   inject,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { firstValueFrom, Subscription } from 'rxjs';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import type { Configuracion } from '../../core/models/configuracion.model';
+import { ConfiguracionApiService } from '../../core/services/api/configuracion.api.service';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,6 +23,27 @@ gsap.registerPlugin(ScrollTrigger);
 })
 export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
   private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly route = inject(ActivatedRoute);
+  private readonly configApi = inject(ConfiguracionApiService);
+
+  private readonly FALLBACK = {
+    nombreAsociacion: 'Asociación Cultural Chicote de Oro',
+    coordinadoraGeneral: 'Martha Bravo',
+    telefono: '926 266 295',
+    correo: 'contacto@chicotedeoro.pe',
+    direccion: 'Tacna, Perú',
+    numeroYape: '926 266 295',
+    numeroPlin: '926 266 295',
+    fechaLimiteInscripcion: '12 de agosto',
+    fechaSorteo: '14 de agosto',
+    horaSorteo: '09:00 pm',
+  };
+
+  modalAbierto = false;
+  datosCoordinacion = { ...this.FALLBACK };
+  private datosDesdeApi = false;
+  private focoPrevio: HTMLElement | null = null;
+  private modalEscListener: ((e: KeyboardEvent) => void) | null = null;
 
   private autoplayInterval: ReturnType<typeof setInterval> | null = null;
   private dotsMorphTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -34,8 +58,9 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
 
   private motionMm: gsap.MatchMedia | null = null;
   private heroPlayed = false;
-  private convertBarShown = false;
   private readonly interactionCleanups: Array<() => void> = [];
+  private fragSub: Subscription | null = null;
+  private pendienteFragment: string | null = null;
 
   ngOnInit(): void {
     document.title = 'Chicote de Oro — Elegancia en movimiento';
@@ -44,13 +69,24 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.initCarousel();
     this.initMobileMenu();
+    this.initAnchors();
     this.initHeader();
     this.initProgWallCarousel();
     this.initMotion();
     this.initIntro();
+    // Fragmento de ruta (p. ej. /#galeria desde el header de /seguimiento).
+    this.fragSub = this.route.fragment.subscribe((f) => {
+      if (f) this.irA(f);
+    });
+    if (this.route.snapshot.fragment) this.irA(this.route.snapshot.fragment);
   }
 
   ngOnDestroy(): void {
+    if (this.modalEscListener) {
+      window.removeEventListener('keydown', this.modalEscListener);
+      this.modalEscListener = null;
+    }
+    document.body.style.overflow = '';
     this.clearIntroFallback();
     if (this.introWatchdog) clearInterval(this.introWatchdog);
     if (this.autoplayInterval) clearInterval(this.autoplayInterval);
@@ -59,6 +95,8 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     if (this.progWallScrollListener) {
       document.getElementById('progWall')?.removeEventListener('scroll', this.progWallScrollListener);
     }
+    this.fragSub?.unsubscribe();
+    this.fragSub = null;
     this.teardownInteractions();
     this.motionMm?.revert();
     this.motionMm = null;
@@ -67,12 +105,22 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
 
   /* —— Intro video —— */
   private initIntro(): void {
+    const yaVisto = sessionStorage.getItem('chicote-intro-played') === '1';
+    if (yaVisto) {
+      document.getElementById('introOverlay')?.remove();
+      queueMicrotask(() => this.playHeroEntrance());
+      queueMicrotask(() => this.flushFragmentScroll());
+      return;
+    }
+
     this.introOverlayEl = document.getElementById('introOverlay');
     this.introVideoEl = document.getElementById('introVideo') as HTMLVideoElement | null;
     if (!this.introOverlayEl || !this.introVideoEl) {
       queueMicrotask(() => this.playHeroEntrance());
+      queueMicrotask(() => this.flushFragmentScroll());
       return;
     }
+    sessionStorage.setItem('chicote-intro-played', '1');
     this.prepareIntro(this.introVideoEl);
   }
 
@@ -102,6 +150,27 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     }
     this.introOverlayEl = null;
     this.playHeroEntrance();
+    this.flushFragmentScroll();
+  }
+
+  /* —— Scroll a sección vía fragmento de ruta (header compartido) —— */
+  private irA(fragment: string): void {
+    if (this.introOverlayEl) {
+      this.pendienteFragment = fragment;
+      return;
+    }
+    const el = (this.host.nativeElement as HTMLElement).querySelector<HTMLElement>('#' + fragment);
+    if (!el) return;
+    this.pendienteFragment = null;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  private flushFragmentScroll(): void {
+    if (this.pendienteFragment) {
+      const f = this.pendienteFragment;
+      this.pendienteFragment = null;
+      this.irA(f);
+    }
   }
 
   private clearIntroFallback(): void {
@@ -199,7 +268,7 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
         };
 
         if (cond.reduceMotion || !cond.isMotion) {
-          gsap.set('.reveal, .hero-anim, .frame-corner, .convert-bar', {
+          gsap.set('.reveal, .hero-anim, .frame-corner', {
             clearProps: 'all',
             autoAlpha: 1,
             y: 0,
@@ -216,7 +285,6 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
         gsap.set(q('.reveal'), { autoAlpha: 0, y: 44 });
         gsap.set(q('.hero-anim'), { autoAlpha: 0, y: 36 });
         gsap.set(q('.frame-corner'), { autoAlpha: 0, scale: 0.85 });
-        gsap.set(q('.convert-bar'), { yPercent: 120, autoAlpha: 0 });
 
         ScrollTrigger.batch(q('.reveal'), {
           start: 'top 88%',
@@ -301,13 +369,6 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
           );
         }
 
-        ScrollTrigger.create({
-          trigger: q('#hero')[0] ?? '#hero',
-          start: 'bottom top+=80',
-          onEnter: () => this.showConvertBar(),
-          onLeaveBack: () => this.hideConvertBar(),
-        });
-
         if (cond.finePointer && cond.isDesktop) {
           this.initProductTilts(root, q);
           this.initHoverLift(root, q);
@@ -323,7 +384,6 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
           this.teardownInteractions();
           root.classList.remove('js-gsap');
           this.heroPlayed = false;
-          this.convertBarShown = false;
         };
       },
       root,
@@ -436,6 +496,15 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     this.heroPlayed = true;
     const q = gsap.utils.selector(root);
 
+    if (sessionStorage.getItem('chicote-entrance-played') === '1') {
+      gsap.set(q('.frame-corner, .hero-anim'), { autoAlpha: 1, y: 0, x: 0, scale: 1 });
+      gsap.set(q('.hero-actions .btn'), { autoAlpha: 1, y: 0 });
+      const logo = q('.hero-logo')[0];
+      if (logo) gsap.set(logo, { scale: 1 });
+      return;
+    }
+    sessionStorage.setItem('chicote-entrance-played', '1');
+
     const tl = gsap.timeline({
       defaults: { ease: 'power3.out' },
     });
@@ -478,26 +547,89 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private showConvertBar(): void {
-    if (this.convertBarShown) return;
-    this.convertBarShown = true;
-    gsap.to('.convert-bar', {
-      yPercent: 0,
-      autoAlpha: 1,
-      duration: 0.45,
-      ease: 'power3.out',
+  /* —— Modal de coordinación —— */
+  async abrirModalCoordinadores(): Promise<void> {
+    if (!this.datosDesdeApi) {
+      try {
+        const c: Configuracion | null = await firstValueFrom(
+          this.configApi.obtenerActiva(),
+        );
+        if (c) {
+          this.datosDesdeApi = true;
+          const f = this.FALLBACK;
+          this.datosCoordinacion = {
+            nombreAsociacion: c.nombreAsociacion || f.nombreAsociacion,
+            coordinadoraGeneral: c.coordinadoraGeneral || f.coordinadoraGeneral,
+            telefono: c.telefono || f.telefono,
+            correo: c.correo || f.correo,
+            direccion: c.direccion || f.direccion,
+            numeroYape: c.numeroYape || f.numeroYape,
+            numeroPlin: c.numeroPlin || f.numeroPlin,
+            fechaLimiteInscripcion:
+              this.formatearFecha(c.fechaLimiteInscripcion) || f.fechaLimiteInscripcion,
+            fechaSorteo: this.formatearFecha(c.fechaSorteo) || f.fechaSorteo,
+            horaSorteo: this.formatearHora(c.horaSorteo) || f.horaSorteo,
+          };
+        }
+      } catch {
+        /* sin conexión: se usan los datos de respaldo */
+      }
+    }
+
+    this.focoPrevio = document.activeElement as HTMLElement | null;
+    this.modalAbierto = true;
+    document.body.style.overflow = 'hidden';
+    this.modalEscListener = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') this.cerrarModalCoordinadores();
+    };
+    window.addEventListener('keydown', this.modalEscListener);
+    requestAnimationFrame(() => {
+      const close = this.host.nativeElement.querySelector(
+        '.coord-modal__close',
+      ) as HTMLButtonElement | null;
+      close?.focus();
     });
   }
 
-  private hideConvertBar(): void {
-    if (!this.convertBarShown) return;
-    this.convertBarShown = false;
-    gsap.to('.convert-bar', {
-      yPercent: 120,
-      autoAlpha: 0,
-      duration: 0.35,
-      ease: 'power2.in',
+  cerrarModalCoordinadores(): void {
+    this.modalAbierto = false;
+    document.body.style.overflow = '';
+    if (this.modalEscListener) {
+      window.removeEventListener('keydown', this.modalEscListener);
+      this.modalEscListener = null;
+    }
+    this.focoPrevio?.focus();
+    this.focoPrevio = null;
+  }
+
+  get telefonoHref(): string {
+    return `tel:+51${this.datosCoordinacion.telefono.replace(/\D/g, '')}`;
+  }
+
+  get whatsappHref(): string {
+    return `https://wa.me/51${this.datosCoordinacion.telefono.replace(/\D/g, '')}`;
+  }
+
+  private formatearFecha(valor: string): string {
+    if (!valor) return '';
+    const d = new Date(`${valor}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('es-PE', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
     });
+  }
+
+  private formatearHora(valor: string): string {
+    if (!valor) return '';
+    const m = /^(\d{1,2}):(\d{2})$/.exec(valor.trim());
+    if (!m) return '';
+    let horas = Number(m[1]);
+    const minutos = m[2];
+    const sufijo = horas >= 12 ? 'pm' : 'am';
+    horas = horas % 12 || 12;
+    return `${horas}:${minutos} ${sufijo}`;
   }
 
   /* —— Carousel —— */
@@ -565,6 +697,25 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     };
 
     startAutoplay();
+  }
+
+  /* —— Anclas del menú: scroll con offset del header —— */
+  private initAnchors(): void {
+    const root = this.host.nativeElement as HTMLElement;
+    root.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((link: HTMLAnchorElement) => {
+      const onClick = (ev: Event) => {
+        const id = (link.getAttribute('href') ?? '').slice(1);
+        if (!id) return;
+        const target = root.querySelector<HTMLElement>('#' + id);
+        if (!target) return;
+        // El offset del header lo da la regla CSS `scroll-margin-top` de cada sección:
+        // scrollIntoView lo respeta (la navegación nativa por hash no). Un solo movimiento.
+        ev.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      link.addEventListener('click', onClick);
+      this.interactionCleanups.push(() => link.removeEventListener('click', onClick));
+    });
   }
 
   /* —— Mobile menu —— */

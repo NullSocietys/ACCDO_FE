@@ -1,0 +1,31 @@
+<header class="site-header" id="siteHeader">
+  <div class="container header-inner">
+    <a class="brand" routerLink="/" fragment="hero" aria-label="Chicote de Oro — inicio">
+      <img class="brand-logo" src="logo/eslogan.png" alt="Chicote de Oro — Elegancia en movimiento">
+    </a>
+
+    <button class="menu-toggle" id="menuToggle" type="button" (click)="toggleMenu()" aria-expanded="false"
+      aria-controls="primaryNav" aria-label="Abrir menú">
+      <span class="menu-bar"></span>
+      <span class="menu-bar"></span>
+      <span class="menu-bar"></span>
+    </button>
+
+    <div class="header-right">
+      <nav class="site-nav" id="primaryNav" aria-label="Navegación principal">
+        <ul class="nav-list">
+          <li><a routerLink="/" fragment="hero" (click)="closeMenu()">Inicio</a></li>
+          <li><a routerLink="/" fragment="experiencia" (click)="closeMenu()">El concurso</a></li>
+          <li><a routerLink="/" fragment="galeria" (click)="closeMenu()">Galería</a></li>
+          <li><a routerLink="/" fragment="inscripcion" (click)="closeMenu()">Proceso</a></li>
+          <li><a routerLink="/" fragment="contacto" (click)="closeMenu()">Contacto</a></li>
+          <li><a routerLink="/seguimiento" [queryParams]="{ origen: 'header' }" (click)="closeMenu()">Verificación</a></li>
+        </ul>
+      </nav>
+      <button class="btn btn-gold header-cta" type="button" (click)="cta.emit()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Coordinadores
+      </button>
+    </div>
+  </div>
+</header>

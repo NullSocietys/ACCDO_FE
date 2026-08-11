@@ -86,7 +86,7 @@
   justify-content: flex-end;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 28px;
   padding: 14px 22px 18px;
   border-top: 1px solid var(--color-border);
   background: var(--color-muted, #fafaf9);

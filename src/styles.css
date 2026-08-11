@@ -372,6 +372,10 @@ img {
   box-shadow: none;
 }
 
+.ui-select.is-invalid {
+  border-color: var(--color-destructive);
+}
+
 .table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -424,6 +428,18 @@ img {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-lg);
+}
+
+.field-error {
+  display: block;
+  color: var(--color-destructive);
+  font-size: 11.5px;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.field-error:empty {
+  display: none;
 }
 
 .form-grid--3 {
@@ -606,5 +622,20 @@ img {
 @media (max-width: 480px) {
   .grid-stats {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Esqueleto de carga inicial de las páginas de módulos (igual que el dashboard). */
+.page-sk {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 720px) {
+  .page-sk {
+    flex: none;
   }
 }

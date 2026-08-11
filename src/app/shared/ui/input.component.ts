@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import { IconComponent } from '../icons/icon.component';
 
 @Component({
@@ -18,5 +18,31 @@ export class InputComponent {
   readonly invalid = input(false);
   readonly multiline = input(false);
   readonly rows = input(4);
+  readonly toggle = input(false);
+  readonly lettersOnly = input(false);
+  readonly digitsOnly = input(false);
+  readonly maxlength = input<number | null>(null);
   readonly valueChange = output<string>();
+
+  readonly mostrado = signal(false);
+
+  onInput(el: HTMLInputElement): void {
+    if (this.lettersOnly()) {
+      const limpio = el.value.replace(/[^\p{L}\s']/gu, '');
+      if (limpio !== el.value) {
+        el.value = limpio;
+      }
+      this.valueChange.emit(limpio);
+      return;
+    }
+    if (this.digitsOnly()) {
+      const limpio = el.value.replace(/\D/g, '');
+      if (limpio !== el.value) {
+        el.value = limpio;
+      }
+      this.valueChange.emit(limpio);
+      return;
+    }
+    this.valueChange.emit(el.value);
+  }
 }

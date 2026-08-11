@@ -1,4 +1,10 @@
 <div class="page">
+  @if (cargando()) {
+    <div class="page-sk" aria-hidden="true">
+      <app-skeleton variant="card" [height]="120" />
+      <app-skeleton variant="table" [count]="8" />
+    </div>
+  } @else {
   <header class="mast">
     <div class="mast__copy">
       <p class="mast__eyebrow">Sistema · Ajustes</p>
@@ -28,8 +34,10 @@
           controlId="cfg-nombre"
           icon="building"
           [value]="form().nombreAsociacion"
+          [invalid]="!!errores()['nombreAsociacion']"
           (valueChange)="patch({ nombreAsociacion: $event })"
         />
+        <span class="field-error">{{ errores()['nombreAsociacion'] }}</span>
       </div>
       <div class="field">
         <label for="cfg-tel">Teléfono</label>
@@ -38,8 +46,10 @@
           type="tel"
           icon="phone"
           [value]="form().telefono"
+          [invalid]="!!errores()['telefono']"
           (valueChange)="patch({ telefono: $event })"
         />
+        <span class="field-error">{{ errores()['telefono'] }}</span>
       </div>
       <div class="field">
         <label for="cfg-mail">Correo</label>
@@ -48,8 +58,10 @@
           type="email"
           icon="mail"
           [value]="form().correo"
+          [invalid]="!!errores()['correo']"
           (valueChange)="patch({ correo: $event })"
         />
+        <span class="field-error">{{ errores()['correo'] }}</span>
       </div>
       <div class="field form-span-2">
         <label for="cfg-dir">Dirección</label>
@@ -57,8 +69,10 @@
           controlId="cfg-dir"
           icon="mapPin"
           [value]="form().direccion"
+          [invalid]="!!errores()['direccion']"
           (valueChange)="patch({ direccion: $event })"
         />
+        <span class="field-error">{{ errores()['direccion'] }}</span>
       </div>
     </div>
   </app-card>
@@ -71,8 +85,10 @@
           controlId="cfg-coord"
           icon="user"
           [value]="form().coordinadoraGeneral"
+          [invalid]="!!errores()['coordinadoraGeneral']"
           (valueChange)="patch({ coordinadoraGeneral: $event })"
         />
+        <span class="field-error">{{ errores()['coordinadoraGeneral'] }}</span>
       </div>
       <div class="field form-span-2">
         <label for="cfg-banco">Cuenta / medio bancario</label>
@@ -80,24 +96,30 @@
           controlId="cfg-banco"
           icon="wallet"
           [value]="form().cuentaBancaria"
+          [invalid]="!!errores()['cuentaBancaria']"
           (valueChange)="patch({ cuentaBancaria: $event })"
         />
+        <span class="field-error">{{ errores()['cuentaBancaria'] }}</span>
       </div>
       <div class="field">
         <label for="cfg-yape">Número Yape / WhatsApp</label>
         <app-input
           controlId="cfg-yape"
           [value]="form().numeroYape"
+          [invalid]="!!errores()['numeroYape']"
           (valueChange)="patch({ numeroYape: $event })"
         />
+        <span class="field-error">{{ errores()['numeroYape'] }}</span>
       </div>
       <div class="field">
         <label for="cfg-plin">Número Plin</label>
         <app-input
           controlId="cfg-plin"
           [value]="form().numeroPlin"
+          [invalid]="!!errores()['numeroPlin']"
           (valueChange)="patch({ numeroPlin: $event })"
         />
+        <span class="field-error">{{ errores()['numeroPlin'] }}</span>
       </div>
       <div class="field">
         <label for="cfg-limite">Fecha límite de inscripción</label>
@@ -105,8 +127,10 @@
           controlId="cfg-limite"
           type="date"
           [value]="form().fechaLimiteInscripcion"
+          [invalid]="!!errores()['fechaLimiteInscripcion']"
           (valueChange)="patch({ fechaLimiteInscripcion: $event })"
         />
+        <span class="field-error">{{ errores()['fechaLimiteInscripcion'] }}</span>
       </div>
       <div class="field">
         <label for="cfg-sorteo">Fecha de sorteo</label>
@@ -114,24 +138,30 @@
           controlId="cfg-sorteo"
           type="date"
           [value]="form().fechaSorteo"
+          [invalid]="!!errores()['fechaSorteo']"
           (valueChange)="patch({ fechaSorteo: $event })"
         />
+        <span class="field-error">{{ errores()['fechaSorteo'] }}</span>
       </div>
       <div class="field">
         <label for="cfg-hora-sorteo">Hora de sorteo</label>
         <app-input
           controlId="cfg-hora-sorteo"
           [value]="form().horaSorteo"
+          [invalid]="!!errores()['horaSorteo']"
           (valueChange)="patch({ horaSorteo: $event })"
         />
+        <span class="field-error">{{ errores()['horaSorteo'] }}</span>
       </div>
       <div class="field">
         <label for="cfg-hora-inicio">Hora de inicio del concurso</label>
         <app-input
           controlId="cfg-hora-inicio"
           [value]="form().horaInicioConcurso"
+          [invalid]="!!errores()['horaInicioConcurso']"
           (valueChange)="patch({ horaInicioConcurso: $event })"
         />
+        <span class="field-error">{{ errores()['horaInicioConcurso'] }}</span>
       </div>
     </div>
   </app-card>
@@ -141,7 +171,7 @@
       <div class="field form-span-2">
         <label>Logo</label>
         <label class="logo-box" style="cursor: pointer">
-          <input type="file" accept="image/*" class="sr-only" (change)="onLogo($event)" />
+          <input autocomplete="off" type="file" accept="image/*" class="sr-only" (change)="onLogo($event)" />
           <div class="logo-preview" aria-hidden="true">C</div>
           <div>
             <div style="font-weight: 600; color: var(--color-primary)">
@@ -161,10 +191,13 @@
           [multiline]="true"
           [rows]="5"
           [value]="form().mensajeConfirmacion"
+          [invalid]="!!errores()['mensajeConfirmacion']"
           (valueChange)="patch({ mensajeConfirmacion: $event })"
         />
+        <span class="field-error">{{ errores()['mensajeConfirmacion'] }}</span>
       </div>
     </div>
   </app-card>
   </div>
+  }
 </div>

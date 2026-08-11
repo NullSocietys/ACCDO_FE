@@ -9,6 +9,23 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'inscribirse',
+    loadComponent: () =>
+      import('./features/inscripcion-publica/inscripcion-publica.page').then(
+        (m) => m.InscripcionPublicaPage,
+      ),
+  },
+  {
+    path: 'seguimiento',
+    loadComponent: () =>
+      import('./features/inscripcion-publica/seguimiento.page').then((m) => m.SeguimientoPage),
+  },
+  {
+    path: 'seguimiento/:codigo',
+    loadComponent: () =>
+      import('./features/inscripcion-publica/seguimiento.page').then((m) => m.SeguimientoPage),
+  },
+  {
     path: 'admin',
     component: ShellComponent,
     children: [

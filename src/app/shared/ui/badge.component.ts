@@ -19,8 +19,7 @@ export class BadgeComponent {
 export function statusTone(status: string): BadgeTone {
   const map: Record<string, BadgeTone> = {
     activo: 'success',
-    proximo: 'info',
-    finalizado: 'muted',
+    cerrado: 'muted',
     cancelado: 'danger',
     pendiente: 'warn',
     confirmada: 'success',
@@ -42,8 +41,7 @@ export function statusTone(status: string): BadgeTone {
 export function statusLabel(status: string): string {
   const map: Record<string, string> = {
     activo: 'Activo',
-    proximo: 'Próximo',
-    finalizado: 'Finalizado',
+    cerrado: 'Cerrado',
     cancelado: 'Cancelado',
     pendiente: 'Pendiente',
     confirmada: 'Confirmada',
