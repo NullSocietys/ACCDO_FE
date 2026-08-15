@@ -92,7 +92,7 @@
             class="tabs__btn"
             [class.is-active]="estadoFiltro() === f.key"
             [attr.aria-pressed]="estadoFiltro() === f.key"
-            (click)="estadoFiltro.set(f.key); visible.set(pageSize)"
+            (click)="estadoFiltro.set(f.key); page.set(1)"
           >
             {{ f.label }}
             <span class="tabs__n">{{ cuentaEstado(f.key) }}</span>
@@ -105,7 +105,7 @@
           icon="search"
           [value]="busqueda()"
           placeholder="Nombre o sede…"
-          (valueChange)="busqueda.set($event); visible.set(pageSize)"
+          (valueChange)="busqueda.set($event); page.set(1)"
         />
       </div>
     </div>
@@ -201,10 +201,12 @@
           }
         </div>
 
-        <app-load-more
-          [hasMore]="hasMore()"
-          [remaining]="remaining()"
-          (loadMore)="loadMore()"
+        <app-pagination
+          [total]="filtrados().length"
+          [pageSize]="pageSize"
+          [page]="page()"
+          ariaLabel="Paginación de eventos"
+          (pageChange)="page.set($event)"
         />
       </section>
     }

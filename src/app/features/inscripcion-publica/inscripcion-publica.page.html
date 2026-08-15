@@ -7,7 +7,9 @@
         <em>Elegancia en movimiento</em>
       </span>
     </a>
-    <a class="ipo-back" routerLink="/">← Volver a la portada</a>
+    <div class="ipo-header__actions" aria-label="Acciones">
+      <a class="ipo-chip ipo-chip--principal" routerLink="/" title="Volver a la portada">Volver</a>
+    </div>
   </div>
 </header>
 
@@ -25,7 +27,7 @@
         </div>
 
         <ol class="ipo-steps">
-          @for (meta of stepMeta; track meta.n) {
+          @for (meta of stepMeta(); track meta.n) {
             <li
               class="ipo-step"
               [class.is-active]="step() === meta.n"
@@ -65,9 +67,26 @@
                 <span class="ipo-panel__num">01</span>
                 <div>
                   <h2>Tu cuenta de delegado</h2>
-                  <p>La necesitarás para inscribir tus propuestas y consultarlas luego.</p>
+                  <p>Entra una vez y reutiliza tus datos en cada inscripción.</p>
                 </div>
               </div>
+
+              @if (sesionActiva()) {
+                <div class="ipo-session-card">
+                  <p class="ipo-session-card__k">Sesión activa</p>
+                  <strong>{{ nombreUsuario() }}</strong>
+                  <em>{{ cuenta().correo }}</em>
+                  <p>Tus datos de responsable se cargarán automáticamente en el paso 3.</p>
+                  <div class="ipo-session-card__actions">
+                    <button type="button" class="ipo-btn ipo-btn--gold" (click)="next()">Continuar</button>
+                    <button type="button" class="ipo-btn ipo-btn--ghost" (click)="cerrarSesionWizard()">Cambiar cuenta</button>
+                  </div>
+                </div>
+              } @else {
+              <p class="ipo-access-hint">
+                ¿Prefieres una pantalla dedicada?
+                <button type="button" class="ipo-linkish" (click)="irAAcceso()">Entrar o crear cuenta</button>
+              </p>
 
               <div class="ipo-tabs">
                 <button type="button" class="ipo-tab" [class.is-active]="cuenta().metodo === 'registro'"
@@ -180,6 +199,7 @@
                   Tu cuenta se crea automáticamente al continuar y quedará ligada a tus inscripciones.
                 </p>
               }
+              }
             </div>
           }
 
@@ -252,10 +272,21 @@
                 </div>
               </div>
 
+              @if (sesionActiva() && (responsable().nombres || responsable().correo)) {
+                <p class="ipo-prefill-note">
+                  Completamos tus datos desde tu cuenta
+                  @if (responsable().dni || responsable().telefono) {
+                    y tu última inscripción
+                  }
+                  . Revísalos y corrige solo si hace falta.
+                </p>
+              }
+
               <div class="ipo-grid ipo-grid--2">
                 <div class="ipo-field" [class.is-invalid]="responsableErrores()['nombres']">
                   <span>Nombres</span>
-                  <input type="text" placeholder="Nombres" [ngModel]="responsable().nombres"
+                  <input type="text" name="given-name" autocomplete="given-name" placeholder="Nombres"
+                    [ngModel]="responsable().nombres"
                     (ngModelChange)="patchResponsable({ nombres: $event })"
                     (input)="onLettersInput($event)">
                   @if (responsableErrores()['nombres']) {
@@ -264,7 +295,8 @@
                 </div>
                 <div class="ipo-field" [class.is-invalid]="responsableErrores()['apellidos']">
                   <span>Apellidos</span>
-                  <input type="text" placeholder="Apellidos" [ngModel]="responsable().apellidos"
+                  <input type="text" name="family-name" autocomplete="family-name" placeholder="Apellidos"
+                    [ngModel]="responsable().apellidos"
                     (ngModelChange)="patchResponsable({ apellidos: $event })"
                     (input)="onLettersInput($event)">
                   @if (responsableErrores()['apellidos']) {
@@ -273,7 +305,7 @@
                 </div>
                 <div class="ipo-field" [class.is-invalid]="responsableErrores()['dni']">
                   <span>DNI</span>
-                  <input type="text" inputmode="numeric" maxlength="8" placeholder="8 dígitos"
+                  <input type="text" name="dni" autocomplete="off" inputmode="numeric" maxlength="8" placeholder="8 dígitos"
                     [ngModel]="responsable().dni" (ngModelChange)="patchResponsable({ dni: $event })"
                     (input)="onDniInput($event)">
                   @if (responsableErrores()['dni']) {
@@ -282,16 +314,17 @@
                 </div>
                 <div class="ipo-field" [class.is-invalid]="responsableErrores()['telefono']">
                   <span>Teléfono / WhatsApp</span>
-                  <input type="tel" inputmode="numeric" maxlength="9" placeholder="9 dígitos"
+                  <input type="tel" name="tel" autocomplete="tel-national" inputmode="numeric" maxlength="9" placeholder="9 dígitos"
                     [ngModel]="responsable().telefono" (ngModelChange)="patchResponsable({ telefono: $event })"
-                    (input)="onDniInput($event)">
+                    (input)="onCelularInput($event)">
                   @if (responsableErrores()['telefono']) {
                     <span class="ipo-error-text">{{ responsableErrores()['telefono'] }}</span>
                   }
                 </div>
                 <div class="ipo-field ipo-field--full" [class.is-invalid]="responsableErrores()['correoRes']">
                   <span>Correo electrónico</span>
-                  <input type="email" placeholder="correo@ejemplo.com" [ngModel]="responsable().correo"
+                  <input type="email" name="email" autocomplete="email" placeholder="correo@ejemplo.com"
+                    [ngModel]="responsable().correo"
                     (ngModelChange)="patchResponsable({ correo: $event })">
                   @if (responsableErrores()['correoRes']) {
                     <span class="ipo-error-text">{{ responsableErrores()['correoRes'] }}</span>
@@ -299,7 +332,8 @@
                 </div>
                 <div class="ipo-field" [class.is-invalid]="responsableErrores()['departamento']">
                   <span>Departamento</span>
-                  <select [ngModel]="responsable().departamento" (ngModelChange)="onDepartamento($event)">
+                  <select name="address-level1" autocomplete="address-level1"
+                    [ngModel]="responsable().departamento" (ngModelChange)="onDepartamento($event)">
                     <option value="">Selecciona…</option>
                     @for (dep of departamentos; track dep) {
                       <option [value]="dep">{{ dep }}</option>
@@ -311,7 +345,8 @@
                 </div>
                 <div class="ipo-field" [class.is-invalid]="responsableErrores()['provincia']">
                   <span>Provincia</span>
-                  <select [ngModel]="responsable().provincia" (ngModelChange)="onProvincia($event)"
+                  <select name="address-level2" autocomplete="address-level2"
+                    [ngModel]="responsable().provincia" (ngModelChange)="onProvincia($event)"
                     [disabled]="!responsable().departamento">
                     <option value="">Selecciona…</option>
                     @for (prov of provincias(); track prov) {
@@ -324,7 +359,8 @@
                 </div>
                 <div class="ipo-field ipo-field--full" [class.is-invalid]="responsableErrores()['distrito']">
                   <span>Distrito</span>
-                  <select [ngModel]="responsable().distrito" (ngModelChange)="patchResponsable({ distrito: $event })"
+                  <select name="address-level3" autocomplete="address-level3"
+                    [ngModel]="responsable().distrito" (ngModelChange)="patchResponsable({ distrito: $event })"
                     [disabled]="!responsable().provincia">
                     <option value="">Selecciona…</option>
                     @for (dis of distritos(); track dis) {
@@ -365,52 +401,21 @@
                   <legend>Participante {{ $index + 1 }}</legend>
                   <div class="ipo-grid ipo-grid--2">
                     <div class="ipo-field" [class.is-invalid]="participanteErrores()[$index]['nombres']">
-                      <span>Nombres</span>
-                      <input type="text" placeholder="Nombres" [ngModel]="p.nombres"
+                      <span>Nombre</span>
+                      <input type="text" placeholder="Nombre completo" [ngModel]="p.nombres"
                         (ngModelChange)="updateParticipante($index, { nombres: $event })"
                         (input)="onLettersInput($event)">
                       @if (participanteErrores()[$index]['nombres']) {
                         <span class="ipo-error-text">{{ participanteErrores()[$index]['nombres'] }}</span>
                       }
                     </div>
-                    <div class="ipo-field" [class.is-invalid]="participanteErrores()[$index]['apellidos']">
-                      <span>Apellidos</span>
-                      <input type="text" placeholder="Apellidos" [ngModel]="p.apellidos"
-                        (ngModelChange)="updateParticipante($index, { apellidos: $event })"
-                        (input)="onLettersInput($event)">
-                      @if (participanteErrores()[$index]['apellidos']) {
-                        <span class="ipo-error-text">{{ participanteErrores()[$index]['apellidos'] }}</span>
-                      }
-                    </div>
-                    <div class="ipo-field" [class.is-invalid]="participanteErrores()[$index]['dni']">
-                      <span>DNI</span>
-                      <input type="text" inputmode="numeric" maxlength="8" placeholder="8 dígitos"
-                        [ngModel]="p.dni" (ngModelChange)="updateParticipante($index, { dni: $event })"
-                        (input)="onDniInput($event)">
-                      @if (participanteErrores()[$index]['dni']) {
-                        <span class="ipo-error-text">{{ participanteErrores()[$index]['dni'] }}</span>
-                      }
-                    </div>
-                    <div class="ipo-field" [class.is-invalid]="participanteErrores()[$index]['edad']">
-                      <span>Edad</span>
-                      <input type="number" min="3" max="120" placeholder="Edad" [ngModel]="p.edad"
-                        (ngModelChange)="updateParticipante($index, { edad: $event ? Number($event) : null })">
-                      @if (participanteErrores()[$index]['edad']) {
-                        <span class="ipo-error-text">{{ participanteErrores()[$index]['edad'] }}</span>
-                      }
-                    </div>
-                    <div class="ipo-field ipo-field--full" [class.is-invalid]="participanteErrores()[$index]['sexo']">
-                      <span>Sexo</span>
-                      <div class="ipo-sexo">
-                        <button type="button" [class.is-active]="p.sexo === 'M'"
-                          (click)="updateParticipante($index, { sexo: 'M' })">Masculino</button>
-                        <button type="button" [class.is-active]="p.sexo === 'F'"
-                          (click)="updateParticipante($index, { sexo: 'F' })">Femenino</button>
-                        <button type="button" [class.is-active]="p.sexo === 'O'"
-                          (click)="updateParticipante($index, { sexo: 'O' })">Otro</button>
-                      </div>
-                      @if (participanteErrores()[$index]['sexo']) {
-                        <span class="ipo-error-text">{{ participanteErrores()[$index]['sexo'] }}</span>
+                    <div class="ipo-field" [class.is-invalid]="participanteErrores()[$index]['celular']">
+                      <span>Celular</span>
+                      <input type="tel" inputmode="numeric" maxlength="9" placeholder="9 dígitos"
+                        [ngModel]="p.celular" (ngModelChange)="updateParticipante($index, { celular: $event })"
+                        (input)="onCelularInput($event)">
+                      @if (participanteErrores()[$index]['celular']) {
+                        <span class="ipo-error-text">{{ participanteErrores()[$index]['celular'] }}</span>
                       }
                     </div>
                   </div>
@@ -438,7 +443,7 @@
                 <span class="ipo-panel__num">05</span>
                 <div>
                   <h2>Pago por Yape</h2>
-                  <p>Simulación del pago: completa los pasos como si fueras a pagar.</p>
+                  <p>Registra tu pago por Yape y adjunta el voucher para que podamos confirmar tu inscripción.</p>
                 </div>
               </div>
 
@@ -519,7 +524,7 @@
 
           <!-- ============ ACCIONES (fijas al pie de la tarjeta) ============ -->
           <div class="ipo-actions">
-            @if (step() > 1) {
+            @if (step() > 1 && !(sesionActiva() && step() === 2)) {
               <button type="button" class="ipo-btn ipo-btn--ghost" (click)="prev()" [disabled]="saving()">
                 ← Atrás
               </button>

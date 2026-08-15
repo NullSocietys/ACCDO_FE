@@ -1,0 +1,172 @@
+<div class="ax">
+  <header class="ax-top">
+    <a class="ax-brand" routerLink="/" title="Ir al menú principal">
+      <img src="logo/logo.png" alt="" width="32" height="32" />
+      <span class="ax-brand__text">
+        <strong>Chicote de Oro</strong>
+        <em>Elegancia en movimiento</em>
+      </span>
+    </a>
+    <a class="ax-top-home" routerLink="/" title="Volver a la portada">
+      <span aria-hidden="true">←</span> Menú principal
+    </a>
+  </header>
+
+  <main class="ax-grid">
+    <section class="ax-intro" aria-labelledby="ax-intro-title">
+      <p class="ax-eyebrow">VII Concurso Nacional · Caporales</p>
+      <p class="ax-index">Acceso delegados</p>
+      <h1 id="ax-intro-title">Tu puerta<br /><em>al escenario</em></h1>
+      <p class="ax-manifesto">
+        Aquí entran los responsables de cada grupo. Guarda tu sesión y el próximo
+        registro ya nace con tus datos de contacto listos.
+      </p>
+      <ul class="ax-points">
+        <li>
+          <span>01</span>
+          <div>
+            <strong>Una cuenta, varias propuestas</strong>
+            <em>Inscribe más de un elenco sin repetir tu ficha</em>
+          </div>
+        </li>
+        <li>
+          <span>02</span>
+          <div>
+            <strong>Datos que viajan contigo</strong>
+            <em>DNI, celular y ubigeo se recuperan al volver</em>
+          </div>
+        </li>
+        <li>
+          <span>03</span>
+          <div>
+            <strong>Listo para el concurso</strong>
+            <em>Tras entrar, vuelves al menú principal a tu ritmo</em>
+          </div>
+        </li>
+      </ul>
+      <div class="ax-rule" aria-hidden="true"></div>
+      <p class="ax-foot-note">Asociación Cultural Chicote de Oro · Tacna, Perú</p>
+    </section>
+
+    <section class="ax-form-wrap">
+      <form class="ax-form" (ngSubmit)="submit()" autocomplete="on">
+        <div class="ax-modes" role="tablist" aria-label="Modo de acceso">
+          <button
+            type="button"
+            role="tab"
+            class="ax-mode"
+            [class.is-on]="modo() === 'entrar'"
+            [attr.aria-selected]="modo() === 'entrar'"
+            (click)="setModo('entrar')"
+          >
+            Iniciar sesión
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="ax-mode"
+            [class.is-on]="modo() === 'crear'"
+            [attr.aria-selected]="modo() === 'crear'"
+            (click)="setModo('crear')"
+          >
+            Crear cuenta
+          </button>
+        </div>
+
+        <header class="ax-form-head">
+          <p class="ax-form-kicker">
+            {{ modo() === 'entrar' ? 'Delegado registrado' : 'Nuevo delegado' }}
+          </p>
+          <h2>{{ titulo() }}</h2>
+          <p>{{ lead() }}</p>
+        </header>
+
+        @if (errorMsg()) {
+          <div class="ax-alert" role="alert">{{ errorMsg() }}</div>
+        }
+
+        @if (modo() === 'crear') {
+          <label class="ax-field">
+            <span>Nombre del delegado</span>
+            <input
+              type="text"
+              name="nombre"
+              autocomplete="name"
+              placeholder="Ej. María Bravo Mendoza"
+              [ngModel]="nombre()"
+              (ngModelChange)="nombre.set($event); errorMsg.set('')"
+              [disabled]="loading()"
+              required
+            />
+          </label>
+        }
+
+        <label class="ax-field">
+          <span>Correo electrónico</span>
+          <input
+            type="email"
+            name="correo"
+            autocomplete="username"
+            placeholder="delegado@tuinstitucion.pe"
+            [ngModel]="correo()"
+            (ngModelChange)="correo.set($event); errorMsg.set('')"
+            [disabled]="loading()"
+            required
+          />
+        </label>
+
+        <label class="ax-field">
+          <span>Contraseña</span>
+          <div class="ax-password">
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              name="password"
+              [attr.autocomplete]="modo() === 'crear' ? 'new-password' : 'current-password'"
+              [placeholder]="modo() === 'crear' ? 'Mín. 8 caracteres seguros' : 'Tu clave de acceso'"
+              [ngModel]="password()"
+              (ngModelChange)="password.set($event); errorMsg.set('')"
+              [disabled]="loading()"
+              required
+            />
+            <button
+              type="button"
+              class="ax-eye"
+              (click)="showPassword.update((v) => !v)"
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              {{ showPassword() ? 'Ocultar' : 'Ver' }}
+            </button>
+          </div>
+        </label>
+
+        @if (modo() === 'crear') {
+          <label class="ax-field">
+            <span>Confirmar contraseña</span>
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              name="confirmar"
+              autocomplete="new-password"
+              placeholder="Repite la misma clave"
+              [ngModel]="confirmar()"
+              (ngModelChange)="confirmar.set($event); errorMsg.set('')"
+              [disabled]="loading()"
+              required
+            />
+          </label>
+        }
+
+        <button class="ax-submit" type="submit" [disabled]="loading()">
+          {{ ctaLabel() }}
+          @if (!loading()) {
+            <span aria-hidden="true">→</span>
+          }
+        </button>
+
+        <div class="ax-switch">
+          <span>¿Eres del equipo organizador?</span>
+          <a class="ax-switch__btn" routerLink="/login">Iniciar sesión como admin</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>

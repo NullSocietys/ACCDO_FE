@@ -1,14 +1,15 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 
-import { Sexo } from '../../core/models';
 import { CategoriaApiService } from '../../core/services/api/categoria.api.service';
 import { EventoApiService } from '../../core/services/api/evento.api.service';
 import { InscripcionApiService } from '../../core/services/api/inscripcion.api.service';
 import { PagoApiService } from '../../core/services/api/pago.api.service';
-import { UsuarioApiService } from '../../core/services/api/usuario.api.service';
+import { AuthSessionService } from '../../core/services/auth-session.service';
 import { descargarComprobantePdf } from '../../shared/pdf/comprobante.pdf';
+import type { Responsable } from '../../core/models';
 import departamentoData from '../../core/ubigeo-json/1_ubigeo_departamentos.json';
 import provinciaData from '../../core/ubigeo-json/2_ubigeo_provincias.json';
 import distritoData from '../../core/ubigeo-json/3_ubigeo_distritos.json';
@@ -44,6 +45,8 @@ const ubigeoDistritos = (
   distritoData as { ubigeo_distritos: UbigeoDistrito[] }
 ).ubigeo_distritos;
 
+const RESPONSABLE_CACHE_KEY = 'chicote.responsablePrefill';
+
 interface FormCuenta {
   metodo: 'registro' | 'login';
   nombre: string;
@@ -71,10 +74,7 @@ interface FormResponsable {
 
 interface FormParticipante {
   nombres: string;
-  apellidos: string;
-  dni: string;
-  edad: number | null;
-  sexo: Sexo | '';
+  celular: string;
 }
 
 type Errores = Record<string, string>;
@@ -88,7 +88,7 @@ type Errores = Record<string, string>;
 })
 export class InscripcionPublicaPage implements OnInit {
   private readonly router = inject(Router);
-  private readonly usuarioApi = inject(UsuarioApiService);
+  private readonly auth = inject(AuthSessionService);
   private readonly eventoApi = inject(EventoApiService);
   private readonly categoriaApi = inject(CategoriaApiService);
   private readonly inscripcionApi = inject(InscripcionApiService);
@@ -111,6 +111,7 @@ export class InscripcionPublicaPage implements OnInit {
   readonly intento = signal(0);
   readonly mostrarPassword = signal(false);
   readonly mostrarConfirmar = signal(false);
+  readonly sesionActiva = signal(false);
 
   readonly eventos = signal<Array<{ id: string; nombre: string; fecha: string }>>([]);
   readonly categorias = signal<
@@ -137,11 +138,12 @@ export class InscripcionPublicaPage implements OnInit {
     distrito: '',
   });
   readonly participantes = signal<FormParticipante[]>([
-    { nombres: '', apellidos: '', dni: '', edad: null, sexo: '' },
+    { nombres: '', celular: '' },
   ]);
   readonly numeroOperacion = signal('');
   readonly comprobanteNombre = signal('');
   readonly comprobantePreview = signal<string | null>(null);
+  readonly comprobanteFile = signal<File | null>(null);
   readonly comprobanteError = signal('');
   readonly resultEstado = signal('Pendiente de confirmación');
 
@@ -152,13 +154,17 @@ export class InscripcionPublicaPage implements OnInit {
   private readonly syncNombres = signal(true);
   private readonly syncCorreo = signal(true);
 
-  readonly stepMeta = [
-    { n: 1, label: 'Cuenta', desc: 'Crea tu cuenta de delegado o inicia sesión' },
+  readonly stepMeta = computed(() => [
+    { n: 1, label: 'Cuenta', desc: this.sesionActiva()
+      ? 'Sesión activa — puedes continuar'
+      : 'Crea tu cuenta de delegado o inicia sesión' },
     { n: 2, label: 'Modalidad', desc: 'Elige categoría y nombre del grupo' },
-    { n: 3, label: 'Responsable', desc: 'Datos de contacto del delegado' },
+    { n: 3, label: 'Responsable', desc: this.sesionActiva()
+      ? 'Revisa o actualiza tus datos de contacto'
+      : 'Datos de contacto del delegado' },
     { n: 4, label: 'Participantes', desc: 'Nómina de bailarines' },
-    { n: 5, label: 'Pago Yape', desc: 'Simula tu pago y confirma' },
-  ];
+    { n: 5, label: 'Pago Yape', desc: 'Registra tu pago y adjunta el voucher' },
+  ]);
 
   readonly eventoNombre = computed(() => {
     const id = this.grupo().eventoId;
@@ -202,7 +208,7 @@ export class InscripcionPublicaPage implements OnInit {
 
   readonly cuentaErrores = computed<Errores>(() => {
     const e: Errores = {};
-    if (this.intento() !== 1) return e;
+    if (this.intento() !== 1 || this.sesionActiva()) return e;
     const c = this.cuenta();
     if (c.metodo === 'registro' && c.nombre.trim().length < 2) {
       e['nombre'] = 'Ingresa tu nombre completo (mínimo 2 caracteres).';
@@ -280,33 +286,17 @@ export class InscripcionPublicaPage implements OnInit {
 
   readonly participanteErrores = computed<Errores[]>(() => {
     const list = this.participantes();
-    const errores: Errores[] = list.map((p) => {
+    return list.map((p) => {
       const e: Errores = {};
       if (this.intento() !== 4) return e;
       if (p.nombres.trim().length < 2) e['nombres'] = 'Obligatorio (mínimo 2 caracteres).';
-      if (p.apellidos.trim().length < 2) e['apellidos'] = 'Obligatorio (mínimo 2 caracteres).';
-      if (!this.dniRe.test(p.dni)) e['dni'] = 'El DNI debe tener 8 dígitos.';
-      if (!p.edad || p.edad < 3 || p.edad > 120) e['edad'] = 'Entre 3 y 120 años.';
-      if (!p.sexo) e['sexo'] = 'Selecciona el sexo.';
+      if (!p.celular.trim()) {
+        e['celular'] = 'El celular es obligatorio (9 dígitos, empieza con 9).';
+      } else if (!this.telRe.test(p.celular)) {
+        e['celular'] = 'Debe tener 9 dígitos y empezar con 9.';
+      }
       return e;
     });
-    if (this.intento() === 4) {
-      const porDni = new Map<string, number[]>();
-      list.forEach((p, i) => {
-        if (!p.dni) return;
-        const filas = porDni.get(p.dni) ?? [];
-        filas.push(i);
-        porDni.set(p.dni, filas);
-      });
-      for (const [, filas] of porDni) {
-        if (filas.length > 1) {
-          filas.forEach((i) => {
-            errores[i] = { ...errores[i], dni: 'DNI repetido en este grupo.' };
-          });
-        }
-      }
-    }
-    return errores;
   });
 
   readonly participantesCountError = computed(() => {
@@ -349,6 +339,7 @@ export class InscripcionPublicaPage implements OnInit {
       this.success.set(true);
       return;
     }
+    void this.bootstrapSesion();
     this.cargarCatalogo();
   }
 
@@ -360,8 +351,145 @@ export class InscripcionPublicaPage implements OnInit {
     this.resultCodigo.set('');
     this.resultEstado.set('Pendiente de confirmación');
     this.nombreUsuario.set('');
-    this.step.set(1);
+    this.step.set(this.sesionActiva() ? 2 : 1);
+    void this.bootstrapSesion();
     this.cargarCatalogo();
+  }
+
+  private async bootstrapSesion(): Promise<void> {
+    const u = this.auth.usuario();
+    if (!this.auth.isAuthenticated() || !u || this.auth.isAdmin()) {
+      this.sesionActiva.set(false);
+      return;
+    }
+
+    this.sesionActiva.set(true);
+    this.usuarioId = u.id;
+    this.nombreUsuario.set(u.nombre);
+    this.cuenta.update((c) => ({
+      ...c,
+      metodo: 'login',
+      nombre: u.nombre,
+      correo: u.correo,
+      password: '',
+      confirmar: '',
+    }));
+    this.step.set(2);
+
+    // 1) Base: nombre/correo de la cuenta
+    this.responsable.set({
+      ...this.responsable(),
+      ...this.splitNombreCompleto(u.nombre),
+      correo: u.correo || this.responsable().correo,
+    });
+
+    // 2) Caché local (última inscripción en este dispositivo)
+    const cached = this.readResponsableCache();
+    if (cached) {
+      this.mergeResponsable(cached);
+    }
+
+    // 3) Backend: última ficha de responsable del usuario
+    try {
+      const remoto = await firstValueFrom(this.inscripcionApi.miUltimoResponsable());
+      this.mergeResponsable(remoto);
+      this.writeResponsableCache(this.responsable());
+    } catch {
+      if (cached) this.writeResponsableCache(this.responsable());
+    }
+
+    this.syncNombres.set(false);
+    this.syncCorreo.set(false);
+  }
+
+  private splitNombreCompleto(nombre: string): Pick<FormResponsable, 'nombres' | 'apellidos'> {
+    const partes = nombre.trim().split(/\s+/).filter(Boolean);
+    if (partes.length === 0) return { nombres: '', apellidos: '' };
+    if (partes.length === 1) return { nombres: partes[0], apellidos: '' };
+    if (partes.length === 2) return { nombres: partes[0], apellidos: partes[1] };
+    return {
+      nombres: partes.slice(0, -2).join(' '),
+      apellidos: partes.slice(-2).join(' '),
+    };
+  }
+
+  private aplicarNombreCorreoAResponsable(nombre: string, correo: string): void {
+    if (this.syncCorreo()) {
+      this.responsable.update((r) => ({ ...r, correo }));
+    }
+    if (this.syncNombres()) {
+      const parts = this.splitNombreCompleto(nombre);
+      this.responsable.update((r) => ({ ...r, ...parts }));
+    }
+  }
+
+  /** Completa o reemplaza campos con datos conocidos (no borra lo ya válido sin motivo). */
+  private mergeResponsable(src: Partial<FormResponsable> | Responsable): void {
+    this.responsable.update((r) => ({
+      nombres: (src.nombres ?? '').trim() || r.nombres,
+      apellidos: (src.apellidos ?? '').trim() || r.apellidos,
+      dni: (src.dni ?? '').trim() || r.dni,
+      telefono: (src.telefono ?? '').trim() || r.telefono,
+      correo: (src.correo ?? '').trim() || r.correo,
+      departamento: (src.departamento ?? '').trim() || r.departamento,
+      provincia: (src.provincia ?? '').trim() || r.provincia,
+      distrito: (src.distrito ?? '').trim() || r.distrito,
+    }));
+  }
+
+  private applyResponsable(remoto: Responsable | FormResponsable): void {
+    this.mergeResponsable(remoto);
+    this.syncNombres.set(false);
+    this.syncCorreo.set(false);
+  }
+
+  private readResponsableCache(): FormResponsable | null {
+    try {
+      const raw = localStorage.getItem(RESPONSABLE_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as FormResponsable & { usuarioId?: string };
+      const uid = this.auth.usuario()?.id;
+      if (parsed.usuarioId && uid && parsed.usuarioId !== uid) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeResponsableCache(r: FormResponsable | Responsable): void {
+    try {
+      localStorage.setItem(
+        RESPONSABLE_CACHE_KEY,
+        JSON.stringify({
+          usuarioId: this.auth.usuario()?.id ?? this.usuarioId,
+          nombres: r.nombres,
+          apellidos: r.apellidos,
+          dni: r.dni,
+          telefono: r.telefono,
+          correo: r.correo,
+          departamento: r.departamento,
+          provincia: r.provincia,
+          distrito: r.distrito,
+        }),
+      );
+    } catch {
+      /* ignore */
+    }
+  }
+
+  irAAcceso(): void {
+    void this.router.navigate(['/acceso'], { queryParams: { returnUrl: '/inscribirse' } });
+  }
+
+  cerrarSesionWizard(): void {
+    this.auth.logout().subscribe({
+      next: () => {
+        this.sesionActiva.set(false);
+        this.usuarioId = '';
+        this.step.set(1);
+        void this.router.navigate(['/acceso'], { queryParams: { returnUrl: '/inscribirse' } });
+      },
+    });
   }
 
   private cargarCatalogo(): void {
@@ -397,12 +525,8 @@ export class InscripcionPublicaPage implements OnInit {
       this.responsable.update((r) => ({ ...r, correo: partial.correo as string }));
     }
     if (partial.nombre !== undefined && this.syncNombres()) {
-      const partes = (partial.nombre as string).trim().split(/\s+/).filter(Boolean);
-      if (partes.length >= 2) {
-        const nombres = partes.slice(0, -2).join(' ') || partes[0];
-        const apellidos = partes.slice(-2).join(' ');
-        this.responsable.update((r) => ({ ...r, nombres, apellidos }));
-      }
+      const parts = this.splitNombreCompleto(partial.nombre as string);
+      this.responsable.update((r) => ({ ...r, ...parts }));
     }
   }
 
@@ -426,10 +550,7 @@ export class InscripcionPublicaPage implements OnInit {
         // Agrega los que faltan para el mínimo de la categoría.
         const extra = Array.from({ length: min - actual }, () => ({
           nombres: '',
-          apellidos: '',
-          dni: '',
-          edad: null as number | null,
-          sexo: '' as Sexo | '',
+          celular: '',
         }));
         this.participantes.update((list) => [...list, ...extra]);
       } else if (actual > max) {
@@ -450,7 +571,7 @@ export class InscripcionPublicaPage implements OnInit {
   addParticipante(): void {
     this.participantes.update((list) => [
       ...list,
-      { nombres: '', apellidos: '', dni: '', edad: null, sexo: '' },
+      { nombres: '', celular: '' },
     ]);
   }
 
@@ -500,7 +621,8 @@ export class InscripcionPublicaPage implements OnInit {
   prev(): void {
     this.errorMsg.set('');
     this.intento.set(0);
-    this.step.update((s) => Math.max(1, s - 1));
+    const min = this.sesionActiva() ? 2 : 1;
+    this.step.update((s) => Math.max(min, s - 1));
   }
 
   async next(): Promise<void> {
@@ -509,6 +631,11 @@ export class InscripcionPublicaPage implements OnInit {
     this.intento.set(n);
 
     if (n === 1) {
+      if (this.sesionActiva()) {
+        this.intento.set(0);
+        this.step.set(2);
+        return;
+      }
       if (Object.keys(this.cuentaErrores()).length > 0) return;
       if (!(await this.resolverCuenta())) return;
     } else if (n === 2) {
@@ -530,21 +657,41 @@ export class InscripcionPublicaPage implements OnInit {
     const c = this.cuenta();
     this.saving.set(true);
     try {
-      const req =
-        c.metodo === 'registro'
-          ? this.usuarioApi.registrar({
-              nombre: c.nombre.trim(),
-              correo: c.correo.trim(),
-              password: c.password,
-            })
-          : this.usuarioApi.login({ correo: c.correo.trim(), password: c.password });
-      const usuario = await new Promise<{ id: string; nombre: string }>((resolve, reject) =>
-        req.subscribe({ next: resolve, error: reject }),
-      );
-      if (!usuario.id) throw new Error('No se pudo obtener tu cuenta.');
-      this.usuarioId = usuario.id;
-      this.nombreUsuario.set(usuario.nombre || c.nombre.trim());
+      if (c.metodo === 'registro') {
+        await firstValueFrom(
+          this.auth.register({
+            nombre: c.nombre.trim(),
+            correo: c.correo.trim(),
+            password: c.password,
+          }),
+        );
+      } else {
+        await firstValueFrom(
+          this.auth.loginPublic({ correo: c.correo.trim(), password: c.password }),
+        );
+      }
+      const u = this.auth.usuario();
+      if (!u?.id) throw new Error('No se pudo obtener tu cuenta.');
+      this.usuarioId = u.id;
+      this.nombreUsuario.set(u.nombre || c.nombre.trim());
+      this.sesionActiva.set(true);
+      this.responsable.update((r) => ({
+        ...r,
+        ...this.splitNombreCompleto(u.nombre || c.nombre.trim()),
+        correo: u.correo || c.correo.trim() || r.correo,
+      }));
       this.saving.set(false);
+      try {
+        const cached = this.readResponsableCache();
+        if (cached) this.mergeResponsable(cached);
+        const remoto = await firstValueFrom(this.inscripcionApi.miUltimoResponsable());
+        this.mergeResponsable(remoto);
+        this.writeResponsableCache(this.responsable());
+      } catch {
+        this.writeResponsableCache(this.responsable());
+      }
+      this.syncNombres.set(false);
+      this.syncCorreo.set(false);
       return true;
     } catch (err) {
       this.saving.set(false);
@@ -563,6 +710,15 @@ export class InscripcionPublicaPage implements OnInit {
   async confirmar(): Promise<void> {
     this.intento.set(5);
     if (Object.keys(this.pagoErrores()).length > 0) return;
+    const voucher = this.comprobanteFile();
+    if (!voucher) {
+      this.comprobanteError.set('Debes subir la foto del voucher (Yape) para confirmar.');
+      return;
+    }
+    if (!this.usuarioId) {
+      this.errorMsg.set('Necesitas una sesión activa para completar la inscripción.');
+      return;
+    }
     this.errorMsg.set('');
     this.saving.set(true);
     try {
@@ -592,25 +748,30 @@ export class InscripcionPublicaPage implements OnInit {
             },
             participantes: this.participantes().map((p) => ({
               nombres: p.nombres.trim(),
-              apellidos: p.apellidos.trim(),
-              dni: p.dni,
-              edad: p.edad ?? 0,
-              sexo: p.sexo as Sexo,
+              celular: p.celular.trim(),
             })),
           })
           .subscribe({ next: resolve, error: reject }),
       );
 
-      await new Promise<void>((resolve, reject) =>
+      this.writeResponsableCache(r);
+
+      const pago = await new Promise<{ id: string }>((resolve, reject) =>
         this.pagoApi
           .registrar({
             inscripcionId: inscripcion.id,
             monto: this.monto(),
             metodoPago: 'YAPE',
             numeroOperacion: this.numeroOperacion().trim(),
-            comprobante: this.comprobanteNombre() || undefined,
           })
-          .subscribe({ next: () => resolve(), error: reject }),
+          .subscribe({ next: resolve, error: reject }),
+      );
+
+      await new Promise<void>((resolve, reject) =>
+        this.pagoApi.adjuntarComprobante(pago.id, voucher).subscribe({
+          next: () => resolve(),
+          error: reject,
+        }),
       );
 
       this.resultCodigo.set(inscripcion.codigo);
@@ -624,7 +785,7 @@ export class InscripcionPublicaPage implements OnInit {
       this.saving.set(false);
       this.success.set(true);
       sessionStorage.setItem('chicote-registro-codigo', inscripcion.codigo);
-      sessionStorage.setItem('chicote-registro-nombre', this.cuenta().nombre);
+      sessionStorage.setItem('chicote-registro-nombre', this.nombreUsuario() || this.cuenta().nombre);
       sessionStorage.setItem('chicote-registro-estado', this.resultEstado());
     } catch (err) {
       this.saving.set(false);
@@ -684,10 +845,8 @@ export class InscripcionPublicaPage implements OnInit {
       numeroOperacion: this.numeroOperacion() || '—',
       monto: `S/ ${this.monto().toFixed(2)}`,
       integrantes: this.participantes().map((p) => ({
-        nombres: `${p.nombres} ${p.apellidos}`,
-        dni: p.dni,
-        edad: p.edad != null ? `${p.edad}` : '—',
-        sexo: p.sexo,
+        nombres: p.nombres.trim(),
+        celular: p.celular.trim(),
       })),
     });
   }
@@ -696,6 +855,10 @@ export class InscripcionPublicaPage implements OnInit {
   protected readonly onDniInput = (e: Event) => {
     const input = e.target as HTMLInputElement;
     input.value = input.value.replace(/\D/g, '');
+  };
+  protected readonly onCelularInput = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    input.value = input.value.replace(/\D/g, '').slice(0, 9);
   };
   protected readonly onLettersInput = (e: Event) => {
     const input = e.target as HTMLInputElement;
@@ -710,16 +873,19 @@ export class InscripcionPublicaPage implements OnInit {
     const esImagen = file.type.startsWith('image/');
     if (!esImagen && file.type !== 'application/pdf') {
       this.comprobanteError.set('Solo se aceptan fotos (JPG/PNG) o PDF.');
+      this.comprobanteFile.set(null);
       input.value = '';
       return;
     }
     if (file.size > 8 * 1024 * 1024) {
       this.comprobanteError.set('El archivo supera los 8 MB.');
+      this.comprobanteFile.set(null);
       input.value = '';
       return;
     }
     this.comprobanteError.set('');
     this.comprobanteNombre.set(file.name);
+    this.comprobanteFile.set(file);
     if (esImagen) {
       const reader = new FileReader();
       reader.onload = () => this.comprobantePreview.set(String(reader.result));

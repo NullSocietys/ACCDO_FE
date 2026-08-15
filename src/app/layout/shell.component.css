@@ -436,25 +436,6 @@
   flex-direction: column;
 }
 
-/* En Bases, Configuración, Resultados, Participantes y Reportes el scroll interno ya maneja el contenido:
-   ocultamos la barra de página (el scroll sigue activo). */
-.content:has(app-bases-page),
-.content:has(app-configuracion-page),
-.content:has(app-resultados-page),
-.content:has(app-participantes-page),
-.content:has(app-reportes-page) {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.content:has(app-bases-page)::-webkit-scrollbar,
-.content:has(app-configuracion-page)::-webkit-scrollbar,
-.content:has(app-resultados-page)::-webkit-scrollbar,
-.content:has(app-participantes-page)::-webkit-scrollbar,
-.content:has(app-reportes-page)::-webkit-scrollbar {
-  display: none;
-}
-
 .route-view {
   flex: 1;
   min-height: 0;

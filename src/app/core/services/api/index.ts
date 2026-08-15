@@ -1,4 +1,5 @@
 export * from './api-base.service';
+export * from './auth.api.service';
 export * from './usuario.api.service';
 export * from './categoria.api.service';
 export * from './evento.api.service';
@@ -7,4 +8,5 @@ export * from './participante.api.service';
 export * from './responsable.api.service';
 export * from './pago.api.service';
 export * from './resultado.api.service';
+export * from './reclamo.api.service';
 export * from './configuracion.api.service';

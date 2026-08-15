@@ -1,23 +1,27 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Pago, PagoEstado, PagoView } from '../../core/models';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { DataStoreService } from '../../core/services/data-store.service';
+import { PagoApiService } from '../../core/services/api/pago.api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { IconComponent } from '../../shared/icons/icon.component';
 import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
-import { LoadMoreComponent } from '../../shared/ui/load-more.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
+import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
 type EstadoFiltro = 'todos' | PagoEstado;
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const PAGE_SIZE = 10;
+/** Filas por página: caben con mast + filtros sin scroll excesivo. */
+const PAGE_SIZE = 6;
 
 function toPagoEntity(pago: PagoView, estado: PagoEstado): Pago {
   return {
@@ -45,17 +49,19 @@ function toPagoEntity(pago: PagoView, estado: PagoEstado): Pago {
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
-    LoadMoreComponent,
     ModalComponent,
+    PaginationComponent,
     SkeletonComponent,
   ],
   styleUrl: './pagos.page.css',
   templateUrl: './pagos.page.html',
 })
-export class PagosPage {
+export class PagosPage implements OnDestroy {
   readonly store = inject(DataStoreService);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
+  private readonly pagoApi = inject(PagoApiService);
+  private readonly http = inject(HttpClient);
 
   readonly statusTone = statusTone;
   readonly statusLabel = statusLabel;
@@ -63,11 +69,14 @@ export class PagosPage {
 
   readonly busqueda = signal('');
   readonly estadoFiltro = signal<EstadoFiltro>('todos');
-  /** Carga fluida: cuántos pagos se muestran hasta el momento. */
-  readonly visible = signal(PAGE_SIZE);
+  readonly page = signal(1);
   /** Esqueleto de carga inicial (igual que el dashboard). */
   readonly cargando = signal(true);
   readonly selected = signal<PagoView | null>(null);
+  /** URL para <img>/<iframe> del voucher (Cloudinary o blob autenticado). */
+  readonly comprobanteSrc = signal<string | null>(null);
+  readonly comprobanteEsPdf = signal(false);
+  private comprobanteBlobUrl: string | null = null;
 
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
     { key: 'todos', label: 'Todos' },
@@ -109,22 +118,18 @@ export class PagosPage {
     });
   });
 
-  readonly paged = computed(() => this.filtered().slice(0, this.visible()));
-
-  readonly hasMore = computed(() => this.visible() < this.filtered().length);
-
-  readonly remaining = computed(() => Math.max(0, this.filtered().length - this.visible()));
+  readonly paged = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.filtered().slice(start, start + this.pageSize);
+  });
 
   readonly rangeLabel = computed(() => {
     const total = this.filtered().length;
     if (total === 0) return '0 resultados';
-    const to = Math.min(this.visible(), total);
-    return `1–${to} de ${total}`;
+    const from = (this.page() - 1) * this.pageSize + 1;
+    const to = Math.min(this.page() * this.pageSize, total);
+    return `${from}–${to} de ${total}`;
   });
-
-  loadMore(): void {
-    this.visible.update((v) => Math.min(v + this.pageSize, this.filtered().length));
-  }
 
   readonly modalDescription = computed(() => {
     const pago = this.selected();
@@ -137,7 +142,7 @@ export class PagosPage {
     effect(() => {
       this.busqueda();
       this.estadoFiltro();
-      untracked(() => this.visible.set(PAGE_SIZE));
+      untracked(() => this.page.set(1));
     });
   }
 
@@ -177,12 +182,61 @@ export class PagosPage {
     this.estadoFiltro.set('todos');
   }
 
+  onPageChange(next: number): void {
+    this.page.set(next);
+    const folio = document.querySelector('.folio');
+    if (!folio) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    folio.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  }
+
   viewComprobante(pago: PagoView): void {
     this.selected.set(pago);
+    void this.cargarVistaComprobante(pago);
   }
 
   closeComprobante(): void {
     this.selected.set(null);
+    this.limpiarComprobanteSrc();
+  }
+
+  ngOnDestroy(): void {
+    this.limpiarComprobanteSrc();
+  }
+
+  private limpiarComprobanteSrc(): void {
+    if (this.comprobanteBlobUrl) {
+      URL.revokeObjectURL(this.comprobanteBlobUrl);
+      this.comprobanteBlobUrl = null;
+    }
+    this.comprobanteSrc.set(null);
+    this.comprobanteEsPdf.set(false);
+  }
+
+  private async cargarVistaComprobante(pago: PagoView): Promise<void> {
+    this.limpiarComprobanteSrc();
+    const ref = (pago.comprobante ?? '').trim();
+    if (!ref) return;
+
+    const esUrl = /^https?:\/\//i.test(ref);
+    const esPdf = /\.pdf($|\?)/i.test(ref) || ref.toLowerCase().includes('/raw/');
+    this.comprobanteEsPdf.set(esPdf);
+
+    if (esUrl) {
+      this.comprobanteSrc.set(ref);
+      return;
+    }
+
+    try {
+      const blob = await firstValueFrom(
+        this.http.get(this.pagoApi.urlComprobante(pago.id), { responseType: 'blob' }),
+      );
+      this.comprobanteEsPdf.set(blob.type === 'application/pdf' || esPdf);
+      this.comprobanteBlobUrl = URL.createObjectURL(blob);
+      this.comprobanteSrc.set(this.comprobanteBlobUrl);
+    } catch {
+      this.toast.warning('No se pudo cargar el comprobante', 'Intente de nuevo o revise el archivo.');
+    }
   }
 
   async accept(pago: PagoView): Promise<void> {
@@ -198,7 +252,6 @@ export class PagosPage {
         this.selected.set({ ...pago, estado: 'CONFIRMADO' });
       }
       this.toast.success('Pago confirmado', pago.codigo);
-      this.toast.info('Correo enviado', 'Confirmación de inscripción enviada al correo del inscrito');
     } catch (err) {
       this.toast.error('No se pudo confirmar', (err as Error).message);
     }
@@ -217,7 +270,7 @@ export class PagosPage {
       if (this.selected()?.id === pago.id) {
         this.selected.set({ ...pago, estado: 'RECHAZADO' });
       }
-      this.toast.warning('Pago rechazado', pago.codigo);
+      this.toast.warning('Pago e inscripción rechazados', pago.codigo);
     } catch (err) {
       this.toast.error('No se pudo rechazar', (err as Error).message);
     }

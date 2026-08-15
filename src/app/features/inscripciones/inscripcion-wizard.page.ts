@@ -2,7 +2,7 @@ import { CurrencyPipe, KeyValuePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { PagoMetodo, Sexo } from '../../core/models';
+import { PagoMetodo } from '../../core/models';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
 import { descargarComprobantePdf } from '../../shared/pdf/comprobante.pdf';
@@ -47,10 +47,7 @@ const ubigeoDistritos = (
 
 interface WizardParticipante {
   nombre: string;
-  apellido: string;
-  dni: string;
-  edad: number | null;
-  sexo: Sexo | '';
+  celular: string;
 }
 
 @Component({
@@ -110,7 +107,7 @@ export class InscripcionWizardPage {
   });
 
   readonly participantes = signal<WizardParticipante[]>([
-    { nombre: '', apellido: '', dni: '', edad: null, sexo: '' },
+    { nombre: '', celular: '' },
   ]);
 
   readonly pago = signal({
@@ -120,6 +117,7 @@ export class InscripcionWizardPage {
   });
 
   readonly comprobantePreview = signal<string | null>(null);
+  readonly comprobanteFile = signal<File | null>(null);
 
   readonly errores1 = signal<Record<string, string>>({});
   readonly errores2 = signal<Record<string, string>>({});
@@ -235,7 +233,7 @@ export class InscripcionWizardPage {
     }
     this.participantes.update((list) => [
       ...list,
-      { nombre: '', apellido: '', dni: '', edad: null, sexo: '' },
+      { nombre: '', celular: '' },
     ]);
   }
 
@@ -248,20 +246,17 @@ export class InscripcionWizardPage {
       if (faltantes <= 0) return list;
       const nuevas = Array.from({ length: faltantes }, (): WizardParticipante => ({
         nombre: '',
-        apellido: '',
-        dni: '',
-        edad: null,
-        sexo: '',
+        celular: '',
       }));
       return [...list, ...nuevas];
     });
   }
 
-  dniParticipante(event: Event, index: number): void {
+  celularParticipante(event: Event, index: number): void {
     const el = event.target as HTMLInputElement;
-    const limpio = el.value.replace(/\D/g, '').slice(0, 8);
+    const limpio = el.value.replace(/\D/g, '').slice(0, 9);
     if (limpio !== el.value) el.value = limpio;
-    this.updateParticipante(index, { dni: limpio });
+    this.updateParticipante(index, { celular: limpio });
   }
 
   updateParticipante(index: number, partial: Partial<WizardParticipante>): void {
@@ -271,29 +266,6 @@ export class InscripcionWizardPage {
     this.erroresParticipantes.update((e) => {
       const nuevo = { ...e };
       delete nuevo[index];
-      return nuevo;
-    });
-    this.marcarDnisRepetidos();
-  }
-
-  private marcarDnisRepetidos(): void {
-    const list = this.participantes();
-    const porDni = new Map<string, number[]>();
-    list.forEach((p, i) => {
-      if (!p.dni) return;
-      const filas = porDni.get(p.dni) ?? [];
-      filas.push(i);
-      porDni.set(p.dni, filas);
-    });
-    const MSG = 'DNI repetido en este grupo.';
-    this.erroresParticipantes.update((e) => {
-      const nuevo = { ...e };
-      for (const k of Object.keys(nuevo)) {
-        if (nuevo[Number(k)] === MSG) delete nuevo[Number(k)];
-      }
-      for (const [, filas] of porDni) {
-        if (filas.length > 1) filas.forEach((i) => (nuevo[i] = MSG));
-      }
       return nuevo;
     });
   }
@@ -331,6 +303,7 @@ export class InscripcionWizardPage {
       delete nuevo['comprobante'];
       return nuevo;
     });
+    this.comprobanteFile.set(file);
     this.patchPago({ comprobanteNombre: file.name });
     if (esImagen) {
       const reader = new FileReader();
@@ -392,31 +365,12 @@ export class InscripcionWizardPage {
       const list = this.participantes();
       const porFila: Record<number, string> = {};
       list.forEach((p, i) => {
-        if (!p.nombre.trim() || !p.apellido.trim()) {
-          porFila[i] = 'Completa nombre y apellido.';
-        } else if (!/^\d{8}$/.test(p.dni)) {
-          porFila[i] = 'El DNI debe tener 8 dígitos.';
-        } else if (!p.edad || p.edad < 3 || p.edad > 120) {
-          porFila[i] = 'Edad entre 3 y 120 años.';
-        } else if (!p.sexo) {
-          porFila[i] = 'Selecciona el sexo.';
+        if (!p.nombre.trim() || p.nombre.trim().length < 2) {
+          porFila[i] = 'El nombre es obligatorio (mínimo 2 caracteres).';
+        } else if (!/^9\d{8}$/.test(p.celular)) {
+          porFila[i] = 'Celular: 9 dígitos y debe empezar con 9.';
         }
       });
-      const porDni = new Map<string, number[]>();
-      list.forEach((p, i) => {
-        if (!p.dni) return;
-        const filas = porDni.get(p.dni) ?? [];
-        filas.push(i);
-        porDni.set(p.dni, filas);
-      });
-      const MSG = 'DNI repetido en este grupo.';
-      for (const [, filas] of porDni) {
-        if (filas.length > 1) {
-          filas.forEach((i) => {
-            porFila[i] = MSG;
-          });
-        }
-      }
       this.erroresParticipantes.set(porFila);
 
       const global: Record<string, string> = {};
@@ -487,19 +441,16 @@ export class InscripcionWizardPage {
             distrito: s2.distrito,
           },
           participantes: this.participantes().map((p) => ({
-            nombres: p.nombre,
-            apellidos: p.apellido,
-            dni: p.dni,
-            edad: p.edad ?? 0,
-            sexo: p.sexo as Sexo,
+            nombres: p.nombre.trim(),
+            celular: p.celular.trim(),
           })),
         },
         {
           monto: this.monto(),
           metodoPago: this.pago().metodo,
           numeroOperacion: this.pago().numeroOperacion,
-          comprobante: this.pago().comprobanteNombre || undefined,
         },
+        this.comprobanteFile(),
       );
 
       this.resultCodigo.set(inscripcion.codigo);
@@ -537,10 +488,8 @@ export class InscripcionWizardPage {
       numeroOperacion: this.pago().numeroOperacion || '—',
       monto: `S/ ${this.monto().toFixed(2)}`,
       integrantes: this.participantes().map((p) => ({
-        nombres: `${p.nombre} ${p.apellido}`,
-        dni: p.dni,
-        edad: p.edad != null ? `${p.edad}` : '—',
-        sexo: p.sexo,
+        nombres: p.nombre.trim(),
+        celular: p.celular.trim(),
       })),
     });
     this.toast.success('Comprobante descargado', `${this.resultCodigo()}.pdf`);

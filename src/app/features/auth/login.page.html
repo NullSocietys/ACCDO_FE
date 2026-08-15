@@ -1,0 +1,72 @@
+<div class="login">
+  <header class="login-top">
+    <a class="login-brand" routerLink="/">
+      <img src="logo/logo.png" alt="Chicote de Oro" width="36" height="36" />
+      <span>
+        <strong>Chicote de Oro</strong>
+        <em>Panel de administración</em>
+      </span>
+    </a>
+    <a class="login-back" routerLink="/">← Volver a la portada</a>
+  </header>
+
+  <main class="login-main">
+    <form class="login-card" (ngSubmit)="submit()" autocomplete="on">
+      <p class="login-eyebrow">Acceso restringido</p>
+      <h1>Iniciar sesión</h1>
+      <p class="login-lead">
+        Usa las credenciales de administrador para gestionar inscripciones, pagos y resultados.
+      </p>
+
+      @if (errorMsg()) {
+        <div class="login-alert" role="alert">{{ errorMsg() }}</div>
+      }
+
+      <label class="login-field">
+        <span>Correo electrónico</span>
+        <input
+          type="email"
+          name="correo"
+          autocomplete="username"
+          placeholder="admin@chicotedeoro.pe"
+          [ngModel]="correo()"
+          (ngModelChange)="correo.set($event); errorMsg.set('')"
+          [disabled]="loading()"
+          required
+        />
+      </label>
+
+      <label class="login-field">
+        <span>Contraseña</span>
+        <div class="login-password">
+          <input
+            [type]="showPassword() ? 'text' : 'password'"
+            name="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event); errorMsg.set('')"
+            [disabled]="loading()"
+            required
+          />
+          <button
+            type="button"
+            class="login-eye"
+            (click)="showPassword.update((v) => !v)"
+            [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            {{ showPassword() ? 'Ocultar' : 'Ver' }}
+          </button>
+        </div>
+      </label>
+
+      <button class="login-submit" type="submit" [disabled]="loading()">
+        @if (loading()) {
+          Entrando…
+        } @else {
+          Entrar al panel
+        }
+      </button>
+    </form>
+  </main>
+</div>

@@ -15,9 +15,7 @@ export interface ComprobantePdfData {
   monto: string;
   integrantes: Array<{
     nombres: string;
-    dni: string;
-    edad: string;
-    sexo: string;
+    celular: string;
   }>;
 }
 
@@ -146,14 +144,12 @@ export async function descargarComprobantePdf(data: ComprobantePdfData): Promise
     const rowsP = participantes.map((p, i) => [
       `${i + 1}`,
       p.nombres,
-      p.dni,
-      p.edad,
-      p.sexo,
+      p.celular,
     ]);
     autoTable(doc, {
       startY: (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 62,
       margin: { left: margin, right: margin },
-      head: [['#', 'Participante', 'DNI', 'Edad', 'Sexo']],
+      head: [['#', 'Participante', 'Celular']],
       body: rowsP,
       theme: 'grid',
       styles: {
@@ -174,9 +170,7 @@ export async function descargarComprobantePdf(data: ComprobantePdfData): Promise
       alternateRowStyles: { fillColor: [250, 250, 249] },
       columnStyles: {
         0: { cellWidth: 9, halign: 'center' },
-        2: { cellWidth: 28, halign: 'center' },
-        3: { cellWidth: 12, halign: 'center' },
-        4: { cellWidth: 13, halign: 'center' },
+        2: { cellWidth: 36, halign: 'center' },
       },
     });
   }

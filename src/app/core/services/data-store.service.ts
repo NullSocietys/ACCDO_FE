@@ -315,10 +315,11 @@ export class DataStoreService {
   // INSCRIPCIONES
   // ============================================================
 
-  /** Crea la inscripción con responsable y participantes, y opcionalmente el pago. */
+  /** Crea la inscripción con responsable y participantes, y opcionalmente el pago + voucher. */
   async crearInscripcion(
     req: InscripcionRequest,
     pago?: Omit<PagoRequest, 'inscripcionId'>,
+    voucher?: File | null,
   ): Promise<Inscripcion> {
     const inscripcion = await firstValueFrom(this.inscripcionApi.crear(req));
     this.inscripciones.update((list) => [...list, inscripcion]);
@@ -344,7 +345,14 @@ export class DataStoreService {
     if (pagos) this.pagos.update((list) => [...list, ...pagos]);
 
     if (pago) {
-      await this.registrarPago({ ...pago, inscripcionId: inscripcion.id });
+      const { comprobante: _omit, ...pagoSinArchivo } = pago;
+      const registrado = await this.registrarPago({
+        ...pagoSinArchivo,
+        inscripcionId: inscripcion.id,
+      });
+      if (voucher) {
+        await this.adjuntarComprobante(registrado.id, voucher);
+      }
     }
     return inscripcion;
   }
@@ -443,15 +451,35 @@ export class DataStoreService {
     return pago;
   }
 
+  async adjuntarComprobante(pagoId: string, archivo: File): Promise<Pago> {
+    const pago = await firstValueFrom(this.pagoApi.adjuntarComprobante(pagoId, archivo));
+    this.pagos.update((list) => list.map((p) => (p.id === pagoId ? pago : p)));
+    return pago;
+  }
+
   async confirmarPago(id: string): Promise<Pago> {
     const pago = await firstValueFrom(this.pagoApi.confirmar(id));
     this.pagos.update((list) => list.map((p) => (p.id === id ? pago : p)));
+    // Si el pago cubre el total, el backend marca la inscripción CONFIRMADA.
+    this.inscripciones.update((list) =>
+      list.map((i) =>
+        i.id === pago.inscripcionId && (i.estado === 'PENDIENTE' || i.estado === 'RECHAZADA')
+          ? { ...i, estado: 'CONFIRMADA' as const }
+          : i,
+      ),
+    );
     return pago;
   }
 
   async rechazarPago(id: string, motivo: string): Promise<Pago> {
     const pago = await firstValueFrom(this.pagoApi.rechazar(id, motivo));
     this.pagos.update((list) => list.map((p) => (p.id === id ? pago : p)));
+    // El backend rechaza también la inscripción asociada.
+    this.inscripciones.update((list) =>
+      list.map((i) =>
+        i.id === pago.inscripcionId ? { ...i, estado: 'RECHAZADA' as const } : i,
+      ),
+    );
     return pago;
   }
 

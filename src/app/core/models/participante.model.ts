@@ -5,11 +5,15 @@ export type Sexo = 'M' | 'F' | 'O';
 export interface Participante {
   id: string;
   inscripcionId: string;
+  /** Nombre completo del integrante */
   nombres: string;
-  apellidos: string;
-  dni: string;
-  edad: number;
-  sexo: Sexo;
+  /** Celular (9 dígitos, empieza con 9) */
+  celular: string;
+  /** @deprecated Campos legacy; pueden venir null desde el API */
+  apellidos?: string | null;
+  dni?: string | null;
+  edad?: number | null;
+  sexo?: Sexo | null;
   activo: boolean;
   createdAt: string;
 }
@@ -17,10 +21,7 @@ export interface Participante {
 /** POST /api/inscripciones/{inscripcionId}/participantes · anidado en InscripcionRequest */
 export interface ParticipanteRequest {
   nombres: string;
-  apellidos: string;
-  dni: string;
-  edad: number;
-  sexo: Sexo;
+  celular: string;
 }
 
 export interface ParticipanteView extends Participante {

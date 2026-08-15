@@ -1,12 +1,25 @@
 import { Routes } from '@angular/router';
 import { ShellComponent } from './layout/shell.component';
 import { LandingPage } from './features/landing/landing.page';
+import { adminGuard, guestGuard, publicGuestGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
   {
     path: '',
     component: LandingPage,
     pathMatch: 'full',
+  },
+  {
+    path: 'acceso',
+    canActivate: [publicGuestGuard],
+    loadComponent: () =>
+      import('./features/auth/acceso.page').then((m) => m.AccesoPage),
+  },
+  {
+    path: 'login',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/login.page').then((m) => m.LoginPage),
   },
   {
     path: 'inscribirse',
@@ -26,8 +39,14 @@ export const routes: Routes = [
       import('./features/inscripcion-publica/seguimiento.page').then((m) => m.SeguimientoPage),
   },
   {
+    path: 'reclamos',
+    loadComponent: () =>
+      import('./features/reclamos/reclamos.page').then((m) => m.ReclamosPage),
+  },
+  {
     path: 'admin',
     component: ShellComponent,
+    canActivate: [adminGuard],
     children: [
       {
         path: '',
@@ -59,6 +78,11 @@ export const routes: Routes = [
       {
         path: 'pagos',
         loadComponent: () => import('./features/pagos/pagos.page').then((m) => m.PagosPage),
+      },
+      {
+        path: 'reclamos',
+        loadComponent: () =>
+          import('./features/reclamos/reclamos-admin.page').then((m) => m.ReclamosAdminPage),
       },
       {
         path: 'usuarios',

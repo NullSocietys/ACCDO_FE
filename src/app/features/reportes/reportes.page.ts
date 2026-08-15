@@ -8,16 +8,14 @@ import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.c
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
-import { LoadMoreComponent } from '../../shared/ui/load-more.component';
+import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 interface IntegranteRow {
   id: string;
   nombre: string;
   iniciales: string;
-  dni: string;
-  edad: number;
-  sexo: string;
+  celular: string;
   grupo: string;
   modalidad: string;
   evento: string;
@@ -31,9 +29,6 @@ interface ReporteModalidad {
   totalGrupos: number;
   confirmados: number;
   pendientes: number;
-  varones: number;
-  mujeres: number;
-  edadPromedio: number;
   participantes: IntegranteRow[];
 }
 
@@ -45,7 +40,7 @@ interface ReporteModalidad {
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
-    LoadMoreComponent,
+    PaginationComponent,
     SkeletonComponent,
   ],
   styleUrl: './reportes.page.css',
@@ -65,12 +60,10 @@ export class ReportesPage {
   readonly vistaActual = signal<'general' | 'modalidades'>('general');
   readonly exportEstado = signal('CONFIRMADA');
   readonly modalidadExpandida = signal<string | null>(null);
-  readonly modalidadPageSize = 5;
-  /** Carga fluida: participantes visibles en la sección expandida. */
-  readonly modalidadVisible = signal(this.modalidadPageSize);
-  readonly seccionesPageSize = 2;
-  /** Carga fluida: secciones de modalidad visibles. */
-  readonly seccionesVisible = signal(this.seccionesPageSize);
+  readonly modalidadPageSize = 8;
+  readonly modalidadPage = signal(1);
+  readonly seccionesPageSize = 4;
+  readonly seccionesPage = signal(1);
 
   readonly mastGrupos = computed(() => new Set(this.integrantes().map((r) => r.codigo)).size);
   readonly mastModalidades = computed(() => new Set(this.integrantes().map((r) => r.modalidad)).size);
@@ -81,19 +74,24 @@ export class ReportesPage {
   readonly integrantes = computed((): IntegranteRow[] =>
     this.store
       .participantesView()
-      .map((p) => ({
-        id: p.id,
-        nombre: `${p.nombres} ${p.apellidos}`.trim(),
-        iniciales: `${p.nombres.charAt(0)}${p.apellidos.charAt(0)}`.toUpperCase(),
-        dni: p.dni,
-        edad: p.edad,
-        sexo: p.sexo === 'M' ? 'Varón' : 'Mujer',
-        grupo: p.nombreGrupo,
-        modalidad: p.categoriaNombre,
-        evento: p.eventoNombre,
-        codigo: p.codigoInscripcion,
-        estado: p.estadoInscripcion,
-      }))
+      .map((p) => {
+        const partes = p.nombres.trim().split(/\s+/).filter(Boolean);
+        const iniciales =
+          partes.length >= 2
+            ? `${partes[0].charAt(0)}${partes[1].charAt(0)}`.toUpperCase()
+            : (partes[0]?.slice(0, 2) ?? '?').toUpperCase();
+        return {
+          id: p.id,
+          nombre: p.nombres,
+          iniciales,
+          celular: p.celular ?? '—',
+          grupo: p.nombreGrupo,
+          modalidad: p.categoriaNombre,
+          evento: p.eventoNombre,
+          codigo: p.codigoInscripcion,
+          estado: p.estadoInscripcion,
+        };
+      })
       .sort(
         (a, b) =>
           a.modalidad.localeCompare(b.modalidad, 'es') ||
@@ -113,7 +111,7 @@ export class ReportesPage {
       const matchQ =
         !q ||
         r.nombre.toLowerCase().includes(q) ||
-        r.dni.includes(q) ||
+        r.celular.includes(q) ||
         r.grupo.toLowerCase().includes(q) ||
         r.codigo.toLowerCase().includes(q) ||
         r.modalidad.toLowerCase().includes(q);
@@ -121,33 +119,15 @@ export class ReportesPage {
     });
   });
 
-  readonly paged = computed(() => this.filtered().slice(0, this.visible()));
+  readonly paged = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.filtered().slice(start, start + this.pageSize);
+  });
 
-  readonly hasMore = computed(() => this.visible() < this.filtered().length);
-
-  readonly remaining = computed(() => Math.max(0, this.filtered().length - this.visible()));
-
-  loadMore(): void {
-    this.visible.update((v) => Math.min(v + this.pageSize, this.filtered().length));
-  }
-
-  readonly seccionesPaged = computed(() =>
-    this.reportesModalidad().slice(0, this.seccionesVisible()),
-  );
-
-  readonly seccionesHasMore = computed(
-    () => this.seccionesVisible() < this.reportesModalidad().length,
-  );
-
-  readonly seccionesRemaining = computed(() =>
-    Math.max(0, this.reportesModalidad().length - this.seccionesVisible()),
-  );
-
-  loadMoreSecciones(): void {
-    this.seccionesVisible.update((v) =>
-      Math.min(v + this.seccionesPageSize, this.reportesModalidad().length),
-    );
-  }
+  readonly seccionesPaged = computed(() => {
+    const start = (this.seccionesPage() - 1) * this.seccionesPageSize;
+    return this.reportesModalidad().slice(start, start + this.seccionesPageSize);
+  });
 
   readonly expanded = computed((): ReporteModalidad | null => {
     const mod = this.modalidadExpandida();
@@ -157,26 +137,9 @@ export class ReportesPage {
   readonly expandedPaged = computed((): IntegranteRow[] => {
     const r = this.expanded();
     if (!r) return [];
-    return r.participantes.slice(0, this.modalidadVisible());
+    const start = (this.modalidadPage() - 1) * this.modalidadPageSize;
+    return r.participantes.slice(start, start + this.modalidadPageSize);
   });
-
-  readonly expandedHasMore = computed(() => {
-    const r = this.expanded();
-    return !!r && this.modalidadVisible() < r.participantes.length;
-  });
-
-  readonly expandedRemaining = computed(() => {
-    const r = this.expanded();
-    return r ? Math.max(0, r.participantes.length - this.modalidadVisible()) : 0;
-  });
-
-  loadMoreModalidad(): void {
-    const r = this.expanded();
-    if (!r) return;
-    this.modalidadVisible.update((v) =>
-      Math.min(v + this.modalidadPageSize, r.participantes.length),
-    );
-  }
 
   readonly reportesModalidad = computed((): ReporteModalidad[] => {
     const all = this.integrantes();
@@ -189,10 +152,6 @@ export class ReportesPage {
       const grupos = new Set(participantes.map((r) => r.codigo)).size;
       const confirmados = participantes.filter((r) => r.estado === 'CONFIRMADA').length;
       const pendientes = participantes.filter((r) => r.estado === 'PENDIENTE').length;
-      const varones = participantes.filter((r) => r.sexo === 'Varón').length;
-      const mujeres = participantes.length - varones;
-      const edadPromedio =
-        participantes.reduce((sum, r) => sum + r.edad, 0) / participantes.length || 0;
 
       return {
         modalidad,
@@ -200,9 +159,6 @@ export class ReportesPage {
         totalGrupos: grupos,
         confirmados,
         pendientes,
-        varones,
-        mujeres,
-        edadPromedio: Math.round(edadPromedio),
         participantes: participantes.sort((a, b) =>
           a.grupo.localeCompare(b.grupo, 'es') || a.nombre.localeCompare(b.nombre, 'es'),
         ),
@@ -211,8 +167,7 @@ export class ReportesPage {
   });
 
   readonly pageSize = 10;
-  /** Carga fluida: cuántos integrantes del listado general se muestran. */
-  readonly visible = signal(this.pageSize);
+  readonly page = signal(1);
 
   constructor() {
     window.setTimeout(() => this.cargando.set(false), 500);
@@ -220,7 +175,7 @@ export class ReportesPage {
       this.search();
       this.modalidadFilter();
       this.estadoFilter();
-      untracked(() => this.visible.set(this.pageSize));
+      untracked(() => this.page.set(1));
     });
   }
 
@@ -235,13 +190,13 @@ export class ReportesPage {
     if (vista === 'general') {
       this.modalidadExpandida.set(null);
     }
-    this.modalidadVisible.set(this.modalidadPageSize);
-    this.seccionesVisible.set(this.seccionesPageSize);
+    this.modalidadPage.set(1);
+    this.seccionesPage.set(1);
   }
 
   toggleModalidad(modalidad: string): void {
     this.modalidadExpandida.set(this.modalidadExpandida() === modalidad ? null : modalidad);
-    this.modalidadVisible.set(this.modalidadPageSize);
+    this.modalidadPage.set(1);
   }
 
   exportarPdfPorModalidad(reporte: ReporteModalidad): void {
@@ -375,8 +330,8 @@ export class ReportesPage {
     doc.line(margin, margin + 17, pageW - margin, margin + 17);
 
     const head = agruparPorModalidad
-      ? ['#', 'Integrante', 'DNI', 'Edad', 'Sexo', 'Grupo', 'Código', 'Estado']
-      : ['#', 'Integrante', 'DNI', 'Edad', 'Sexo', 'Grupo', 'Modalidad', 'Código', 'Estado'];
+      ? ['#', 'Integrante', 'Celular', 'Grupo', 'Código', 'Estado']
+      : ['#', 'Integrante', 'Celular', 'Grupo', 'Modalidad', 'Código', 'Estado'];
 
     const body = this.filasPdf(rows, agruparPorModalidad);
 
@@ -468,7 +423,7 @@ export class ReportesPage {
   }
 
   private filaPdf(index: number, r: IntegranteRow, conModalidad: boolean): RowInput {
-    const fila: CellInput[] = [index, r.nombre, r.dni, r.edad, r.sexo, r.grupo];
+    const fila: CellInput[] = [index, r.nombre, r.celular, r.grupo];
     if (conModalidad) fila.push(r.modalidad);
     fila.push(r.codigo, this.statusLabel(r.estado));
     return fila;

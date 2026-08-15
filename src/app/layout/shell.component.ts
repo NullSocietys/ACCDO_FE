@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import {
   NavigationEnd,
   NavigationStart,
@@ -8,6 +8,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { filter } from 'rxjs';
+import { AuthSessionService } from '../core/services/auth-session.service';
 import { ToastService } from '../core/services/toast.service';
 import { IconComponent } from '../shared/icons/icon.component';
 import { ConfirmDialogComponent } from '../shared/ui/confirm-dialog.component';
@@ -40,12 +41,19 @@ interface NavGroup {
 export class ShellComponent {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthSessionService);
 
   readonly collapsed = signal(false);
   readonly mobileOpen = signal(false);
   readonly navigating = signal(false);
   readonly pageTitle = signal('Dashboard');
   readonly sectionLabel = signal('General');
+  readonly loggingOut = signal(false);
+
+  readonly usuario = this.auth.usuario;
+  readonly initials = computed(() => this.auth.initials());
+  readonly displayName = computed(() => this.usuario()?.nombre ?? 'Administrador');
+  readonly displayEmail = computed(() => this.usuario()?.correo ?? '');
 
   readonly navGroups: NavGroup[] = [
     {
@@ -60,6 +68,7 @@ export class ShellComponent {
         { label: 'Inscripciones', path: '/admin/inscripciones', icon: 'clipboardList' },
         { label: 'Participantes', path: '/admin/participantes', icon: 'users' },
         { label: 'Pagos', path: '/admin/pagos', icon: 'creditCard' },
+        { label: 'Reclamos', path: '/admin/reclamos', icon: 'megaphone' },
         { label: 'Resultados', path: '/admin/resultados', icon: 'trophy' },
         { label: 'Reportes', path: '/admin/reportes', icon: 'fileText' },
       ],
@@ -81,6 +90,7 @@ export class ShellComponent {
     '/admin/inscripciones/nueva': { title: 'Nueva inscripción', section: 'Gestión' },
     '/admin/participantes': { title: 'Participantes', section: 'Gestión' },
     '/admin/pagos': { title: 'Pagos', section: 'Gestión' },
+    '/admin/reclamos': { title: 'Reclamos', section: 'Gestión' },
     '/admin/resultados': { title: 'Resultados', section: 'Gestión' },
     '/admin/reportes': { title: 'Reportes', section: 'Gestión' },
     '/admin/bases': { title: 'Bases del concurso', section: 'Sistema' },
@@ -115,7 +125,20 @@ export class ShellComponent {
   }
 
   logout(): void {
-    this.toast.success('Sesión cerrada', 'Esta es una demostración sin backend.');
+    if (this.loggingOut()) return;
+    this.loggingOut.set(true);
+    this.auth.logout().subscribe({
+      next: () => {
+        this.loggingOut.set(false);
+        this.toast.success('Sesión cerrada', 'Hasta pronto');
+        void this.router.navigateByUrl('/login');
+      },
+      error: () => {
+        this.loggingOut.set(false);
+        this.auth.clearSession();
+        void this.router.navigateByUrl('/login');
+      },
+    });
   }
 
   private scrollMainToTop(): void {

@@ -21,6 +21,13 @@ export abstract class ApiBaseService {
       .pipe(catchError((e) => this.manejarError(e)));
   }
 
+  /** POST multipart (FormData); no Content-Type manual — el browser pone el boundary. */
+  protected postFormData<T>(path: string, form: FormData): Observable<T> {
+    return this.http
+      .post<T>(this.url + path, form)
+      .pipe(catchError((e) => this.manejarError(e)));
+  }
+
   protected put<T>(path: string, body: unknown): Observable<T> {
     return this.http.put<T>(this.url + path, body).pipe(catchError((e) => this.manejarError(e)));
   }

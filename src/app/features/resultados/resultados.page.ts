@@ -8,8 +8,8 @@ import { ButtonComponent } from '../../shared/ui/button.component';
 import { CardComponent } from '../../shared/ui/card.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
-import { LoadMoreComponent } from '../../shared/ui/load-more.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
+import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 @Component({
@@ -21,8 +21,8 @@ import { SkeletonComponent } from '../../shared/ui/skeleton.component';
     CardComponent,
     EmptyStateComponent,
     InputComponent,
-    LoadMoreComponent,
     ModalComponent,
+    PaginationComponent,
     SkeletonComponent,
   ],
   styleUrl: './resultados.page.css',
@@ -55,10 +55,10 @@ export class ResultadosPage {
       }
     });
 
-    // Al cambiar de evento, reinicia el resto de la tabla (carga fluida).
+    // Al cambiar de evento, reinicia la paginación del resto.
     effect(() => {
       this.eventoId();
-      this.restoVisible.set(this.pageSize);
+      this.restoPage.set(1);
     });
   }
 
@@ -85,29 +85,24 @@ export class ResultadosPage {
   /** Podio: campeón (1.º), segundo y tercer lugar. */
   readonly podio = computed(() => this.filtered().slice(0, 3));
 
-  /** Resto de la tabla: todo desde el 4.º puesto, con carga fluida (de a 3: 4.º–6.º, luego 7.º–9.º, …). */
-  readonly pageSize = 3;
-  /** Carga fluida: cuántos puestos del resto se muestran hasta el momento. */
-  readonly restoVisible = signal(this.pageSize);
+  /** Resto de la tabla: desde el 4.º puesto, paginado. */
+  readonly pageSize = 5;
+  readonly restoPage = signal(1);
 
   readonly resto = computed(() => this.filtered().slice(3));
 
-  readonly pagedResto = computed(() => this.resto().slice(0, this.restoVisible()));
+  readonly pagedResto = computed(() => {
+    const start = (this.restoPage() - 1) * this.pageSize;
+    return this.resto().slice(start, start + this.pageSize);
+  });
 
-  readonly restoHasMore = computed(() => this.restoVisible() < this.resto().length);
-
-  readonly restoRemaining = computed(() => Math.max(0, this.resto().length - this.restoVisible()));
-
-  loadMoreResto(): void {
-    this.restoVisible.update((v) => Math.min(v + this.pageSize, this.resto().length));
-  }
-
-  /** Rango en puestos absolutos (4–6 al inicio, 4–9 tras cargar más, …). */
+  /** Rango en puestos absolutos (p. ej. 4–8 de 12). */
   readonly restoRangeLabel = computed(() => {
     const total = this.resto().length;
     if (total === 0) return '';
-    const to = Math.min(3 + this.restoVisible(), 3 + total);
-    return `4–${to} de ${3 + total}`;
+    const from = 3 + (this.restoPage() - 1) * this.pageSize + 1;
+    const to = Math.min(3 + this.restoPage() * this.pageSize, 3 + total);
+    return `${from}–${to} de ${3 + total}`;
   });
 
   patch(partial: Partial<ReturnType<ResultadosPage['form']>>): void {

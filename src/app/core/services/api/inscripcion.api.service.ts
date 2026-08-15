@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { Inscripcion, InscripcionRequest } from '../../models';
+import { Inscripcion, InscripcionRequest, Responsable } from '../../models';
 import { ApiBaseService } from './api-base.service';
 
 @Injectable({ providedIn: 'root' })
@@ -25,6 +25,11 @@ export class InscripcionApiService extends ApiBaseService {
 
   crear(req: InscripcionRequest): Observable<Inscripcion> {
     return this.post<Inscripcion>('/inscripciones', req);
+  }
+
+  /** Prefill: responsable de la última inscripción del usuario autenticado. */
+  miUltimoResponsable(): Observable<Responsable> {
+    return this.get<Responsable>('/inscripciones/mi/ultimo-responsable');
   }
 
   cambiarEstado(id: string, estado: string): Observable<Inscripcion> {

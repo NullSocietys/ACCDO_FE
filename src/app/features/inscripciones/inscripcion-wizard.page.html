@@ -185,10 +185,7 @@
               <thead>
                 <tr>
                   <th>Nombre</th>
-                  <th>Apellido</th>
-                  <th>DNI</th>
-                  <th>Edad</th>
-                  <th>Sexo</th>
+                  <th>Celular</th>
                   <th></th>
                 </tr>
               </thead>
@@ -196,23 +193,10 @@
                 @for (p of participantes(); track $index; let i = $index) {
                   <tr>
                     <td>
-                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" [class.is-invalid]="!!erroresParticipantes()[i]" [ngModel]="p.nombre" (ngModelChange)="updateParticipante(i, { nombre: $event })" aria-label="Nombre participante" />
+                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" [class.is-invalid]="!!erroresParticipantes()[i]" [ngModel]="p.nombre" (ngModelChange)="updateParticipante(i, { nombre: $event })" aria-label="Nombre participante" placeholder="Nombre completo" />
                     </td>
                     <td>
-                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" [ngModel]="p.apellido" (ngModelChange)="updateParticipante(i, { apellido: $event })" aria-label="Apellido participante" />
-                    </td>
-                    <td>
-                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" [class.is-invalid]="!!erroresParticipantes()[i]" [value]="p.dni" (input)="dniParticipante($event, i)" maxlength="8" aria-label="DNI participante" placeholder="8 dígitos" />
-                    </td>
-                    <td>
-                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" type="number" [ngModel]="p.edad" (ngModelChange)="updateParticipante(i, { edad: $event === '' || $event === null ? null : +$event })" aria-label="Edad participante" />
-                    </td>
-                    <td>
-                      <select autocomplete="off" class="ui-select" [ngModel]="p.sexo" (ngModelChange)="updateParticipante(i, { sexo: $event })" aria-label="Sexo participante">
-                        <option value="">—</option>
-                        <option value="M">M</option>
-                        <option value="F">F</option>
-                      </select>
+                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" [class.is-invalid]="!!erroresParticipantes()[i]" [value]="p.celular" (input)="celularParticipante($event, i)" maxlength="9" aria-label="Celular participante" placeholder="9 dígitos" />
                     </td>
                     <td>
                       <app-button variant="ghost" size="icon" icon="trash" ariaLabel="Quitar participante" (clicked)="removeParticipante(i)" />

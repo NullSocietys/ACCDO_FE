@@ -22,6 +22,18 @@ export class PagoApiService extends ApiBaseService {
     return this.post<Pago>('/pagos', req);
   }
 
+  /** Sube el voucher (multipart) a Cloudinary / disco vía backend. */
+  adjuntarComprobante(pagoId: string, archivo: File): Observable<Pago> {
+    const form = new FormData();
+    form.append('archivo', archivo, archivo.name);
+    return this.postFormData<Pago>(`/pagos/${pagoId}/comprobante`, form);
+  }
+
+  /** URL del endpoint de comprobante (admin con JWT, o redirect Cloudinary). */
+  urlComprobante(pagoId: string): string {
+    return `${this.url}/pagos/${pagoId}/comprobante`;
+  }
+
   confirmar(id: string): Observable<Pago> {
     return this.patch<Pago>(`/pagos/${id}/confirmar`);
   }

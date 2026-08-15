@@ -133,10 +133,12 @@
           }
         </div>
 
-        <app-load-more
-          [hasMore]="hasMore()"
-          [remaining]="remaining()"
-          (loadMore)="loadMore()"
+        <app-pagination
+          [total]="filtered().length"
+          [pageSize]="pageSize"
+          [page]="page()"
+          ariaLabel="Paginación de participantes"
+          (pageChange)="page.set($event)"
         />
       </section>
   }
@@ -160,22 +162,20 @@
               <span>Pareja {{ i + 1 }}</span>
             </header>
             <div class="pair__body">
-              <div class="person" [class.is-m]="pair.a.sexo === 'M'" [class.is-f]="pair.a.sexo === 'F'">
+              <div class="person">
                 <span class="person__avatar" aria-hidden="true">{{ pair.a.iniciales }}</span>
                 <div class="person__info">
                   <strong>{{ pair.a.nombreCompleto }}</strong>
-                  <span>{{ pair.a.sexoLabel }} · {{ pair.a.edad }} años</span>
-                  <span class="mono">DNI {{ pair.a.dni }}</span>
+                  <span class="mono">{{ pair.a.celular }}</span>
                 </div>
               </div>
               @if (pair.b; as b) {
                 <div class="pair__join" aria-hidden="true">+</div>
-                <div class="person" [class.is-m]="b.sexo === 'M'" [class.is-f]="b.sexo === 'F'">
+                <div class="person">
                   <span class="person__avatar" aria-hidden="true">{{ b.iniciales }}</span>
                   <div class="person__info">
                     <strong>{{ b.nombreCompleto }}</strong>
-                    <span>{{ b.sexoLabel }} · {{ b.edad }} años</span>
-                    <span class="mono">DNI {{ b.dni }}</span>
+                    <span class="mono">{{ b.celular }}</span>
                   </div>
                 </div>
               }
@@ -186,12 +186,11 @@
     } @else {
       <div class="people" role="list" aria-label="Integrantes del elenco">
         @for (m of g.members; track m.id) {
-          <article class="person person--card" role="listitem" [class.is-m]="m.sexo === 'M'" [class.is-f]="m.sexo === 'F'">
+          <article class="person person--card" role="listitem">
             <span class="person__avatar" aria-hidden="true">{{ m.iniciales }}</span>
             <div class="person__info">
               <strong>{{ m.nombreCompleto }}</strong>
-              <span>{{ m.sexoLabel }} · {{ m.edad }} años</span>
-              <span class="mono">DNI {{ m.dni }}</span>
+              <span class="mono">{{ m.celular }}</span>
             </div>
           </article>
         }

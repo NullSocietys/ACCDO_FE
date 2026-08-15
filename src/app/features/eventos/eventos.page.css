@@ -13,13 +13,10 @@
   --paper: var(--color-card);
   --field: var(--stone-50);
   --accent: var(--gold-700);
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  overflow: hidden;
-}
+  gap: var(--section-gap);
+  }
 
 /* —— Mast —— */
 .mast {
@@ -28,12 +25,12 @@
   grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
   gap: 24px 40px;
   align-items: start;
-  padding-bottom: 8px;
+  padding-bottom: 20px;
   border-bottom: 2px solid var(--ink);
 }
 
 .mast__eyebrow {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: 11px;
   font-weight: 650;
   letter-spacing: 0.14em;
@@ -51,7 +48,7 @@
 }
 
 .mast__lead {
-  margin: 6px 0 0;
+  margin: 12px 0 0;
   max-width: 44ch;
   font-size: 14px;
   line-height: 1.45;
@@ -61,7 +58,7 @@
 .mast__aside {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   align-items: stretch;
 }
 
@@ -127,7 +124,7 @@
   grid-template-columns: 80px minmax(0, 1fr) auto;
   gap: 16px 20px;
   align-items: start;
-  padding: 4px 0;
+  padding: 16px 0;
   border-top: 1px solid var(--rule);
   border-bottom: 2px solid var(--ink);
   background: transparent;
@@ -244,10 +241,10 @@
   flex-shrink: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(200px, 240px);
-  gap: 12px 20px;
+  gap: 12px 24px;
   align-items: end;
   padding-top: 4px;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .tabs {
@@ -262,10 +259,10 @@
   border: none;
   background: transparent;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 550;
   color: var(--quiet);
-  padding: 7px 10px 8px;
+  padding: 10px 14px 12px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -304,29 +301,25 @@
 
 /* —— Folio agenda: ocupa la altura disponible, sin scroll —— */
 .folio {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--rule);
-  background: var(--paper);
-  overflow: hidden;
+  border: 1px solid var(--rule, var(--color-border));
+  background: var(--paper, var(--color-card));
 }
 
 .folio__head {
-  flex-shrink: 0;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  padding: 3px 14px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--rule);
   background: var(--field);
 }
 
 .folio__head h2 {
   margin: 0;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -334,7 +327,7 @@
 }
 
 .folio__head span {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 550;
   color: var(--quiet);
   font-variant-numeric: tabular-nums;
@@ -345,7 +338,7 @@
   display: grid;
   grid-template-columns: 60px minmax(130px, 1.5fr) minmax(110px, 1fr) 72px 52px 88px 148px;
   gap: 8px 12px;
-  padding: 4px 12px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--rule);
   font-size: 10px;
   font-weight: 650;
@@ -355,20 +348,16 @@
 }
 
 .folio__list {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: repeat(10, minmax(0, 1fr));
-  gap: 4px;
+  display: flex;
+  flex-direction: column;
 }
 
 .row {
-  overflow: hidden;
   display: grid;
   grid-template-columns: 60px minmax(130px, 1.5fr) minmax(110px, 1fr) 72px 52px 88px 148px;
   gap: 8px 12px;
   align-items: center;
-  padding: 1px 12px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--rule);
   transition: background 180ms ease;
 }
@@ -452,39 +441,31 @@
 .row__cell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
 }
 
 .row__cell h3 {
   margin: 0;
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: var(--ink);
-  line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
 }
 
 .row__sub {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 550;
   color: var(--quiet);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.35;
 }
 
 .row__text {
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--stone-700);
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
 }
 
 .v--gold {

@@ -8,8 +8,8 @@ import { BadgeComponent } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
-import { LoadMoreComponent } from '../../shared/ui/load-more.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
+import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 const emptyForm = () => ({
@@ -22,7 +22,7 @@ const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 type EstadoFiltro = 'activos' | 'inactivos';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 6;
 
 @Component({
   selector: 'app-usuarios-page',
@@ -32,8 +32,8 @@ const PAGE_SIZE = 10;
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
-    LoadMoreComponent,
     ModalComponent,
+    PaginationComponent,
     SkeletonComponent,
   ],
   styleUrl: './usuarios.page.css',
@@ -51,8 +51,7 @@ export class UsuariosPage {
   readonly form = signal(emptyForm());
   readonly errores = signal<Record<string, string>>({});
   readonly pageSize = PAGE_SIZE;
-  /** Carga fluida: cuántos usuarios se muestran hasta el momento. */
-  readonly visible = signal(PAGE_SIZE);
+  readonly page = signal(1);
   /** Esqueleto de carga inicial (igual que el dashboard). */
   readonly cargando = signal(true);
 
@@ -81,29 +80,40 @@ export class UsuariosPage {
     );
   });
 
-  readonly paginado = computed(() => this.filtrados().slice(0, this.visible()));
+  readonly paginado = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.filtrados().slice(start, start + this.pageSize);
+  });
 
-  readonly hasMore = computed(() => this.visible() < this.filtrados().length);
-
-  readonly remaining = computed(() => Math.max(0, this.filtrados().length - this.visible()));
-
-  loadMore(): void {
-    this.visible.update((v) => Math.min(v + PAGE_SIZE, this.filtrados().length));
-  }
+  readonly rangeLabel = computed(() => {
+    const total = this.filtrados().length;
+    if (total === 0) return '0 resultados';
+    const from = (this.page() - 1) * this.pageSize + 1;
+    const to = Math.min(this.page() * this.pageSize, total);
+    return `${from}–${to} de ${total}`;
+  });
 
   readonly overview = computed(() => ({
-    total: this.store.usuarios().length,
+    total: this.store.usuarios().length + this.store.usuariosInactivos().length,
     activos: this.store.usuarios().length,
     inactivos: this.store.usuariosInactivos().length,
   }));
 
   limpiarFiltros(): void {
     this.busqueda.set('');
-    this.visible.set(PAGE_SIZE);
+    this.page.set(1);
+  }
+
+  onPageChange(next: number): void {
+    this.page.set(next);
+    const folio = document.querySelector('.folio');
+    if (!folio) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    folio.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
   }
 
   rowIndex(localIndex: number): string {
-    return String(localIndex + 1).padStart(2, '0');
+    return String((this.page() - 1) * this.pageSize + localIndex + 1).padStart(2, '0');
   }
 
   iniciales(usuario: Usuario): string {

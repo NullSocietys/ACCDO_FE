@@ -4,11 +4,9 @@
 }
 
 .page {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  gap: var(--section-gap);
   --rule: var(--color-border);
   --ink: var(--stone-900);
   --quiet: var(--stone-500);
@@ -19,20 +17,10 @@
 
 /* Cuerpo con scroll interno: el mast queda fijo y solo esto hace scroll. */
 .cfg-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding-top: 14px;
-  /* Barra de scroll invisible (el scroll sigue funcionando). */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.cfg-body::-webkit-scrollbar {
-  display: none;
+  gap: 24px;
+  padding-top: 4px;
 }
 
 /* —— Mast —— */
@@ -42,7 +30,7 @@
   grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
   gap: 24px 40px;
   align-items: start;
-  padding-bottom: 8px;
+  padding-bottom: 20px;
   border-bottom: 2px solid var(--ink);
 }
 
@@ -77,7 +65,7 @@
 .mast__aside {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   align-items: stretch;
 }
 
@@ -95,8 +83,8 @@
 }
 
 @media (max-width: 720px) {
-  .page { overflow: visible; }
-  .cfg-body { overflow: visible; flex: none; padding-top: 12px; }
+  
+  .cfg-body { padding-top: 4px; }
   .mast { grid-template-columns: 1fr; gap: 18px; }
 }
 

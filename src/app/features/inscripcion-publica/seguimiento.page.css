@@ -9,7 +9,7 @@
     var(--bg-main, #080808);
   color: var(--text-main, #fff);
   font-family: var(--font-body, 'Geist', system-ui, sans-serif);
-  --header-h: 120px;
+  --header-h: 72px;
 }
 
 .ipo-container {
@@ -490,5 +490,5 @@
 }
 
 @media (max-width: 860px) {
-  :host { --header-h: 88px; }
+  :host { --header-h: 64px; }
 }

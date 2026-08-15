@@ -3,7 +3,7 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CATEGORIAS } from '../../core/data/mock-data';
-import { InscripcionEstado, InscripcionView, Sexo } from '../../core/models';
+import { InscripcionEstado, InscripcionView } from '../../core/models';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -11,8 +11,8 @@ import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.c
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
-import { LoadMoreComponent } from '../../shared/ui/load-more.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
+import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 type EstadoFiltro = 'todos' | InscripcionEstado;
@@ -21,14 +21,19 @@ interface DetailMember {
   id: string;
   nombreCompleto: string;
   iniciales: string;
-  dni: string;
-  edad: number;
-  sexo: Sexo;
-  sexoLabel: string;
+  celular: string;
+}
+
+function inicialesDe(nombre: string): string {
+  const partes = nombre.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return '?';
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+  return `${partes[0].charAt(0)}${partes[1].charAt(0)}`.toUpperCase();
 }
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const PAGE_SIZE = 10;
+/** Filas por página: caben en viewport con mast + filtros sin scroll excesivo. */
+const PAGE_SIZE = 6;
 
 @Component({
   selector: 'app-inscripciones-page',
@@ -40,8 +45,8 @@ const PAGE_SIZE = 10;
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
-    LoadMoreComponent,
     ModalComponent,
+    PaginationComponent,
     SkeletonComponent,
   ],
   styleUrl: './inscripciones.page.css',
@@ -63,8 +68,7 @@ export class InscripcionesPage {
   readonly categoriaFilter = signal('');
   readonly estadoFiltro = signal<EstadoFiltro>('todos');
   readonly selected = signal<InscripcionView | null>(null);
-  /** Carga fluida: cuántas inscripciones se muestran hasta el momento. */
-  readonly visible = signal(PAGE_SIZE);
+  readonly page = signal(1);
   /** Esqueleto de carga inicial (igual que el dashboard). */
   readonly cargando = signal(true);
 
@@ -106,22 +110,18 @@ export class InscripcionesPage {
     });
   });
 
-  readonly paged = computed(() => this.filtered().slice(0, this.visible()));
-
-  readonly hasMore = computed(() => this.visible() < this.filtered().length);
-
-  readonly remaining = computed(() => Math.max(0, this.filtered().length - this.visible()));
+  readonly paged = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.filtered().slice(start, start + this.pageSize);
+  });
 
   readonly rangeLabel = computed(() => {
     const total = this.filtered().length;
     if (total === 0) return '0 resultados';
-    const to = Math.min(this.visible(), total);
-    return `1–${to} de ${total}`;
+    const from = (this.page() - 1) * this.pageSize + 1;
+    const to = Math.min(this.page() * this.pageSize, total);
+    return `${from}–${to} de ${total}`;
   });
-
-  loadMore(): void {
-    this.visible.update((v) => Math.min(v + this.pageSize, this.filtered().length));
-  }
 
   readonly modalDescription = computed(() => {
     const ins = this.selected();
@@ -137,12 +137,9 @@ export class InscripcionesPage {
       .filter((p) => p.inscripcionId === ins.id)
       .map((p) => ({
         id: p.id,
-        nombreCompleto: `${p.nombres} ${p.apellidos}`,
-        iniciales: `${p.nombres.charAt(0)}${p.apellidos.charAt(0)}`.toUpperCase(),
-        dni: p.dni,
-        edad: p.edad,
-        sexo: p.sexo,
-        sexoLabel: p.sexo === 'M' ? 'Varón' : 'Mujer',
+        nombreCompleto: p.nombres,
+        iniciales: inicialesDe(p.nombres),
+        celular: p.celular ?? '—',
       }));
   });
 
@@ -153,7 +150,7 @@ export class InscripcionesPage {
       this.eventoFilter();
       this.categoriaFilter();
       this.estadoFiltro();
-      untracked(() => this.visible.set(PAGE_SIZE));
+      untracked(() => this.page.set(1));
     });
   }
 
@@ -193,6 +190,14 @@ export class InscripcionesPage {
     this.eventoFilter.set('');
     this.categoriaFilter.set('');
     this.estadoFiltro.set('todos');
+  }
+
+  onPageChange(next: number): void {
+    this.page.set(next);
+    const folio = document.querySelector('.folio');
+    if (!folio) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    folio.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
   }
 
   goNew(): void {

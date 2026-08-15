@@ -121,18 +121,8 @@
           <span>{{ rangeLabel() }}</span>
         </div>
 
-        <div class="folio__cols" aria-hidden="true">
-          <span>Tarifa</span>
-          <span>Grupo</span>
-          <span>Evento</span>
-          <span>Encargado</span>
-          <span>Elenco</span>
-          <span>Estado</span>
-          <span></span>
-        </div>
-
         <div class="folio__list" role="list">
-          @for (ins of paged(); track ins.id; let i = $index) {
+          @for (ins of paged(); track ins.id) {
             <article
               class="row"
               role="listitem"
@@ -140,38 +130,43 @@
               [class.is-rechazada]="ins.estado === 'RECHAZADA'"
               [class.is-confirmada]="ins.estado === 'CONFIRMADA'"
             >
-              <!-- Tarifa -->
               <div class="row__amount">
+                <span class="row__amount-k">Tarifa</span>
                 <b>{{ ins.total | currency: 'PEN':'symbol-narrow':'1.0-0' }}</b>
               </div>
 
-              <!-- Nombre y Modalidad (en fila) -->
-              <div class="row__cell row__cell--grupo">
-                <h3 class="row__title">{{ ins.nombreGrupo }}</h3>
-                <span class="row__sub">{{ ins.categoriaNombre }}</span>
-                <p class="row__code mono">{{ ins.codigo }}</p>
-              </div>
+              <div class="row__body">
+                <div class="row__lead">
+                  <div class="row__identity">
+                    <h3 class="row__title">{{ ins.nombreGrupo }}</h3>
+                    <p class="row__tags">
+                      <span class="row__sub">{{ ins.categoriaNombre }}</span>
+                      <span class="row__sep" aria-hidden="true">·</span>
+                      <span class="row__code mono">{{ ins.codigo }}</span>
+                    </p>
+                  </div>
+                  <app-badge [tone]="statusTone(ins.estado)" [dot]="false">
+                    {{ statusLabel(ins.estado) }}
+                  </app-badge>
+                </div>
 
-              <!-- Evento -->
-              <div class="row__cell">
-                <span class="row__text" [attr.title]="ins.eventoNombre">{{ ins.eventoNombre }}</span>
-              </div>
-
-              <!-- Encargado -->
-              <div class="row__cell">
-                <span class="row__text" [attr.title]="ins.responsableNombre">{{ ins.responsableNombre }}</span>
-              </div>
-
-              <!-- Elenco -->
-              <div class="row__cell">
-                <span class="row__text">{{ ins.cantidadIntegrantes }}</span>
-              </div>
-
-              <!-- Estado -->
-              <div class="row__cell">
-                <app-badge [tone]="statusTone(ins.estado)" [dot]="false">
-                  {{ statusLabel(ins.estado) }}
-                </app-badge>
+                <dl class="row__facts">
+                  <div>
+                    <dt>Evento</dt>
+                    <dd [attr.title]="ins.eventoNombre">{{ ins.eventoNombre }}</dd>
+                  </div>
+                  <div>
+                    <dt>Encargado</dt>
+                    <dd [attr.title]="ins.responsableNombre">{{ ins.responsableNombre }}</dd>
+                  </div>
+                  <div>
+                    <dt>Elenco</dt>
+                    <dd>
+                      {{ ins.cantidadIntegrantes }}
+                      {{ ins.cantidadIntegrantes === 1 ? 'integrante' : 'integrantes' }}
+                    </dd>
+                  </div>
+                </dl>
               </div>
 
               <div class="row__actions">
@@ -195,10 +190,12 @@
           }
         </div>
 
-        <app-load-more
-          [hasMore]="hasMore()"
-          [remaining]="remaining()"
-          (loadMore)="loadMore()"
+        <app-pagination
+          [total]="filtered().length"
+          [pageSize]="pageSize"
+          [page]="page()"
+          ariaLabel="Paginación de inscripciones"
+          (pageChange)="onPageChange($event)"
         />
       </section>
     }
@@ -280,17 +277,11 @@
         } @else {
           <div class="cast" role="list">
             @for (m of detailMembers(); track m.id) {
-              <article
-                class="cast__item"
-                role="listitem"
-                [class.is-m]="m.sexo === 'M'"
-                [class.is-f]="m.sexo === 'F'"
-              >
+              <article class="cast__item" role="listitem">
                 <span class="cast__mark" aria-hidden="true">{{ m.iniciales }}</span>
                 <div class="cast__info">
                   <strong>{{ m.nombreCompleto }}</strong>
-                  <span>{{ m.sexoLabel }} · {{ m.edad }} años</span>
-                  <span class="mono">DNI {{ m.dni }}</span>
+                  <span class="mono">{{ m.celular }}</span>
                 </div>
               </article>
             }

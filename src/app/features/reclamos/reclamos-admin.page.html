@@ -1,0 +1,257 @@
+<div class="page reclamos">
+  @if (cargando()) {
+    <div class="page-sk" aria-hidden="true">
+      <app-skeleton variant="card" [height]="88" />
+      <app-skeleton variant="table" [count]="8" />
+    </div>
+  } @else {
+    <header class="mast">
+      <div class="mast__copy">
+        <p class="mast__eyebrow">Gestión · Soporte</p>
+        <h1>Reclamos</h1>
+        <p class="mast__lead">
+          Solicitudes de encargados que reclaman el nombre de su grupo inscrito sin autorización.
+        </p>
+      </div>
+      <div class="mast__aside">
+        <dl class="mast__pulse" aria-label="Resumen rápido">
+          <div>
+            <dt>Total</dt>
+            <dd>{{ overview().total }}</dd>
+          </div>
+          <div class="mast__pulse--gold">
+            <dt>Pendientes</dt>
+            <dd>{{ overview().pendientes }}</dd>
+          </div>
+          <div>
+            <dt>Atendidos</dt>
+            <dd>{{ overview().atendidos }}</dd>
+          </div>
+        </dl>
+        <div class="mast__cta">
+          <app-button icon="rotateCcw" variant="outline" [fullWidth]="true" (clicked)="cargar()">
+            Actualizar
+          </app-button>
+        </div>
+      </div>
+    </header>
+
+    @if (overview().total === 0) {
+      <app-empty-state
+        icon="megaphone"
+        title="Sin reclamos"
+        description="Cuando un encargado registre un reclamo desde la portada, aparecerá aquí."
+      />
+    } @else {
+      <div class="controls">
+        <nav class="tabs" role="group" aria-label="Filtrar por estado">
+          @for (f of filtros; track f.key) {
+            <button
+              type="button"
+              class="tabs__btn"
+              [class.is-active]="estadoFiltro() === f.key"
+              [attr.aria-pressed]="estadoFiltro() === f.key"
+              (click)="estadoFiltro.set(f.key)"
+            >
+              {{ f.label }}
+              <span class="tabs__n">
+                {{ f.key === 'pendientes' ? overview().pendientes : overview().atendidos }}
+              </span>
+            </button>
+          }
+        </nav>
+        <div class="controls__search">
+          <app-input
+            controlId="rc-search"
+            icon="search"
+            [value]="busqueda()"
+            placeholder="Grupo, DNI, encargado…"
+            (valueChange)="busqueda.set($event)"
+          />
+        </div>
+      </div>
+
+      @if (filtrados().length === 0) {
+        <app-empty-state
+          icon="search"
+          title="Sin resultados"
+          description="Ningún reclamo coincide con los filtros aplicados."
+          actionLabel="Limpiar filtros"
+          actionIcon="x"
+          (actioned)="limpiarFiltros()"
+        />
+      } @else {
+        <section class="folio" aria-label="Listado de reclamos">
+          <div class="folio__head">
+            <h2>{{ estadoFiltro() === 'pendientes' ? 'Cola pendiente' : 'Histórico atendido' }}</h2>
+            <span>{{ rangeLabel() }}</span>
+          </div>
+
+          <div class="folio__cols" aria-hidden="true">
+            <span class="folio__cols-mark">#</span>
+            <span>Grupo</span>
+            <span>Evento</span>
+            <span>Estado</span>
+            <span></span>
+          </div>
+
+          <div class="folio__list" role="list">
+            @for (reclamo of paginado(); track reclamo.id; let i = $index) {
+              <article class="row" role="listitem">
+                <div class="row__mark" aria-hidden="true">
+                  <span class="row__index">{{ rowIndex(i) }}</span>
+                </div>
+
+                <div class="row__identity">
+                  <h3 class="row__title">{{ reclamo.nombreGrupo }}</h3>
+                  <p class="row__sub">
+                    {{ encargadoNombre(reclamo) }}
+                    <span class="mono">· DNI {{ reclamo.encargadoDni }}</span>
+                  </p>
+                </div>
+
+                <div class="row__meta">
+                  <span class="row__meta-k">Evento</span>
+                  <span class="row__meta-v">{{ nombreEvento(reclamo.eventoId) }}</span>
+                  <span class="row__meta-k">Registro</span>
+                  <span class="row__meta-v">{{ fechaCorta(reclamo.createdAt) }}</span>
+                </div>
+
+                <div class="row__status">
+                  <app-badge
+                    [tone]="statusTone(reclamo.estado)"
+                    [dot]="reclamo.estado === 'PENDIENTE'"
+                  >
+                    {{ statusLabel(reclamo.estado) }}
+                  </app-badge>
+                </div>
+
+                <div class="row__actions">
+                  <app-button
+                    variant="outline"
+                    size="lg"
+                    icon="eye"
+                    (clicked)="openDetail(reclamo)"
+                  >
+                    Ver
+                  </app-button>
+                  @if (reclamo.estado === 'PENDIENTE') {
+                    <app-button
+                      variant="outline"
+                      size="lg"
+                      icon="check"
+                      [disabled]="busyId() === reclamo.id"
+                      (clicked)="atender(reclamo)"
+                    >
+                      Atender
+                    </app-button>
+                  } @else {
+                    <app-button
+                      variant="outline"
+                      size="lg"
+                      icon="rotateCcw"
+                      [disabled]="busyId() === reclamo.id"
+                      (clicked)="restaurar(reclamo)"
+                    >
+                      Reabrir
+                    </app-button>
+                  }
+                  <app-button
+                    variant="ghost"
+                    size="icon"
+                    icon="trash"
+                    ariaLabel="Eliminar reclamo"
+                    [disabled]="busyId() === reclamo.id"
+                    (clicked)="eliminar(reclamo)"
+                  />
+                </div>
+              </article>
+            }
+          </div>
+
+          <app-pagination
+            [total]="filtrados().length"
+            [pageSize]="pageSize"
+            [page]="page()"
+            ariaLabel="Paginación de reclamos"
+            (pageChange)="onPageChange($event)"
+          />
+        </section>
+      }
+    }
+  }
+</div>
+
+<app-modal
+  [open]="!!selected()"
+  label="Reclamo"
+  [title]="selected()?.nombreGrupo ?? 'Detalle'"
+  [description]="selected() ? encargadoNombre(selected()!) : null"
+  size="lg"
+  (closed)="closeDetail()"
+>
+  @if (selected(); as r) {
+    <div class="sheet">
+      <div class="sheet__hero">
+        <div>
+          <span class="k">Estado</span>
+          <p class="sheet__figure">{{ statusLabel(r.estado) }}</p>
+        </div>
+        <app-badge [tone]="statusTone(r.estado)" [dot]="false">
+          {{ statusLabel(r.estado) }}
+        </app-badge>
+      </div>
+
+      <dl class="sheet__grid">
+        <div>
+          <dt>Evento</dt>
+          <dd>{{ nombreEvento(r.eventoId) }}</dd>
+        </div>
+        <div>
+          <dt>Registrado</dt>
+          <dd>{{ fechaCorta(r.createdAt) }}</dd>
+        </div>
+        <div>
+          <dt>Encargado</dt>
+          <dd>{{ encargadoNombre(r) }}</dd>
+        </div>
+        <div>
+          <dt>DNI</dt>
+          <dd class="mono">{{ r.encargadoDni }}</dd>
+        </div>
+        <div>
+          <dt>Teléfono</dt>
+          <dd>{{ r.telefono || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Correo</dt>
+          <dd>
+            @if (r.correo) {
+              <a [href]="'mailto:' + r.correo">{{ r.correo }}</a>
+            } @else {
+              —
+            }
+          </dd>
+        </div>
+      </dl>
+
+      @if (r.mensaje) {
+        <div class="sheet__msg">
+          <span class="k">Mensaje</span>
+          <p>{{ r.mensaje }}</p>
+        </div>
+      }
+
+      <div class="sheet__actions">
+        @if (r.estado === 'PENDIENTE') {
+          <app-button icon="check" (clicked)="atender(r)">Marcar atendido</app-button>
+        } @else {
+          <app-button icon="rotateCcw" variant="outline" (clicked)="restaurar(r)">
+            Reabrir
+          </app-button>
+        }
+        <app-button icon="trash" variant="ghost" (clicked)="eliminar(r)">Eliminar</app-button>
+      </div>
+    </div>
+  }
+</app-modal>

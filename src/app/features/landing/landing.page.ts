@@ -7,47 +7,26 @@ import {
   inject,
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { firstValueFrom, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import gsap from 'gsap';
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import type { Configuracion } from '../../core/models/configuracion.model';
-import { ConfiguracionApiService } from '../../core/services/api/configuracion.api.service';
+import { SiteHeaderComponent } from '../../shared/ui/site-header/site-header.component';
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 @Component({
   selector: 'app-landing',
   templateUrl: './landing.page.html',
   styleUrls: ['./landing.page.css'],
-  imports: [RouterLink],
+  imports: [RouterLink, SiteHeaderComponent],
 })
 export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly route = inject(ActivatedRoute);
-  private readonly configApi = inject(ConfiguracionApiService);
-
-  private readonly FALLBACK = {
-    nombreAsociacion: 'Asociación Cultural Chicote de Oro',
-    coordinadoraGeneral: 'Martha Bravo',
-    telefono: '926 266 295',
-    correo: 'contacto@chicotedeoro.pe',
-    direccion: 'Tacna, Perú',
-    numeroYape: '926 266 295',
-    numeroPlin: '926 266 295',
-    fechaLimiteInscripcion: '12 de agosto',
-    fechaSorteo: '14 de agosto',
-    horaSorteo: '09:00 pm',
-  };
-
-  modalAbierto = false;
-  datosCoordinacion = { ...this.FALLBACK };
-  private datosDesdeApi = false;
-  private focoPrevio: HTMLElement | null = null;
-  private modalEscListener: ((e: KeyboardEvent) => void) | null = null;
 
   private autoplayInterval: ReturnType<typeof setInterval> | null = null;
   private dotsMorphTimeout: ReturnType<typeof setTimeout> | null = null;
-  private scrollListener: (() => void) | null = null;
   private progWallScrollListener: (() => void) | null = null;
 
   private introOverlayEl: HTMLElement | null = null;
@@ -62,36 +41,32 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
   private fragSub: Subscription | null = null;
   private pendienteFragment: string | null = null;
 
+  private stickyVisible = false;
+  private stickyTween: gsap.core.Tween | null = null;
+
   ngOnInit(): void {
-    document.title = 'Chicote de Oro — Elegancia en movimiento';
+    document.title = 'Asociación Cultural Chicote de Oro — Elegancia en movimiento';
   }
 
   ngAfterViewInit(): void {
     this.initCarousel();
-    this.initMobileMenu();
     this.initAnchors();
-    this.initHeader();
     this.initProgWallCarousel();
     this.initMotion();
     this.initIntro();
-    // Fragmento de ruta (p. ej. /#galeria desde el header de /seguimiento).
+
+    // Fragmento de ruta (p. ej. /#galeria desde otra página).
     this.fragSub = this.route.fragment.subscribe((f) => {
       if (f) this.irA(f);
     });
-    if (this.route.snapshot.fragment) this.irA(this.route.snapshot.fragment);
   }
 
   ngOnDestroy(): void {
-    if (this.modalEscListener) {
-      window.removeEventListener('keydown', this.modalEscListener);
-      this.modalEscListener = null;
-    }
-    document.body.style.overflow = '';
+    gsap.killTweensOf(window);
     this.clearIntroFallback();
     if (this.introWatchdog) clearInterval(this.introWatchdog);
     if (this.autoplayInterval) clearInterval(this.autoplayInterval);
     if (this.dotsMorphTimeout) clearTimeout(this.dotsMorphTimeout);
-    if (this.scrollListener) window.removeEventListener('scroll', this.scrollListener);
     if (this.progWallScrollListener) {
       document.getElementById('progWall')?.removeEventListener('scroll', this.progWallScrollListener);
     }
@@ -100,7 +75,7 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     this.teardownInteractions();
     this.motionMm?.revert();
     this.motionMm = null;
-    document.title = 'Chicote de Oro — Inscripciones Caporales';
+    document.title = 'Asociación Cultural Chicote de Oro — Inscripciones Caporales';
   }
 
   /* —— Intro video —— */
@@ -154,15 +129,30 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /* —— Scroll a sección vía fragmento de ruta (header compartido) —— */
+  private headerOffset(): number {
+    const header = document.getElementById('siteHeader');
+    const h = header?.offsetHeight ?? 72;
+    return h + 20;
+  }
+
+  private scrollToSection(el: HTMLElement): void {
+    const y = Math.max(0, el.getBoundingClientRect().top + window.scrollY - this.headerOffset());
+    gsap.killTweensOf(window);
+    window.scrollTo(0, y);
+  }
+
   private irA(fragment: string): void {
     if (this.introOverlayEl) {
       this.pendienteFragment = fragment;
       return;
     }
-    const el = (this.host.nativeElement as HTMLElement).querySelector<HTMLElement>('#' + fragment);
+
+    const el = (this.host.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      '#' + CSS.escape(fragment),
+    );
     if (!el) return;
     this.pendienteFragment = null;
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    this.scrollToSection(el);
   }
 
   private flushFragmentScroll(): void {
@@ -276,49 +266,73 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
             scale: 1,
           });
           root.classList.add('js-reduced-motion');
-          return () => root.classList.remove('js-reduced-motion');
+          this.initStickyCta(root, true);
+          return () => {
+            this.teardownStickyCta(root);
+            root.classList.remove('js-reduced-motion');
+          };
         }
 
         root.classList.add('js-gsap');
         const q = gsap.utils.selector(root);
 
-        gsap.set(q('.reveal'), { autoAlpha: 0, y: 44 });
-        gsap.set(q('.hero-anim'), { autoAlpha: 0, y: 36 });
-        gsap.set(q('.frame-corner'), { autoAlpha: 0, scale: 0.85 });
+        gsap.set(q('.reveal'), { autoAlpha: 0, y: 36 });
+        gsap.set(q('.hero-anim'), { autoAlpha: 0, y: 28 });
+        gsap.set(q('.frame-corner'), { autoAlpha: 0, scale: 0.88 });
 
         ScrollTrigger.batch(q('.reveal'), {
-          start: 'top 88%',
+          start: 'top 86%',
           once: true,
-          interval: 0.1,
-          batchMax: 5,
+          interval: 0.12,
+          batchMax: 6,
           onEnter: (batch) => {
             gsap.to(batch, {
               autoAlpha: 1,
               y: 0,
-              duration: 0.8,
-              stagger: { each: 0.07, from: 'start' },
+              duration: 0.95,
+              stagger: { each: 0.08, from: 'start' },
               ease: 'power3.out',
-              overwrite: true,
+              overwrite: 'auto',
             });
+          },
+        });
+
+        // Títulos de sección: entrada un poco más marcada
+        ScrollTrigger.batch(q('.sec-head, .sec-title'), {
+          start: 'top 88%',
+          once: true,
+          onEnter: (batch) => {
+            gsap.fromTo(
+              batch,
+              { autoAlpha: 0.35, y: 18 },
+              {
+                autoAlpha: 1,
+                y: 0,
+                duration: 0.85,
+                stagger: 0.06,
+                ease: 'power2.out',
+                overwrite: 'auto',
+              },
+            );
           },
         });
 
         this.initSectionTimelines(root, q);
 
         gsap.to(q('.hero-carousel'), {
-          yPercent: 12,
+          yPercent: 10,
           ease: 'none',
           force3D: true,
           scrollTrigger: {
             trigger: q('#hero')[0] ?? '#hero',
             start: 'top top',
             end: 'bottom top',
-            scrub: 0.9,
+            scrub: 1.1,
           },
         });
 
         gsap.to(q('.hero-overlay'), {
-          autoAlpha: 0.4,
+          autoAlpha: 0.45,
           ease: 'none',
           scrollTrigger: {
             trigger: q('#hero')[0] ?? '#hero',
@@ -374,6 +388,8 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
           this.initHoverLift(root, q);
         }
 
+        this.initStickyCta(root, false);
+
         requestAnimationFrame(() => ScrollTrigger.refresh());
 
         if (!this.introOverlayEl) {
@@ -382,12 +398,98 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
 
         return () => {
           this.teardownInteractions();
+          this.teardownStickyCta(root);
           root.classList.remove('js-gsap');
           this.heroPlayed = false;
         };
       },
       root,
     );
+  }
+
+  /* —— CTA flotante simple: aparece al salir del hero y se oculta en contacto —— */
+  private initStickyCta(root: HTMLElement, reduceMotion: boolean): void {
+    const q = gsap.utils.selector(root);
+    const sticky = q('#stickyCta')[0] as HTMLElement | undefined;
+    const hero = q('#hero')[0] as HTMLElement | undefined;
+    const contacto = q('#contacto')[0] as HTMLElement | undefined;
+    if (!sticky || !hero) return;
+
+    this.stickyTween?.kill();
+    this.stickyTween = null;
+    this.stickyVisible = false;
+
+    sticky.classList.remove('is-visible');
+    sticky.setAttribute('aria-hidden', 'true');
+    sticky.setAttribute('tabindex', '-1');
+    gsap.set(sticky, { autoAlpha: 0, y: 28, scale: 0.96 });
+
+    const duration = reduceMotion ? 0.2 : 0.55;
+
+    const setVisible = (show: boolean) => {
+      if (show === this.stickyVisible) return;
+      this.stickyVisible = show;
+      this.stickyTween?.kill();
+
+      if (show) {
+        sticky.classList.add('is-visible');
+        sticky.setAttribute('aria-hidden', 'false');
+        sticky.removeAttribute('tabindex');
+        this.stickyTween = gsap.to(sticky, {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          duration,
+          ease: 'power3.out',
+          overwrite: true,
+        });
+      } else {
+        this.stickyTween = gsap.to(sticky, {
+          autoAlpha: 0,
+          y: 20,
+          scale: 0.96,
+          duration: duration * 0.85,
+          ease: 'power2.in',
+          overwrite: true,
+          onComplete: () => {
+            if (this.stickyVisible) return;
+            sticky.classList.remove('is-visible');
+            sticky.setAttribute('aria-hidden', 'true');
+            sticky.setAttribute('tabindex', '-1');
+          },
+        });
+      }
+    };
+
+    const trigger = ScrollTrigger.create({
+      id: 'sticky-cta',
+      trigger: hero,
+      start: 'bottom 82%',
+      endTrigger: contacto ?? undefined,
+      end: contacto ? 'top 90%' : 'max',
+      onToggle: (self) => setVisible(self.isActive),
+      onRefresh: (self) => setVisible(self.isActive),
+    });
+
+    queueMicrotask(() => setVisible(trigger.isActive));
+  }
+
+  private teardownStickyCta(root: HTMLElement): void {
+    this.stickyTween?.kill();
+    this.stickyTween = null;
+    this.stickyVisible = false;
+    ScrollTrigger.getById('sticky-cta')?.kill();
+    ScrollTrigger.getById('sticky-cta-hero')?.kill();
+    ScrollTrigger.getById('sticky-cta-hide')?.kill();
+    ScrollTrigger.getById('sticky-cta-source')?.kill();
+
+    const sticky = root.querySelector<HTMLElement>('#stickyCta');
+    if (sticky) {
+      sticky.classList.remove('is-visible');
+      sticky.setAttribute('aria-hidden', 'true');
+      sticky.setAttribute('tabindex', '-1');
+      gsap.set(sticky, { clearProps: 'all' });
+    }
   }
 
   private initSectionTimelines(
@@ -397,17 +499,37 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     const facts = q('.prog-facts')[0];
     if (facts) {
       const cells = q('.prog-fact');
-      gsap.set(cells, { autoAlpha: 0, y: 20 });
+      gsap.set(cells, { autoAlpha: 0, y: 24 });
       gsap.to(cells, {
         autoAlpha: 1,
         y: 0,
-        duration: 0.55,
-        stagger: 0.08,
-        ease: 'power2.out',
+        duration: 0.65,
+        stagger: 0.09,
+        ease: 'power3.out',
         scrollTrigger: {
           trigger: facts,
-          start: 'top 85%',
+          start: 'top 82%',
           once: true,
+        },
+      });
+    }
+
+    const processSteps = q('.process-step');
+    if (processSteps.length) {
+      gsap.set(processSteps, { autoAlpha: 0, y: 28 });
+      ScrollTrigger.batch(processSteps, {
+        start: 'top 85%',
+        once: true,
+        interval: 0.1,
+        onEnter: (batch) => {
+          gsap.to(batch, {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.75,
+            stagger: 0.1,
+            ease: 'power3.out',
+            overwrite: 'auto',
+          });
         },
       });
     }
@@ -512,14 +634,14 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     tl.addLabel('intro', 0)
       .to(
         q('.frame-corner'),
-        { autoAlpha: 1, scale: 1, duration: 0.75, stagger: 0.05 },
+        { autoAlpha: 1, scale: 1, duration: 0.85, stagger: 0.06 },
         'intro',
       )
-      .to(q('.hero-top.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.7 }, 'intro+=0.15')
+      .to(q('.hero-top.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.75 }, 'intro+=0.12')
       .to(
         q('.hero-media.hero-anim'),
-        { autoAlpha: 1, y: 0, duration: 0.9, ease: 'power4.out' },
-        'intro+=0.22',
+        { autoAlpha: 1, y: 0, duration: 1, ease: 'power4.out' },
+        'intro+=0.18',
       )
       .to(q('.hero-title.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.85 }, 'intro+=0.32')
       .to(q('.hero-sub.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.7 }, 'intro+=0.45')
@@ -545,91 +667,6 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
         },
       );
     }
-  }
-
-  /* —— Modal de coordinación —— */
-  async abrirModalCoordinadores(): Promise<void> {
-    if (!this.datosDesdeApi) {
-      try {
-        const c: Configuracion | null = await firstValueFrom(
-          this.configApi.obtenerActiva(),
-        );
-        if (c) {
-          this.datosDesdeApi = true;
-          const f = this.FALLBACK;
-          this.datosCoordinacion = {
-            nombreAsociacion: c.nombreAsociacion || f.nombreAsociacion,
-            coordinadoraGeneral: c.coordinadoraGeneral || f.coordinadoraGeneral,
-            telefono: c.telefono || f.telefono,
-            correo: c.correo || f.correo,
-            direccion: c.direccion || f.direccion,
-            numeroYape: c.numeroYape || f.numeroYape,
-            numeroPlin: c.numeroPlin || f.numeroPlin,
-            fechaLimiteInscripcion:
-              this.formatearFecha(c.fechaLimiteInscripcion) || f.fechaLimiteInscripcion,
-            fechaSorteo: this.formatearFecha(c.fechaSorteo) || f.fechaSorteo,
-            horaSorteo: this.formatearHora(c.horaSorteo) || f.horaSorteo,
-          };
-        }
-      } catch {
-        /* sin conexión: se usan los datos de respaldo */
-      }
-    }
-
-    this.focoPrevio = document.activeElement as HTMLElement | null;
-    this.modalAbierto = true;
-    document.body.style.overflow = 'hidden';
-    this.modalEscListener = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') this.cerrarModalCoordinadores();
-    };
-    window.addEventListener('keydown', this.modalEscListener);
-    requestAnimationFrame(() => {
-      const close = this.host.nativeElement.querySelector(
-        '.coord-modal__close',
-      ) as HTMLButtonElement | null;
-      close?.focus();
-    });
-  }
-
-  cerrarModalCoordinadores(): void {
-    this.modalAbierto = false;
-    document.body.style.overflow = '';
-    if (this.modalEscListener) {
-      window.removeEventListener('keydown', this.modalEscListener);
-      this.modalEscListener = null;
-    }
-    this.focoPrevio?.focus();
-    this.focoPrevio = null;
-  }
-
-  get telefonoHref(): string {
-    return `tel:+51${this.datosCoordinacion.telefono.replace(/\D/g, '')}`;
-  }
-
-  get whatsappHref(): string {
-    return `https://wa.me/51${this.datosCoordinacion.telefono.replace(/\D/g, '')}`;
-  }
-
-  private formatearFecha(valor: string): string {
-    if (!valor) return '';
-    const d = new Date(`${valor}T00:00:00`);
-    if (Number.isNaN(d.getTime())) return '';
-    return d.toLocaleDateString('es-PE', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  }
-
-  private formatearHora(valor: string): string {
-    if (!valor) return '';
-    const m = /^(\d{1,2}):(\d{2})$/.exec(valor.trim());
-    if (!m) return '';
-    let horas = Number(m[1]);
-    const minutos = m[2];
-    const sufijo = horas >= 12 ? 'pm' : 'am';
-    horas = horas % 12 || 12;
-    return `${horas}:${minutos} ${sufijo}`;
   }
 
   /* —— Carousel —— */
@@ -699,7 +736,7 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     startAutoplay();
   }
 
-  /* —— Anclas del menú: scroll con offset del header —— */
+  /* —— Anclas del menú: scroll suave con offset del header —— */
   private initAnchors(): void {
     const root = this.host.nativeElement as HTMLElement;
     root.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((link: HTMLAnchorElement) => {
@@ -708,45 +745,12 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
         if (!id) return;
         const target = root.querySelector<HTMLElement>('#' + id);
         if (!target) return;
-        // El offset del header lo da la regla CSS `scroll-margin-top` de cada sección:
-        // scrollIntoView lo respeta (la navegación nativa por hash no). Un solo movimiento.
         ev.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        this.scrollToSection(target);
       };
       link.addEventListener('click', onClick);
       this.interactionCleanups.push(() => link.removeEventListener('click', onClick));
     });
-  }
-
-  /* —— Mobile menu —— */
-  private initMobileMenu(): void {
-    const menuToggle = document.getElementById('menuToggle');
-    const primaryNav = document.getElementById('primaryNav');
-
-    menuToggle?.addEventListener('click', () => {
-      const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
-      menuToggle.setAttribute('aria-expanded', String(!isExpanded));
-      primaryNav?.classList.toggle('open');
-    });
-
-    primaryNav?.querySelectorAll('a').forEach((link) => {
-      link.addEventListener('click', () => {
-        primaryNav.classList.remove('open');
-        menuToggle?.setAttribute('aria-expanded', 'false');
-      });
-    });
-  }
-
-  /* —— Header solid on scroll —— */
-  private initHeader(): void {
-    const siteHeader = document.getElementById('siteHeader');
-    const updateHeaderState = () => {
-      if (!siteHeader) return;
-      siteHeader.classList.toggle('scrolled', window.scrollY > 40);
-    };
-    updateHeaderState();
-    this.scrollListener = updateHeaderState;
-    window.addEventListener('scroll', updateHeaderState, { passive: true });
   }
 
   /* —— Photo wall carousel (mobile) —— */

@@ -139,8 +139,4 @@ export class SeguimientoPage implements OnDestroy {
   buscar(): void {
     this.consultar();
   }
-
-  contactarCoordinadora(): void {
-    window.open('https://wa.me/51926266295', '_blank', 'noopener');
-  }
 }

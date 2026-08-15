@@ -9,8 +9,8 @@ import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.c
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
-import { LoadMoreComponent } from '../../shared/ui/load-more.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
+import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 const emptyForm = (): Omit<Evento, 'id'> => ({
@@ -39,8 +39,8 @@ type EstadoFiltro = 'todos' | EventoEstado;
     ButtonComponent,
     EmptyStateComponent,
     InputComponent,
-    LoadMoreComponent,
     ModalComponent,
+    PaginationComponent,
     SkeletonComponent,
   ],
   styleUrl: './eventos.page.css',
@@ -62,8 +62,7 @@ export class EventosPage {
   readonly form = signal(emptyForm());
   readonly errores = signal<Record<string, string>>({});
   readonly pageSize = PAGE_SIZE;
-  /** Carga fluida: cuántos eventos se muestran hasta el momento. */
-  readonly visible = signal(PAGE_SIZE);
+  readonly page = signal(1);
   /** Esqueleto de carga inicial (igual que el dashboard). */
   readonly cargando = signal(true);
 
@@ -97,22 +96,18 @@ export class EventosPage {
     );
   });
 
-  readonly paged = computed(() => this.filtrados().slice(0, this.visible()));
-
-  readonly hasMore = computed(() => this.visible() < this.filtrados().length);
-
-  readonly remaining = computed(() => Math.max(0, this.filtrados().length - this.visible()));
+  readonly paged = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.filtrados().slice(start, start + this.pageSize);
+  });
 
   readonly rangeLabel = computed(() => {
     const total = this.filtrados().length;
     if (total === 0) return '0 resultados';
-    const to = Math.min(this.visible(), total);
-    return `1–${to} de ${total}`;
+    const from = (this.page() - 1) * this.pageSize + 1;
+    const to = Math.min(this.page() * this.pageSize, total);
+    return `${from}–${to} de ${total}`;
   });
-
-  loadMore(): void {
-    this.visible.update((v) => Math.min(v + this.pageSize, this.filtrados().length));
-  }
 
   readonly featured = computed(() => {
     const activos = this.ordenados().filter((e) => e.estado === 'ACTIVO' && e.activo);
@@ -196,11 +191,11 @@ export class EventosPage {
   limpiarFiltros(): void {
     this.busqueda.set('');
     this.estadoFiltro.set('todos');
-    this.visible.set(PAGE_SIZE);
+    this.page.set(1);
   }
 
   rowIndex(localIndex: number): string {
-    return String(localIndex + 1).padStart(2, '0');
+    return String((this.page() - 1) * this.pageSize + localIndex + 1).padStart(2, '0');
   }
 
   openCreate(): void {

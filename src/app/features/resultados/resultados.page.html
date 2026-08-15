@@ -143,10 +143,12 @@
           </table>
         </div>
 
-        <app-load-more
-          [hasMore]="restoHasMore()"
-          [remaining]="restoRemaining()"
-          (loadMore)="loadMoreResto()"
+        <app-pagination
+          [total]="resto().length"
+          [pageSize]="pageSize"
+          [page]="restoPage()"
+          ariaLabel="Paginación de clasificación"
+          (pageChange)="restoPage.set($event)"
         />
       }
     </app-card>

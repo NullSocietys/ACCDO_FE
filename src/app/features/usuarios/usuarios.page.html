@@ -1,16 +1,16 @@
 <div class="page usuarios">
   @if (cargando()) {
     <div class="page-sk" aria-hidden="true">
-      <app-skeleton variant="card" [height]="120" />
+      <app-skeleton variant="card" [height]="88" />
       <app-skeleton variant="table" [count]="8" />
     </div>
   } @else {
   <header class="mast">
     <div class="mast__copy">
-      <p class="mast__eyebrow">Usuarios · Cuentas</p>
+      <p class="mast__eyebrow">Panel · Cuentas</p>
       <h1>Usuarios</h1>
       <p class="mast__lead">
-        Cuentas de los delegados y administradores: acceso, restauración y depuración del sistema.
+        Acceso al panel: alta, restauración y depuración de cuentas.
       </p>
     </div>
     <div class="mast__aside">
@@ -49,7 +49,7 @@
             class="tabs__btn"
             [class.is-active]="estadoFiltro() === f.key"
             [attr.aria-pressed]="estadoFiltro() === f.key"
-            (click)="estadoFiltro.set(f.key); visible.set(pageSize)"
+            (click)="estadoFiltro.set(f.key); page.set(1)"
           >
             {{ f.label }}
             <span class="tabs__n">
@@ -64,7 +64,7 @@
           icon="search"
           [value]="busqueda()"
           placeholder="Nombre o correo…"
-          (valueChange)="busqueda.set($event); visible.set(pageSize)"
+          (valueChange)="busqueda.set($event); page.set(1)"
         />
       </div>
     </div>
@@ -81,14 +81,13 @@
     } @else {
       <section class="folio" aria-label="Listado de usuarios">
         <div class="folio__head">
-          <h2>{{ estadoFiltro() === 'activos' ? 'Activos' : 'Inactivos' }}</h2>
-          <span>{{ filtrados().length }} de {{ lista().length }}</span>
+          <h2>{{ estadoFiltro() === 'activos' ? 'Directorio activo' : 'Archivo inactivo' }}</h2>
+          <span>{{ rangeLabel() }}</span>
         </div>
 
         <div class="folio__cols" aria-hidden="true">
-          <span></span>
-          <span>Nombre</span>
-          <span>Correo</span>
+          <span class="folio__cols-mark">#</span>
+          <span>Cuenta</span>
           <span>Registro</span>
           <span>Estado</span>
           <span></span>
@@ -97,21 +96,24 @@
         <div class="folio__list" role="list">
           @for (usuario of paginado(); track usuario.id; let i = $index) {
             <article class="row" role="listitem" [class.is-inactivo]="!usuario.activo">
-              <div class="row__avatar" aria-hidden="true">{{ iniciales(usuario) }}</div>
-
-              <div class="row__cell">
-                <h3>{{ usuario.nombre }}</h3>
+              <div class="row__mark" aria-hidden="true">
+                <span class="row__index">{{ rowIndex(i) }}</span>
+                <span class="row__avatar">{{ iniciales(usuario) }}</span>
               </div>
 
-              <div class="row__cell">
-                <span class="row__text" [attr.title]="usuario.correo">{{ usuario.correo }}</span>
+              <div class="row__identity">
+                <h3 class="row__title">{{ usuario.nombre }}</h3>
+                <a class="row__mail mono" [href]="'mailto:' + usuario.correo" [attr.title]="usuario.correo">
+                  {{ usuario.correo }}
+                </a>
               </div>
 
-              <div class="row__cell">
-                <span class="row__text">{{ fechaCorta(usuario.createdAt) }}</span>
+              <div class="row__meta">
+                <span class="row__meta-k">Registro</span>
+                <span class="row__meta-v">{{ fechaCorta(usuario.createdAt) }}</span>
               </div>
 
-              <div class="row__cell">
+              <div class="row__status">
                 <app-badge
                   [tone]="usuario.activo ? 'success' : 'muted'"
                   [dot]="usuario.activo"
@@ -124,7 +126,7 @@
                 @if (usuario.activo) {
                   <app-button
                     variant="outline"
-                    size="sm"
+                    size="lg"
                     icon="pencil"
                     (clicked)="openEdit(usuario)"
                   >
@@ -138,7 +140,7 @@
                     (clicked)="remove(usuario)"
                   />
                 } @else {
-                  <app-button variant="outline" size="sm" icon="check" (clicked)="restore(usuario)">
+                  <app-button variant="outline" size="lg" icon="check" (clicked)="restore(usuario)">
                     Restaurar
                   </app-button>
                   <app-button
@@ -154,10 +156,12 @@
           }
         </div>
 
-        <app-load-more
-          [hasMore]="hasMore()"
-          [remaining]="remaining()"
-          (loadMore)="loadMore()"
+        <app-pagination
+          [total]="filtrados().length"
+          [pageSize]="pageSize"
+          [page]="page()"
+          ariaLabel="Paginación de usuarios"
+          (pageChange)="onPageChange($event)"
         />
       </section>
     }

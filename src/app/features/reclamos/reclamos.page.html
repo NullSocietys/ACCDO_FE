@@ -1,0 +1,237 @@
+<app-site-header></app-site-header>
+
+<main class="rc-main">
+  <div class="rc-grid">
+    <aside class="rc-aside" aria-labelledby="rc-title">
+      <p class="rc-kicker">Soporte · Uso indebido</p>
+      <h1 id="rc-title" class="rc-title">
+        Reclamar<br /><em>mi grupo</em>
+      </h1>
+      <p class="rc-lead">
+        Si otra persona inscribió el nombre de tu elenco sin autorización,
+        registra el reclamo. La organización lo revisa y responde.
+      </p>
+
+      <ol class="rc-steps">
+        <li>
+          <span class="rc-steps__n" aria-hidden="true">01</span>
+          <div>
+            <strong>Identifica el evento</strong>
+            <p>Elige el concurso donde aparece tu nombre de grupo.</p>
+          </div>
+        </li>
+        <li>
+          <span class="rc-steps__n" aria-hidden="true">02</span>
+          <div>
+            <strong>Datos del encargado real</strong>
+            <p>Nombres, apellidos y DNI del responsable legítimo.</p>
+          </div>
+        </li>
+        <li>
+          <span class="rc-steps__n" aria-hidden="true">03</span>
+          <div>
+            <strong>Contexto breve</strong>
+            <p>Explica qué ocurrió. Nosotros te contactamos.</p>
+          </div>
+        </li>
+      </ol>
+
+      <dl class="rc-meta">
+        <div>
+          <dt>Canal</dt>
+          <dd>Formulario oficial</dd>
+        </div>
+        <div>
+          <dt>Respuesta</dt>
+          <dd>Administración</dd>
+        </div>
+      </dl>
+    </aside>
+
+    <section class="rc-panel" aria-label="Formulario de reclamo">
+      @if (submitted()) {
+        <div class="rc-success" role="status">
+          <span class="rc-success__mark" aria-hidden="true">✓</span>
+          <h2>Reclamo enviado</h2>
+          <p>
+            Registramos tu solicitud. El equipo de administración la revisará
+            y se pondrá en contacto contigo.
+          </p>
+          <div class="rc-success__actions">
+            <button type="button" class="rc-btn rc-btn--gold" (click)="nuevoReclamo()">
+              Enviar otro reclamo
+            </button>
+            <a class="rc-btn rc-btn--ghost" routerLink="/">Volver al inicio</a>
+          </div>
+        </div>
+      } @else {
+        <header class="rc-panel__head">
+          <div>
+            <p class="rc-panel__index" aria-hidden="true">01 / Form</p>
+            <h2>Formulario</h2>
+          </div>
+          <p>Campos con <span aria-hidden="true">*</span><span class="sr-only">asterisco</span> son obligatorios.</p>
+        </header>
+
+        @if (errorMsg()) {
+          <div class="rc-alert" role="alert">{{ errorMsg() }}</div>
+        }
+
+        <form class="rc-form" (ngSubmit)="submit()" novalidate>
+          <div class="rc-field">
+            <label for="rc-evento">Evento <span aria-hidden="true">*</span></label>
+            <select
+              id="rc-evento"
+              [ngModel]="form().eventoId"
+              (ngModelChange)="patch({ eventoId: $event })"
+              name="eventoId"
+              [disabled]="loadingEventos()"
+              [attr.aria-invalid]="!!errores()['eventoId']"
+              [attr.aria-describedby]="errores()['eventoId'] ? 'err-evento' : null"
+            >
+              <option value="" disabled>
+                {{ loadingEventos() ? 'Cargando eventos…' : 'Selecciona un evento' }}
+              </option>
+              @for (ev of eventos(); track ev.id) {
+                <option [value]="ev.id">{{ ev.nombre }}</option>
+              }
+            </select>
+            @if (errores()['eventoId']) {
+              <span id="err-evento" class="rc-error">{{ errores()['eventoId'] }}</span>
+            }
+          </div>
+
+          <div class="rc-field">
+            <label for="rc-grupo">Nombre del grupo <span aria-hidden="true">*</span></label>
+            <input
+              id="rc-grupo"
+              type="text"
+              maxlength="150"
+              autocomplete="organization"
+              [ngModel]="form().nombreGrupo"
+              (ngModelChange)="patch({ nombreGrupo: $event })"
+              name="nombreGrupo"
+              [attr.aria-invalid]="!!errores()['nombreGrupo']"
+              [attr.aria-describedby]="errores()['nombreGrupo'] ? 'err-grupo' : null"
+            />
+            @if (errores()['nombreGrupo']) {
+              <span id="err-grupo" class="rc-error">{{ errores()['nombreGrupo'] }}</span>
+            }
+          </div>
+
+          <div class="rc-row">
+            <div class="rc-field">
+              <label for="rc-nombres">Nombres <span aria-hidden="true">*</span></label>
+              <input
+                id="rc-nombres"
+                type="text"
+                maxlength="100"
+                autocomplete="given-name"
+                [ngModel]="form().encargadoNombres"
+                (ngModelChange)="patch({ encargadoNombres: $event })"
+                name="encargadoNombres"
+                [attr.aria-invalid]="!!errores()['encargadoNombres']"
+              />
+              @if (errores()['encargadoNombres']) {
+                <span class="rc-error">{{ errores()['encargadoNombres'] }}</span>
+              }
+            </div>
+            <div class="rc-field">
+              <label for="rc-apellidos">Apellidos <span aria-hidden="true">*</span></label>
+              <input
+                id="rc-apellidos"
+                type="text"
+                maxlength="100"
+                autocomplete="family-name"
+                [ngModel]="form().encargadoApellidos"
+                (ngModelChange)="patch({ encargadoApellidos: $event })"
+                name="encargadoApellidos"
+                [attr.aria-invalid]="!!errores()['encargadoApellidos']"
+              />
+              @if (errores()['encargadoApellidos']) {
+                <span class="rc-error">{{ errores()['encargadoApellidos'] }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="rc-row">
+            <div class="rc-field">
+              <label for="rc-dni">DNI <span aria-hidden="true">*</span></label>
+              <input
+                id="rc-dni"
+                type="text"
+                inputmode="numeric"
+                maxlength="8"
+                autocomplete="off"
+                [ngModel]="form().encargadoDni"
+                (ngModelChange)="patch({ encargadoDni: $event.replace(/\D/g, '').slice(0, 8) })"
+                name="encargadoDni"
+                [attr.aria-invalid]="!!errores()['encargadoDni']"
+              />
+              @if (errores()['encargadoDni']) {
+                <span class="rc-error">{{ errores()['encargadoDni'] }}</span>
+              }
+            </div>
+            <div class="rc-field">
+              <label for="rc-tel">Teléfono</label>
+              <input
+                id="rc-tel"
+                type="tel"
+                maxlength="20"
+                autocomplete="tel"
+                [ngModel]="form().telefono"
+                (ngModelChange)="patch({ telefono: $event })"
+                name="telefono"
+              />
+            </div>
+          </div>
+
+          <div class="rc-field">
+            <label for="rc-correo">Correo</label>
+            <input
+              id="rc-correo"
+              type="email"
+              maxlength="150"
+              autocomplete="email"
+              [ngModel]="form().correo"
+              (ngModelChange)="patch({ correo: $event })"
+              name="correo"
+              [attr.aria-invalid]="!!errores()['correo']"
+            />
+            @if (errores()['correo']) {
+              <span class="rc-error">{{ errores()['correo'] }}</span>
+            }
+          </div>
+
+          <div class="rc-field">
+            <label for="rc-msg">Mensaje</label>
+            <textarea
+              id="rc-msg"
+              rows="4"
+              maxlength="1000"
+              [ngModel]="form().mensaje"
+              (ngModelChange)="patch({ mensaje: $event })"
+              name="mensaje"
+              placeholder="Describe el mal uso o la situación (máx. 1000 caracteres)"
+            ></textarea>
+            <span class="rc-hint">{{ form().mensaje.length }}/1000</span>
+            @if (errores()['mensaje']) {
+              <span class="rc-error">{{ errores()['mensaje'] }}</span>
+            }
+          </div>
+
+          <div class="rc-actions">
+            <button
+              type="submit"
+              class="rc-btn rc-btn--gold"
+              [disabled]="submitting() || loadingEventos() || eventos().length === 0"
+            >
+              {{ submitting() ? 'Enviando…' : 'Enviar reclamo' }}
+            </button>
+            <a class="rc-btn rc-btn--ghost" routerLink="/">Cancelar</a>
+          </div>
+        </form>
+      }
+    </section>
+  </div>
+</main>

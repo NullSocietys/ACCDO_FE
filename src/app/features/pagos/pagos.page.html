@@ -98,18 +98,8 @@
           <span>{{ rangeLabel() }}</span>
         </div>
 
-        <div class="folio__cols" aria-hidden="true">
-          <span>Monto</span>
-          <span>Grupo</span>
-          <span>Método</span>
-          <span>Encargado</span>
-          <span>Operación</span>
-          <span>Estado</span>
-          <span></span>
-        </div>
-
         <div class="folio__list" role="list">
-          @for (pago of paged(); track pago.id; let i = $index) {
+          @for (pago of paged(); track pago.id) {
             <article
               class="row"
               role="listitem"
@@ -117,37 +107,38 @@
               [class.is-rechazado]="pago.estado === 'RECHAZADO'"
               [class.is-verificado]="pago.estado === 'CONFIRMADO'"
             >
-              <!-- Monto -->
               <div class="row__amount">
+                <span class="row__amount-k">Monto</span>
                 <b>{{ pago.monto | currency: 'PEN':'symbol-narrow':'1.0-0' }}</b>
               </div>
 
-              <!-- Grupo -->
-              <div class="row__cell">
-                <h3>{{ pago.nombreGrupo }}</h3>
-                <span class="row__sub">{{ pago.codigo }}</span>
-              </div>
+              <div class="row__body">
+                <div class="row__lead">
+                  <div class="row__identity">
+                    <h3 class="row__title">{{ pago.nombreGrupo }}</h3>
+                    <p class="row__tags">
+                      <span class="row__code mono">{{ pago.codigo }}</span>
+                    </p>
+                  </div>
+                  <app-badge [tone]="statusTone(pago.estado)" [dot]="false">
+                    {{ statusLabel(pago.estado) }}
+                  </app-badge>
+                </div>
 
-              <!-- Método -->
-              <div class="row__cell">
-                <span class="row__text row__text--gold">{{ statusLabel(pago.metodoPago) }}</span>
-              </div>
-
-              <!-- Encargado -->
-              <div class="row__cell">
-                <span class="row__text" [attr.title]="pago.responsableNombre">{{ pago.responsableNombre }}</span>
-              </div>
-
-              <!-- Operación -->
-              <div class="row__cell">
-                <span class="row__text mono">{{ pago.numeroOperacion || '—' }}</span>
-              </div>
-
-              <!-- Estado -->
-              <div class="row__cell">
-                <app-badge [tone]="statusTone(pago.estado)" [dot]="false">
-                  {{ statusLabel(pago.estado) }}
-                </app-badge>
+                <dl class="row__facts">
+                  <div>
+                    <dt>Método</dt>
+                    <dd class="row__facts-gold">{{ statusLabel(pago.metodoPago) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Encargado</dt>
+                    <dd [attr.title]="pago.responsableNombre">{{ pago.responsableNombre }}</dd>
+                  </div>
+                  <div>
+                    <dt>Operación</dt>
+                    <dd class="mono">{{ pago.numeroOperacion || '—' }}</dd>
+                  </div>
+                </dl>
               </div>
 
               <div class="row__actions">
@@ -182,10 +173,12 @@
           }
         </div>
 
-        <app-load-more
-          [hasMore]="hasMore()"
-          [remaining]="remaining()"
-          (loadMore)="loadMore()"
+        <app-pagination
+          [total]="filtered().length"
+          [pageSize]="pageSize"
+          [page]="page()"
+          ariaLabel="Paginación de pagos"
+          (pageChange)="onPageChange($event)"
         />
       </section>
     }
@@ -242,18 +235,38 @@
         </div>
       </dl>
 
-      <div class="sheet__preview" role="img" aria-label="Vista previa del comprobante">
-        <app-icon name="image" [size]="22" />
-        <div>
-          <strong>Comprobante</strong>
-          <p>
-            {{
-              pago.comprobante
-                ? 'Archivo cargado. Confirme monto y número de operación.'
-                : 'Sin archivo adjunto.'
-            }}
-          </p>
-        </div>
+      <div class="sheet__preview" aria-label="Vista previa del comprobante">
+        @if (comprobanteSrc(); as src) {
+          @if (comprobanteEsPdf()) {
+            <div class="sheet__preview-pdf">
+              <app-icon name="image" [size]="22" />
+              <div>
+                <strong>Comprobante PDF</strong>
+                <p>El voucher está en formato PDF.</p>
+                <a class="sheet__preview-link" [href]="src" target="_blank" rel="noopener noreferrer">
+                  Abrir PDF
+                </a>
+              </div>
+            </div>
+          } @else {
+            <img class="sheet__preview-img" [src]="src" alt="Comprobante de pago" />
+            <a class="sheet__preview-link" [href]="src" target="_blank" rel="noopener noreferrer">
+              Abrir en pestaña nueva
+            </a>
+          }
+        } @else {
+          <app-icon name="image" [size]="22" />
+          <div>
+            <strong>Comprobante</strong>
+            <p>
+              {{
+                selected()?.comprobante
+                  ? 'Cargando archivo…'
+                  : 'Sin archivo adjunto.'
+              }}
+            </p>
+          </div>
+        }
       </div>
     </div>
   }

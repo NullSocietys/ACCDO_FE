@@ -92,14 +92,14 @@
   --tracking-normal: -0.014em;
   --tracking-wide: 0.06em;
 
-  /* —— Spacing (density 5 — more air) —— */
+  /* —— Spacing (Swiss — generous white space, 8px base) —— */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
-  --space-md: 0.875rem;
-  --space-lg: 1.25rem;
-  --space-xl: 1.75rem;
-  --space-2xl: 2.5rem;
-  --space-3xl: 3.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
 
   /* Minimal rounded — clean geometry but not harsh */
   --radius-sm: 4px;
@@ -116,17 +116,17 @@
   --sidebar-collapsed: 72px;
   --navbar-height: 56px;
 
-  /* Layout — full-bleed content with fluid gutters (no empty side gutters) */
-  --content-gutter: clamp(1rem, 1.8vw, 1.75rem);
-  --content-gutter-y: clamp(1.25rem, 2vw, 1.75rem);
-  --section-gap: clamp(1.25rem, 1.8vw, 1.5rem);
+  /* Layout — full-bleed with generous Swiss gutters */
+  --content-gutter: clamp(1.25rem, 2.4vw, 2.25rem);
+  --content-gutter-y: clamp(1.5rem, 2.6vw, 2.25rem);
+  --section-gap: clamp(1.5rem, 2.2vw, 2rem);
 
   /* Component tokens */
   --badge-radius: 0;
-  --badge-pad-y: 3px;
-  --badge-pad-x: 8px;
+  --badge-pad-y: 4px;
+  --badge-pad-x: 10px;
   --stat-min: 9.5rem;
-  --card-pad: 1.125rem;
+  --card-pad: 1.35rem;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);

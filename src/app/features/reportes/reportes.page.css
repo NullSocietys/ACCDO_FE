@@ -4,11 +4,9 @@
 }
 
 .page {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  gap: var(--section-gap);
   --rule: var(--color-border);
   --ink: var(--stone-900);
   --quiet: var(--stone-500);
@@ -24,7 +22,7 @@
   grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
   gap: 24px 40px;
   align-items: start;
-  padding-bottom: 8px;
+  padding-bottom: 20px;
   border-bottom: 2px solid var(--ink);
 }
 
@@ -129,10 +127,10 @@
 }
 
 @media (max-width: 720px) {
-  .page { overflow: visible; }
+  
   .roster,
   .roster__list,
-  .modalidades-container { overflow: visible; flex: none; }
+  .modalidades-container { flex: none; }
   .mast { grid-template-columns: 1fr; gap: 18px; }
   .mast__pulse { grid-template-columns: 1fr; }
 }
@@ -142,8 +140,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 10px;
-  padding: 2px 14px;
+  gap: 12px 14px;
+  padding: 14px 16px;
   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -188,37 +186,23 @@
 }
 
 .roster {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
-/* Lista con scroll interno: el mast y el paginador quedan fijos. */
 .roster__list {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  overflow-y: auto;
-  /* Barra de scroll invisible (el scroll sigue funcionando). */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.roster__list::-webkit-scrollbar {
-  display: none;
+  gap: 8px;
 }
 
 .who {
-  flex: 0 0 auto;
   display: grid;
   grid-template-columns: 40px minmax(0, 1.4fr) minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 8px 14px;
-  padding: 2px 16px;
+  gap: 10px 16px;
+  padding: 14px 16px;
   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -465,19 +449,9 @@
 
 /* Modalidades container */
 .modalidades-container {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-  /* Barra de scroll invisible (el scroll sigue funcionando). */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.modalidades-container::-webkit-scrollbar {
-  display: none;
+  gap: 16px;
 }
 
 /* Modalidad section */
@@ -552,7 +526,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 12px 16px;
   font-size: 12px;
   font-weight: 600;
   color: var(--stone-700);
@@ -717,9 +691,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 42vh;
-  overflow-y: auto;
-  padding-right: 2px;
 }
 
 /* Participant row */
@@ -728,7 +699,7 @@
   grid-template-columns: 32px 40px minmax(0, 1.5fr) minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  padding: 6px 10px;
+  padding: 12px 14px;
   background: var(--stone-50);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);

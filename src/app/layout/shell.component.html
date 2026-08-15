@@ -50,15 +50,15 @@
     <div class="sidebar-footer">
 
       <div class="admin">
-        <div class="admin-avatar" aria-hidden="true">AD</div>
+        <div class="admin-avatar" aria-hidden="true">{{ initials() }}</div>
         <div class="admin-meta">
-          <strong>Administrador</strong>
-          <span>admin&#64;chicotedeoro.pe</span>
+          <strong>{{ displayName() }}</strong>
+          <span>{{ displayEmail() }}</span>
         </div>
       </div>
-      <button class="logout" type="button" (click)="logout()">
+      <button class="logout" type="button" (click)="logout()" [disabled]="loggingOut()">
         <app-icon name="logOut" [size]="17" />
-        <span class="logout-label">Cerrar sesión</span>
+        <span class="logout-label">{{ loggingOut() ? 'Cerrando…' : 'Cerrar sesión' }}</span>
       </button>
     </div>
   </aside>
