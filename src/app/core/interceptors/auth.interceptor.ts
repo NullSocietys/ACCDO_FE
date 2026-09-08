@@ -5,19 +5,19 @@ import { catchError, switchMap, throwError } from 'rxjs';
 
 import { AuthSessionService, readAccessToken } from '../services/auth-session.service';
 
-const AUTH_PUBLIC = ['/api/auth/login', '/api/auth/refresh', '/api/auth/logout'];
+const AUTH_PUBLIC = ['/api/auth/login', '/api/auth/refresh', '/api/auth/logout', '/api/usuarios/registro'];
 
 function redirectAfterAuthLoss(router: Router): void {
   const url = router.url;
   const adminArea = url.startsWith('/admin') || url.startsWith('/login');
-  void router.navigate([adminArea ? '/login' : '/acceso'], {
+  void router.navigate([adminArea ? '/login' : '/inscribirse'], {
     queryParams: {
       returnUrl: adminArea
         ? url.startsWith('/admin')
           ? url
           : '/admin'
-        : url.startsWith('/acceso')
-          ? '/inscribirse'
+        : url.startsWith('/inscribirse')
+          ? null
           : url,
     },
   });

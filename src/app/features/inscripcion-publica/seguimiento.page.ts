@@ -36,6 +36,9 @@ export class SeguimientoPage implements OnDestroy {
   readonly desdeHeader = signal(false);
 
   private poll: ReturnType<typeof setInterval> | null = null;
+  /** Número de reintentos de polling ya hechos (tope para no consultar por siempre). */
+  private pollsHechos = 0;
+  private static readonly MAX_POLLS = 60; // 60 × 10s = 10 minutos
 
   constructor() {
     this.route.queryParamMap.subscribe((q) => {
@@ -67,6 +70,7 @@ export class SeguimientoPage implements OnDestroy {
     this.buscaCodigo.set(valor);
     this.loading.set(true);
     this.notFound.set(false);
+    this.pollsHechos = 0;
 
     this.inscripcionApi.obtenerPorCodigo(valor).subscribe({
       next: (inscripcion) => {
@@ -116,17 +120,22 @@ export class SeguimientoPage implements OnDestroy {
 
   private iniciarPollingSiPendiente(): void {
     const d = this.data();
-    if (d && d.estado === 'PENDIENTE') {
-      this.poll = setInterval(() => {
-        this.inscripcionApi.obtenerPorCodigo(this.buscaCodigo()).subscribe({
-          next: (inscripcion) => {
-            if (inscripcion.estado !== this.data()?.estado) {
-              this.consultar(this.buscaCodigo());
-            }
-          },
-        });
-      }, 10000);
-    }
+    if (!d || d.estado !== 'PENDIENTE') return;
+    if (this.pollsHechos >= SeguimientoPage.MAX_POLLS) return;
+    this.poll = setInterval(() => {
+      this.pollsHechos++;
+      if (this.pollsHechos > SeguimientoPage.MAX_POLLS) {
+        this.detenerPolling();
+        return;
+      }
+      this.inscripcionApi.obtenerPorCodigo(this.buscaCodigo()).subscribe({
+        next: (inscripcion) => {
+          if (inscripcion.estado !== this.data()?.estado) {
+            this.consultar(this.buscaCodigo());
+          }
+        },
+      });
+    }, 10000);
   }
 
   private detenerPolling(): void {

@@ -51,13 +51,41 @@ export abstract class ApiBaseService {
     return typeof v === 'string' ? v.slice(0, 5) : '';
   }
 
+  /**
+   * Traduce errores técnicos a mensajes que un cliente entiende.
+   * El detalle técnico (status, stack) queda en la consola para el desarrollador.
+   */
   private manejarError(e: HttpErrorResponse): Observable<never> {
-    const msg =
-      e.error && typeof e.error === 'object' && e.error.mensaje
-        ? (e.error.mensaje as string)
-        : e.status === 0
-          ? 'No se pudo conectar con el servidor'
-          : `Error ${e.status}: ${e.statusText ?? 'desconocido'}`;
+    const mensajeBE =
+      e.error && typeof e.error === 'object' && (e.error as { mensaje?: string }).mensaje
+        ? String((e.error as { mensaje?: string }).mensaje)
+        : '';
+
+    let msg: string;
+    if (mensajeBE) {
+      // Los mensajes del backend ya están escritos para el cliente.
+      msg = mensajeBE;
+    } else if (e.status === 0) {
+      msg = 'No pudimos conectarnos. Revisa tu conexión a internet e inténtalo de nuevo.';
+    } else if (e.status === 400) {
+      msg = 'Revisa los datos que ingresaste e inténtalo de nuevo.';
+    } else if (e.status === 401) {
+      msg = 'Tu sesión expiró. Entra de nuevo para continuar.';
+    } else if (e.status === 403) {
+      msg = 'No tienes permiso para esta acción. Verifica que entraste con tu cuenta.';
+    } else if (e.status === 404) {
+      msg = 'No encontramos lo que buscabas. Verifica los datos e inténtalo de nuevo.';
+    } else if (e.status === 409) {
+      msg = 'Ese dato ya está registrado. Verifica e inténtalo de nuevo.';
+    } else if (e.status >= 500) {
+      msg = 'Tuvimos un problema inesperado. Espera unos minutos e inténtalo de nuevo.';
+    } else {
+      msg = 'No se pudo completar la operación. Inténtalo de nuevo.';
+    }
+
+    if (e.status >= 500 || e.status === 0) {
+      console.error('[API]', e.status, e.url, e.error);
+    }
     return throwError(() => new Error(msg));
   }
 }

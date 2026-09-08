@@ -1,0 +1,80 @@
+<app-site-header></app-site-header>
+
+<main class="ipo-main">
+  <div class="ipo-container">
+    <div class="ipo-head">
+      <h1 class="ipo-title">Mis <em>inscripciones</em></h1>
+      <p class="ipo-sub">
+        Todas las propuestas que registraste con esta cuenta y el estado de su pago.
+      </p>
+    </div>
+
+    @if (loading()) {
+      <div class="ipo-card ipo-card--compact ipo-center">
+        <span class="ipo-spinner" aria-hidden="true"></span>
+        <p>Cargando tus inscripciones…</p>
+      </div>
+    } @else if (errorMsg()) {
+      <div class="ipo-card ipo-card--compact ipo-center">
+        <div class="ipo-status ipo-status--error">
+          <span class="ipo-status__badge">!</span>
+          <strong>No pudimos cargar tus inscripciones</strong>
+          <p>{{ errorMsg() }}</p>
+        </div>
+      </div>
+    } @else if (inscripciones().length === 0) {
+      <div class="ipo-card ipo-card--compact ipo-center">
+        <div class="ipo-status ipo-status--pending">
+          <strong>Aún no tienes inscripciones</strong>
+          <p>Cuando inscribas a tu agrupación, aparecerá aquí.</p>
+        </div>
+        <a class="ipo-btn ipo-btn--gold" routerLink="/inscribirse">Inscribir mi agrupación</a>
+      </div>
+    } @else {
+      <div class="ipo-card">
+        <table class="mc-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Modalidad</th>
+              <th>Grupo</th>
+              <th>Estado</th>
+              <th>Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (inscripcion of inscripciones(); track inscripcion.codigo) {
+              <tr>
+                <td><strong>{{ inscripcion.codigo }}</strong></td>
+                <td>{{ nombreCategoria(inscripcion.categoriaId) }}</td>
+                <td>{{ inscripcion.nombreGrupo }}</td>
+                <td>
+                  @switch (inscripcion.estado) {
+                    @case ('CONFIRMADA') {
+                      <span class="estado-confirmado">Confirmada</span>
+                    }
+                    @case ('RECHAZADA') {
+                      <span class="estado-rechazada">Rechazada</span>
+                    }
+                    @default {
+                      <span class="estado-pendiente">Pendiente</span>
+                    }
+                  }
+                </td>
+                <td>S/ {{ inscripcion.total.toFixed(2) }}</td>
+                <td>
+                  <a [routerLink]="['/seguimiento', inscripcion.codigo]" class="btn-ver">Ver seguimiento</a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="acciones">
+        <a routerLink="/inscribirse" class="ipo-btn ipo-btn--gold">Inscribir otra agrupación</a>
+      </div>
+    }
+  </div>
+</main>

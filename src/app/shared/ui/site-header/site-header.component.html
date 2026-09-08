@@ -12,7 +12,7 @@
           <li><a href="/#galeria" (click)="goToSection($event, 'galeria')">Galería</a></li>
           <li><a href="/#inscripcion" (click)="goToSection($event, 'inscripcion')">Proceso</a></li>
           <li><a href="/#contacto" (click)="goToSection($event, 'contacto')">Contacto</a></li>
-          <li><a routerLink="/seguimiento" [queryParams]="{ origen: 'header' }" (click)="closeMenu()">Verificación</a></li>
+          <li><a routerLink="/seguimiento" [queryParams]="{ origen: 'header' }" (click)="closeMenu()">Consultar mi inscripción</a></li>
         </ul>
       </nav>
 
@@ -45,7 +45,7 @@
         >
           <header class="hdr-tools__head">
             <span class="hdr-tools__kicker">Menú</span>
-            @if (esDelegadoLogueado()) {
+            @if (esClienteLogueado()) {
               <strong>{{ auth.usuario()?.nombre?.split(' ')?.[0] || 'Delegado' }}</strong>
               <em class="hdr-tools__mail">{{ auth.usuario()?.correo }}</em>
             } @else if (esAdminLogueado()) {
@@ -62,35 +62,18 @@
               <a
                 class="hdr-act hdr-act--primary"
                 role="menuitem"
-                routerLink="/acceso"
+                routerLink="/inscribirse"
                 (click)="cerrarPanel(); closeMenu()"
               >
-                Iniciar sesión
+                Inscribirse
               </a>
               <button
                 type="button"
                 class="hdr-act hdr-act--acceso"
                 role="menuitem"
-                (click)="onInscribirse()"
-              >
-                Inscribirse
-              </button>
-            } @else if (esAdminLogueado()) {
-              <button
-                type="button"
-                class="hdr-act hdr-act--primary"
-                role="menuitem"
                 (click)="onPanelAdmin()"
               >
                 Panel organización
-              </button>
-              <button
-                type="button"
-                class="hdr-act hdr-act--acceso"
-                role="menuitem"
-                (click)="onInscribirse()"
-              >
-                Inscribirse
               </button>
             } @else {
               <button
@@ -113,7 +96,7 @@
             </button>
           </div>
 
-          @if (esDelegadoLogueado() || esAdminLogueado()) {
+          @if (esClienteLogueado() || esAdminLogueado()) {
             <footer class="hdr-tools__danger">
               <button
                 type="button"

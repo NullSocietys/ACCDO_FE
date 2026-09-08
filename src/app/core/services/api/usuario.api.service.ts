@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { ActualizarRequest, LoginRequest, RegistroRequest, Usuario } from '../../models';
+import { ActualizarRequest, ContactoRequest, LoginRequest, RegistroRequest, Usuario } from '../../models';
 import { ApiBaseService } from './api-base.service';
 
 @Injectable({ providedIn: 'root' })
@@ -13,10 +13,14 @@ export class UsuarioApiService extends ApiBaseService {
     return this.post<Usuario>('/usuarios/registro', datos).pipe(map(this.usuarioServidor));
   }
 
+  /** Actualiza los datos de contacto del usuario autenticado (sin tocar correo/password). */
+  actualizarMiContacto(datos: ContactoRequest): Observable<Usuario> {
+    return this.patch<Usuario>('/usuarios/mi/contacto', datos).pipe(map(this.usuarioServidor));
+  }
+
   login(datos: LoginRequest): Observable<Usuario> {
     return this.post<Usuario>('/usuarios/login', datos).pipe(map(this.usuarioServidor));
   }
-
   listar(): Observable<Usuario[]> {
     return this.get<Usuario[]>('/usuarios').pipe(map((lista) => lista.map(this.usuarioServidor)));
   }

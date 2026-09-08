@@ -45,9 +45,9 @@ export class AuthSessionService {
   readonly accessToken = this.accessTokenSignal.asReadonly();
   readonly isAuthenticated = computed(() => !!this.accessTokenSignal() && !!this.usuarioSignal());
   readonly isAdmin = computed(() => this.hasAdminRole(this.usuarioSignal()?.roles));
-  readonly isParticipante = computed(() => {
+  readonly isCliente = computed(() => {
     const roles = this.normalizeRoles(this.usuarioSignal()?.roles);
-    return roles.includes('PARTICIPANTE') && !roles.includes('ADMIN');
+    return roles.includes('CLIENTE') && !roles.includes('ADMIN');
   });
 
   /** Login al panel de administración (exige rol ADMIN). */
@@ -62,9 +62,10 @@ export class AuthSessionService {
 
   /** Registro de participante + emisión de JWT. */
   register(datos: RegistroRequest): Observable<AuthUsuario> {
-    return this.http.post(`${USUARIOS_URL}/registro`, datos).pipe(
+    const correo = datos.correo.trim().toLowerCase();
+    return this.http.post(`${USUARIOS_URL}/registro`, { ...datos, correo }).pipe(
       timeout({ first: LOGIN_TIMEOUT_MS }),
-      switchMap(() => this.authenticate({ correo: datos.correo, password: datos.password }, 'public')),
+      switchMap(() => this.authenticate({ correo, password: datos.password }, 'public')),
       catchError((err) => throwError(() => new Error(this.errorMessage(err)))),
     );
   }
@@ -141,7 +142,12 @@ export class AuthSessionService {
   }
 
   private authenticate(datos: LoginRequest, mode: LoginMode): Observable<AuthUsuario> {
-    return this.http.post<AuthResponse>(`${AUTH_URL}/login`, datos).pipe(
+    return this.http
+      .post<AuthResponse>(`${AUTH_URL}/login`, {
+        ...datos,
+        correo: datos.correo.trim().toLowerCase(),
+      })
+      .pipe(
       timeout({ first: LOGIN_TIMEOUT_MS }),
       switchMap((res) => {
         const roles = this.normalizeRoles(res?.usuario?.roles);
@@ -159,9 +165,7 @@ export class AuthSessionService {
               ),
           );
         }
-        if (mode === 'public' && roles.length === 0) {
-          return throwError(() => new Error('La cuenta no tiene roles asignados'));
-        }
+        
         const usuario: AuthUsuario = { ...res.usuario, roles };
         this.persist({ ...res, usuario });
         return of(usuario);
@@ -187,7 +191,7 @@ export class AuthSessionService {
     if (!Array.isArray(roles)) return [];
     return roles
       .map((r) => String(r).replace(/^ROLE_/i, '').toUpperCase())
-      .filter((r): r is RolNombre => r === 'ADMIN' || r === 'PARTICIPANTE');
+      .filter((r): r is RolNombre => r === 'ADMIN' || r === 'CLIENTE');
   }
 
   private errorMessage(err: unknown): string {

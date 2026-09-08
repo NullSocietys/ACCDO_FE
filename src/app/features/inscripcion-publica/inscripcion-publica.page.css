@@ -1108,22 +1108,25 @@
 }
 
 .ipo-estado-badge {
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
+  gap: 5px;
+  padding: 6px 9px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.01em;
   background: rgba(212, 175, 55, 0.14);
   color: #fbe8a6;
   border: 1px solid rgba(212, 175, 55, 0.35);
+  max-width: 100%;
 }
 
 .ipo-estado-badge__dot {
-  width: 8px;
-  height: 8px;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: currentColor;
 }
@@ -1249,193 +1252,307 @@
 }
 
 /* ============================================================
-   ÉXITO — centrado vertical en la tarjeta
+   ÉXITO — layout compacto 2 columnas, sin aire muerto
    ============================================================ */
 .ipo-success {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  overflow-y: auto;
-  padding: 20px;
+  margin: auto;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-items: stretch;
+  gap: 22px;
+  text-align: left;
+  padding: 26px 28px;
   background: #121212;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
 }
 
-.ipo-success__check svg circle {
-  stroke: #d4af37;
-  stroke-width: 2;
-  stroke-dasharray: 151;
-  stroke-dashoffset: 151;
-  animation: ipo-draw 0.8s ease forwards;
+.ipo-success__col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
 }
 
-.ipo-success__check svg path {
-  stroke: #d4af37;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 40;
-  stroke-dashoffset: 40;
-  animation: ipo-draw 0.5s 0.4s ease forwards;
+.ipo-success__col--info {
+  align-items: flex-start;
+  justify-content: center;
 }
 
-@keyframes ipo-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
+.ipo-success__col--accion {
+  padding: 18px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 14px;
+  background: rgba(212, 175, 55, 0.04);
+  justify-content: center;
+}
+
+/* Check: círculo dorado + paloma oscura nítida */
+.ipo-success__check {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbe8a6, #d4af37);
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);
+  color: #1a1502;
+  flex: 0 0 auto;
+}
+
+.ipo-success__check svg {
+  display: block;
+}
+
+/* Cabecera: check a la izquierda, eyebrow + título a la derecha */
+.ipo-success__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.ipo-success__headtxt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ipo-success .ipo-eyebrow {
+  margin: 0;
+  align-self: flex-start;
 }
 
 .ipo-success .ipo-title {
-  font-size: clamp(22px, 3vw, 32px);
+  margin: 0;
+  text-align: left;
+  font-size: clamp(22px, 2.6vw, 30px);
+  line-height: 1.15;
 }
 
-.ipo-codigo {
-  min-width: min(380px, 100%);
-  margin: 24px auto;
-  padding: 20px;
-  border-radius: 15px;
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  background: rgba(212, 175, 55, 0.08);
+.ipo-success .ipo-title em {
+  font-style: normal;
+  color: #fbbf24;
+}
+
+.ipo-success .ipo-sub {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #d6d3d1;
+}
+
+/* --- ¿Qué sigue? --- */
+.ipo-siguientes {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 7px;
 }
 
-.ipo-codigo span {
+.ipo-siguientes li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.ipo-siguientes__num {
+  flex: 0 0 21px;
+  display: grid;
+  place-items: center;
+  height: 21px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #fbbf24;
   font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #d3d3d3;
+  font-weight: 800;
 }
 
-.ipo-codigo strong {
-  font-size: 24px;
-  letter-spacing: 0.1em;
-  color: #fbe8a6;
+.ipo-siguientes li div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 
-.ipo-codigo em {
+.ipo-siguientes li strong {
+  font-size: 12.5px;
+}
+
+.ipo-siguientes li em {
   font-style: normal;
+  font-size: 11.5px;
+  color: rgba(245, 239, 228, 0.55);
+}
+
+.ipo-success__ayuda {
+  margin: 0;
+  font-size: 11.5px;
+  color: rgba(245, 239, 228, 0.5);
+}
+
+.ipo-success__ayuda a {
+  color: #fbbf24;
+  text-decoration: none;
+}
+
+.ipo-success__ayuda a:hover {
+  text-decoration: underline;
+}
+
+/* --- Ticket: código | estado --- */
+.ipo-ticket {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 14px;
+  background: linear-gradient(rgba(212, 175, 55, 0.06), rgba(212, 175, 55, 0.02)), #16130f;
+  overflow: hidden;
+}
+
+.ipo-ticket__seccion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 14px 8px;
+  text-align: center;
+  min-width: 0;
+}
+
+.ipo-ticket__label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(245, 239, 228, 0.55);
+}
+
+.ipo-ticket__codigo {
+  white-space: nowrap;
+  font-size: clamp(20px, 2.2vw, 25px);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fbe8a6;
+  font-variant-numeric: tabular-nums;
+}
+
+.ipo-ticket__seccion em {
+  font-style: normal;
+  font-size: 9.5px;
+  line-height: 1.35;
+  color: rgba(245, 239, 228, 0.5);
+  max-width: 26ch;
+}
+
+/* Separador integrado a la sección estado (sin elemento vacío) */
+.ipo-ticket__seccion--estado {
+  border-left: 1px dashed rgba(212, 175, 55, 0.25);
+}
+
+/* --- Acciones compactas --- */
+.ipo-success .ipo-actions--center {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.ipo-success .ipo-actions--center .ipo-btn {
+  justify-content: center;
+  text-align: center;
+}
+
+.ipo-actions__fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ipo-actions__fila .ipo-btn {
+  font-size: 12.5px;
+  padding: 11px 10px;
+  justify-content: center;
+  text-align: center;
+}
+
+.ipo-success__inicio {
+  align-self: center;
   font-size: 12px;
-  color: #d3d3d3;
+  color: rgba(245, 239, 228, 0.55);
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(245, 239, 228, 0.3);
+  padding-bottom: 2px;
+  transition: color 0.15s;
 }
 
-/* ============================================================
-   MÓVIL: la barra lateral pasa arriba y los pasos van en fila
-   ============================================================ */
-@media (max-width: 900px) {
-  .ipo-main {
-    padding: 12px 0 14px;
+.ipo-success__inicio:hover {
+  color: #fbbf24;
+}
+
+.ipo-success .ipo-registrar-otro {
+  align-self: center;
+  margin-top: 0;
+}
+
+/* --- Móvil --- */
+@media (max-width: 760px) {
+  .ipo-success {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 22px 18px;
+    gap: 16px;
   }
 
-  .ipo-layout {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .ipo-side {
-    flex: 0 0 auto;
-    overflow: visible;
-    padding-right: 0;
-  }
-
-  .ipo-side__head {
-    margin-bottom: 12px;
-  }
-
-  .ipo-title {
-    font-size: 20px;
-    margin-bottom: 6px;
-  }
-
-  .ipo-sub {
-    font-size: 12.5px;
-  }
-
-  .ipo-eyebrow {
-    font-size: 9.5px;
-    margin-bottom: 8px;
-  }
-
-  .ipo-side__help {
-    display: none;
-  }
-
-  .ipo-steps {
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 6px;
-    scrollbar-width: none;
-    margin-bottom: 2px;
-  }
-
-  .ipo-step {
-    flex: 0 0 auto;
-    min-width: 108px;
-    padding: 9px 11px;
-  }
-
-  .ipo-step__body em {
-    display: none;
-  }
-
-  .ipo-card {
-    padding: 18px 16px 14px;
-    border-radius: 14px;
-  }
-}@media (max-width: 640px) {
-  .ipo-brand__text em {
-    display: none;
-  }
-
-  .ipo-back {
-    font-size: 11.5px;
-  }
-
-  /* Paso 2: cabecera más compacta y tarjetas de categoría en fila
-     (nombre · integrantes · precio) para que quepan más y se vea
-     el campo "Nombre del grupo" sin scroll excesivo. */
-  .ipo-panel__head {
-    margin-bottom: 14px;
-  }
-
-  .ipo-cat {
-    flex-direction: row;
+  .ipo-success__col--info {
     align-items: center;
-    gap: 12px;
-    padding: 11px 13px;
   }
 
-  .ipo-cat__meta {
-    flex: 1;
+  .ipo-success__header {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
   }
 
-  .ipo-cat__price {
-    margin-top: 0;
+  .ipo-success__headtxt {
+    align-items: center;
   }
-}
 
-/* ============================================================
-   MUY ESTRECHO (≥300px): el resumen y los pasos Yape se apilan
-   ============================================================ */
-@media (max-width: 480px) {
-  .ipo-resumen {
+  .ipo-success .ipo-eyebrow {
+    align-self: center;
+  }
+
+  .ipo-success .ipo-title {
+    text-align: center;
+  }
+
+  .ipo-siguientes {
+    text-align: left;
+  }
+
+  .ipo-ticket__codigo {
+    font-size: clamp(16px, 4.6vw, 22px);
+    letter-spacing: 0.04em;
+  }
+
+  .ipo-actions__fila {
     grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .ipo-yape__row {
-    grid-template-columns: 1fr;
-  }
-
-  .ipo-ficha__codigo-row {
-    flex-wrap: wrap;
-    justify-content: center;
   }
 }

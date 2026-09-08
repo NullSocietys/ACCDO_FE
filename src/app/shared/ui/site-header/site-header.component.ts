@@ -42,7 +42,7 @@ export class SiteHeaderComponent implements AfterViewInit, OnDestroy {
   private readonly router = inject(Router);
   readonly auth = inject(AuthSessionService);
   /** Delegado con sesión (no admin): muestra Salir y oculta acceso. */
-  readonly esDelegadoLogueado = computed(
+  readonly esClienteLogueado = computed(
     () => this.auth.isAuthenticated() && !this.auth.isAdmin(),
   );
   /** Organizador con sesión: no mostrar “Iniciar sesión” (evita puente a /admin). */
@@ -148,12 +148,6 @@ export class SiteHeaderComponent implements AfterViewInit, OnDestroy {
     void this.router.navigateByUrl('/inscribirse');
   }
 
-  onAcceso(): void {
-    this.cerrarPanel();
-    this.closeMenu();
-    void this.router.navigate(['/acceso']);
-  }
-
   onPanelAdmin(): void {
     this.cerrarPanel();
     this.closeMenu();
@@ -207,35 +201,16 @@ export class SiteHeaderComponent implements AfterViewInit, OnDestroy {
     window.scrollTo(0, y);
   }
 
-  async abrirModal(): Promise<void> {
+  abrirModal(): void {
     this.closeMenu();
     this.cerrarPanel();
-    if (!this.datosDesdeApi) {
-      try {
-        const c: Configuracion | null = await firstValueFrom(this.configApi.obtenerActiva());
-        if (c) {
-          this.datosDesdeApi = true;
-          const f = this.FALLBACK;
-          this.datosCoordinacion = {
-            nombreAsociacion: c.nombreAsociacion || f.nombreAsociacion,
-            coordinadoraGeneral: c.coordinadoraGeneral || f.coordinadoraGeneral,
-            telefono: c.telefono || f.telefono,
-            correo: c.correo || f.correo,
-            direccion: c.direccion || f.direccion,
-            numeroYape: c.numeroYape || f.numeroYape,
-            numeroPlin: c.numeroPlin || f.numeroPlin,
-          };
-        }
-      } catch {
-        /* sin conexión: se usan los datos de respaldo */
-      }
-    }
 
     this.focoPrevio = document.activeElement as HTMLElement | null;
     this.modalAbierto = true;
     document.body.style.overflow = 'hidden';
     this.modalEscListener = (e: KeyboardEvent) => {
       if (e.key === 'Escape') this.cerrarModal();
+      if (e.key === 'Tab') this.trapTab(e);
     };
     window.addEventListener('keydown', this.modalEscListener);
     requestAnimationFrame(() => {
@@ -244,6 +219,33 @@ export class SiteHeaderComponent implements AfterViewInit, OnDestroy {
       ) as HTMLButtonElement | null;
       close?.focus();
     });
+
+    // Mostrar modal al instante con datos de respaldo; cargar API en segundo plano
+    if (!this.datosDesdeApi) {
+      this.datosCoordinacion = { ...this.FALLBACK };
+      this.datosDesdeApi = true;
+      // Cargar datos reales por detrás sin bloquear
+      void this.cargarDatosConfiguracion();
+    }
+  }
+
+  private async cargarDatosConfiguracion(): Promise<void> {
+    try {
+      const c: Configuracion | null = await firstValueFrom(this.configApi.obtenerActiva());
+      if (c) {
+        this.datosCoordinacion = {
+          nombreAsociacion: c.nombreAsociacion || this.datosCoordinacion.nombreAsociacion,
+          coordinadoraGeneral: c.coordinadoraGeneral || this.datosCoordinacion.coordinadoraGeneral,
+          telefono: c.telefono || this.datosCoordinacion.telefono,
+          correo: c.correo || this.datosCoordinacion.correo,
+          direccion: c.direccion || this.datosCoordinacion.direccion,
+          numeroYape: c.numeroYape || this.datosCoordinacion.numeroYape,
+          numeroPlin: c.numeroPlin || this.datosCoordinacion.numeroPlin,
+        };
+      }
+    } catch {
+      /* errores silenciosos: ya tiene los datos de fallback */
+    }
   }
 
   cerrarModal(): void {
@@ -256,6 +258,26 @@ export class SiteHeaderComponent implements AfterViewInit, OnDestroy {
     }
     this.focoPrevio?.focus();
     this.focoPrevio = null;
+  }
+
+  /** Mantiene el foco dentro del modal (accesibilidad). */
+  private trapTab(e: KeyboardEvent): void {
+    const hostEl = this.host.nativeElement as HTMLElement;
+    const panel = hostEl.querySelector('.coord-modal__panel') as HTMLElement | null;
+    if (!panel) return;
+    const focusables = (
+      Array.from(panel.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')) as HTMLElement[]
+    ).filter((el) => !el.hasAttribute('disabled') && el.offsetParent !== null);
+    if (focusables.length === 0) return;
+    const primero = focusables[0];
+    const ultimo = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === primero) {
+      e.preventDefault();
+      ultimo.focus();
+    } else if (!e.shiftKey && document.activeElement === ultimo) {
+      e.preventDefault();
+      primero.focus();
+    }
   }
 
   get telefonoHref(): string {

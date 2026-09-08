@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
 import { ShellComponent } from './layout/shell.component';
 import { LandingPage } from './features/landing/landing.page';
-import { adminGuard, guestGuard, publicGuestGuard } from './core/guards/admin.guard';
+import { NotFoundPage } from './features/not-found/not-found.page';
+import { adminGuard, guestGuard, inscribirseGuard, clienteGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -10,10 +11,18 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    // Alias histórico: la pantalla dedicada se fusionó con el wizard.
     path: 'acceso',
-    canActivate: [publicGuestGuard],
+    redirectTo: 'inscribirse',
+    pathMatch: 'full',
+  },
+  {
+    path: 'inscribirse',
+    canActivate: [inscribirseGuard],
     loadComponent: () =>
-      import('./features/auth/acceso.page').then((m) => m.AccesoPage),
+      import('./features/inscripcion-publica/inscripcion-publica.page').then(
+        (m) => m.InscripcionPublicaPage,
+      ),
   },
   {
     path: 'login',
@@ -22,11 +31,10 @@ export const routes: Routes = [
       import('./features/auth/login.page').then((m) => m.LoginPage),
   },
   {
-    path: 'inscribirse',
+    path: 'mi-cuenta',
+    canActivate: [clienteGuard],
     loadComponent: () =>
-      import('./features/inscripcion-publica/inscripcion-publica.page').then(
-        (m) => m.InscripcionPublicaPage,
-      ),
+      import('./features/mi-cuenta/mi-cuenta.page').then((m) => m.MiCuentaPage),
   },
   {
     path: 'seguimiento',
@@ -110,5 +118,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: '' },
+  { path: '**', component: NotFoundPage },
 ];

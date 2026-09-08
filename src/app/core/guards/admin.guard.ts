@@ -12,9 +12,9 @@ export const adminGuard: CanActivateFn = (_route, state) => {
     return true;
   }
 
-  // Participante autenticado: no borrar sesión; solo negar el panel.
-  if (auth.isAuthenticated()) {
-    return router.createUrlTree(['/inscribirse']);
+  // Cliente autenticado: no borrar sesión; solo negar el panel.
+  if (auth.isCliente()) {
+    return router.createUrlTree(['/mi-cuenta']);
   }
 
   return router.createUrlTree(['/login'], {
@@ -35,31 +35,41 @@ export const guestGuard: CanActivateFn = () => {
 };
 
 /**
- * Evita mostrar /acceso si ya hay sesión de delegado.
- * Sesión de admin NO se redirige al panel desde aquí (el login público
- * no es puerta al panel de organización).
+ * Guard del wizard de inscripción (/inscribirse).
+ * - Sin sesión: PERMITE el acceso (el paso 1 del wizard crea la cuenta o
+ *   inicia sesión; /acceso ya no existe como pantalla separada).
+ * - Con sesión CLIENTE: continúa directo (paso "Sesión activa").
+ * - Con sesión ADMIN: el organizador no se inscribe; lo lleva a su panel.
  */
-export const publicGuestGuard: CanActivateFn = (route) => {
+export const inscribirseGuard: CanActivateFn = () => {
   const auth = inject(AuthSessionService);
   const router = inject(Router);
 
-  if (!auth.isAuthenticated()) {
+  if (auth.isAdmin()) {
+    return router.createUrlTree(['/admin']);
+  }
+
+  return true;
+};
+
+/**
+ * Rutas solo para clientes autenticados (/mi-cuenta).
+ * Sin sesión lo manda al wizard (que incluye login) y recuerda el destino;
+ * tras entrar, el wizard lo devuelve a ese destino.
+ */
+export const clienteGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthSessionService);
+  const router = inject(Router);
+
+  if (auth.isCliente()) {
     return true;
   }
 
-  // Organizador con sesión: vuelve a la portada; el panel solo vía /login.
   if (auth.isAdmin()) {
-    return router.createUrlTree(['/']);
+    return router.createUrlTree(['/admin']);
   }
 
-  const returnUrl = route.queryParamMap.get('returnUrl');
-  const safe =
-    returnUrl &&
-    returnUrl.startsWith('/') &&
-    !returnUrl.startsWith('//') &&
-    returnUrl !== '/admin' &&
-    !returnUrl.startsWith('/admin/')
-      ? returnUrl
-      : '/';
-  return router.parseUrl(safe);
+  return router.createUrlTree(['/inscribirse'], {
+    queryParams: { returnUrl: state.url },
+  });
 };

@@ -27,9 +27,19 @@ export class InscripcionApiService extends ApiBaseService {
     return this.post<Inscripcion>('/inscripciones', req);
   }
 
+  /** Prevalida sin guardar: detecta duplicados/limites ANTES del pago. */
+  prevalidar(req: InscripcionRequest): Observable<void> {
+    return this.post<void>('/inscripciones/prevalidar', req);
+  }
+
   /** Prefill: responsable de la última inscripción del usuario autenticado. */
   miUltimoResponsable(): Observable<Responsable> {
     return this.get<Responsable>('/inscripciones/mi/ultimo-responsable');
+  }
+
+  /** Inscripciones del cliente autenticado (para el panel 'Mi cuenta'). */
+  misInscripciones(): Observable<Inscripcion[]> {
+    return this.get<Inscripcion[]>('/inscripciones/mi');
   }
 
   cambiarEstado(id: string, estado: string): Observable<Inscripcion> {

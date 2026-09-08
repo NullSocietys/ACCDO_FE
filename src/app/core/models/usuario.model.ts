@@ -1,6 +1,6 @@
 /** Módulo Usuarios — tabla usuarios + DTOs de autenticación. */
 
-export type RolNombre = 'ADMIN' | 'PARTICIPANTE';
+export type RolNombre = 'ADMIN' | 'CLIENTE';
 
 export interface Usuario {
   id: string;
@@ -13,11 +13,26 @@ export interface Usuario {
   roles?: RolNombre[];
 }
 
-/** POST /api/usuarios/registro */
+/** POST /api/usuarios/registro — incluye el contacto que se guarda en la cuenta. */
 export interface RegistroRequest {
   nombre: string;
   correo: string;
   password: string;
+  dni?: string;
+  telefono?: string;
+  departamento?: string;
+  provincia?: string;
+  distrito?: string;
+}
+
+/** PATCH /api/usuarios/mi/contacto — actualiza el contacto del usuario autenticado. */
+export interface ContactoRequest {
+  nombre: string;
+  dni?: string;
+  telefono?: string;
+  departamento?: string;
+  provincia?: string;
+  distrito?: string;
 }
 
 /** PUT /api/usuarios/{id} — password opcional (vacío = no cambia) */
@@ -27,13 +42,13 @@ export interface ActualizarRequest {
   password?: string;
 }
 
-/** POST /api/auth/login y POST /api/usuarios/login */
+/** POST /api/auth/login y POST /api/auth/refresh */
 export interface LoginRequest {
   correo: string;
   password: string;
 }
 
-/** Resumen de usuario en AuthResponse (sin password). */
+/** Resumen de usuario en AuthResponse (sin password, con contacto). */
 export interface AuthUsuario {
   id: string;
   nombre: string;
@@ -41,6 +56,11 @@ export interface AuthUsuario {
   activo: boolean;
   roles: RolNombre[];
   createdAt: string;
+  dni?: string | null;
+  telefono?: string | null;
+  departamento?: string | null;
+  provincia?: string | null;
+  distrito?: string | null;
 }
 
 /** POST /api/auth/login | /api/auth/refresh */

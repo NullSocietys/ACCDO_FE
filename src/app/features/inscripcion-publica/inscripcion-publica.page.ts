@@ -1,12 +1,14 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, forkJoin } from 'rxjs';
 
 import { CategoriaApiService } from '../../core/services/api/categoria.api.service';
 import { EventoApiService } from '../../core/services/api/evento.api.service';
 import { InscripcionApiService } from '../../core/services/api/inscripcion.api.service';
 import { PagoApiService } from '../../core/services/api/pago.api.service';
+import { UsuarioApiService } from '../../core/services/api/usuario.api.service';
+import { ComboBuscadorComponent } from '../../shared/ui/combo-buscador/combo-buscador.component';
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { descargarComprobantePdf } from '../../shared/pdf/comprobante.pdf';
 import type { Responsable } from '../../core/models';
@@ -49,7 +51,8 @@ const RESPONSABLE_CACHE_KEY = 'chicote.responsablePrefill';
 
 interface FormCuenta {
   metodo: 'registro' | 'login';
-  nombre: string;
+  /** Solo credenciales. Los datos de contacto viven en FormResponsable
+   *  (nombres, apellidos, dni, teléfono, ubigeo, correo) y se piden UNA vez. */
   correo: string;
   password: string;
   confirmar: string;
@@ -82,7 +85,7 @@ type Errores = Record<string, string>;
 @Component({
   selector: 'app-inscripcion-publica-page',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, ComboBuscadorComponent],
   templateUrl: './inscripcion-publica.page.html',
   styleUrls: ['./inscripcion-publica.page.css'],
 })
@@ -93,6 +96,7 @@ export class InscripcionPublicaPage implements OnInit {
   private readonly categoriaApi = inject(CategoriaApiService);
   private readonly inscripcionApi = inject(InscripcionApiService);
   private readonly pagoApi = inject(PagoApiService);
+  private readonly usuarioApi = inject(UsuarioApiService);
 
   private readonly emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   private readonly passRe = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -118,9 +122,37 @@ export class InscripcionPublicaPage implements OnInit {
     Array<{ id: string; nombre: string; precio: number; minIntegrantes: number; maxIntegrantes: number }>
   >([]);
 
+  /** Labels del selector de evento, con fecha legible. */
+  readonly eventoLabels = computed(() =>
+    this.eventos().map((e) => `${e.nombre} · ${this.formatearFecha(e.fecha)}`),
+  );
+
+  readonly eventoLabelSeleccionado = computed(() => {
+    const ev = this.eventos().find((e) => e.id === this.grupo().eventoId);
+    return ev ? `${ev.nombre} · ${this.formatearFecha(ev.fecha)}` : '';
+  });
+
+  /** "2026-09-25" -> "25 de setiembre de 2026". */
+  formatearFecha(fecha: string): string {
+    if (!fecha) return '';
+    const partes = fecha.slice(0, 10).split('-').map(Number);
+    if (partes.length !== 3 || partes.some(isNaN)) return fecha;
+    return new Intl.DateTimeFormat('es-PE', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(new Date(partes[0], partes[1] - 1, partes[2]));
+  }
+
+  onEventoLabel(label: string): void {
+    const ev = this.eventos().find(
+      (e) => `${e.nombre} · ${this.formatearFecha(e.fecha)}` === label,
+    );
+    if (ev) this.patchGrupo({ eventoId: ev.id });
+  }
+
   readonly cuenta = signal<FormCuenta>({
     metodo: 'registro',
-    nombre: '',
     correo: '',
     password: '',
     confirmar: '',
@@ -146,24 +178,31 @@ export class InscripcionPublicaPage implements OnInit {
   readonly comprobanteFile = signal<File | null>(null);
   readonly comprobanteError = signal('');
   readonly resultEstado = signal('Pendiente de confirmación');
+  /** true si el registro de la cuenta ocurrió dentro de este wizard. */
+  readonly cuentaRecienCreada = signal(false);
 
   private usuarioId = '';
   readonly nombreUsuario = signal('');
 
-  /** Sincronización "nombre completo/email" → responsable: activa hasta editar manual. */
-  private readonly syncNombres = signal(true);
+  /** Nombre completo de la cuenta del formulario (nombres + apellidos). */
+  private get nombreCuenta(): string {
+    const r = this.responsable();
+    return [r.nombres.trim(), r.apellidos.trim()].filter(Boolean).join(' ');
+  }
+
+  /** Persistencia del wizard: sobrevive recargas de página. */
+  private static readonly WIZARD_KEY = 'chicote-wizard-estado';
+
+  /** Sincronización correo → responsable: activa hasta editar manual. */
   private readonly syncCorreo = signal(true);
 
   readonly stepMeta = computed(() => [
-    { n: 1, label: 'Cuenta', desc: this.sesionActiva()
+    { n: 1, label: 'Tus datos', desc: this.sesionActiva()
       ? 'Sesión activa — puedes continuar'
-      : 'Crea tu cuenta de delegado o inicia sesión' },
+      : 'Crea tu cuenta o entra: una sola vez' },
     { n: 2, label: 'Modalidad', desc: 'Elige categoría y nombre del grupo' },
-    { n: 3, label: 'Responsable', desc: this.sesionActiva()
-      ? 'Revisa o actualiza tus datos de contacto'
-      : 'Datos de contacto del delegado' },
-    { n: 4, label: 'Participantes', desc: 'Nómina de bailarines' },
-    { n: 5, label: 'Pago Yape', desc: 'Registra tu pago y adjunta el voucher' },
+    { n: 3, label: 'Participantes', desc: 'Nómina de bailarines' },
+    { n: 4, label: 'Pago Yape', desc: 'Registra tu pago y adjunta el voucher' },
   ]);
 
   readonly eventoNombre = computed(() => {
@@ -206,13 +245,30 @@ export class InscripcionPublicaPage implements OnInit {
      VALIDACIONES POR CAMPO (se muestran al intentar continuar)
      ============================================================ */
 
-  readonly cuentaErrores = computed<Errores>(() => {
+  /** Datos de contacto (paso 1): nombres, apellidos, dni, teléfono, ubigeo. */
+  readonly datosErrores = computed<Errores>(() => {
+    const e: Errores = {};
+    if (this.intento() !== 1) return e;
+    const r = this.responsable();
+    if (r.nombres.trim().length < 2) e['nombres'] = 'Ingresa tus nombres (mínimo 2 caracteres).';
+    if (r.apellidos.trim().length < 2) e['apellidos'] = 'Ingresa tus apellidos (mínimo 2 caracteres).';
+    if (!this.dniRe.test(r.dni)) e['dni'] = 'El DNI debe tener 8 dígitos.';
+    if (!r.telefono.trim()) {
+      e['telefono'] = 'El teléfono es obligatorio (9 dígitos, empieza con 9).';
+    } else if (!this.telRe.test(r.telefono)) {
+      e['telefono'] = 'Debe tener 9 dígitos y empezar con 9.';
+    }
+    if (!r.departamento) e['departamento'] = 'Selecciona tu departamento.';
+    if (!r.provincia) e['provincia'] = 'Selecciona tu provincia.';
+    if (!r.distrito) e['distrito'] = 'Selecciona tu distrito.';
+    return e;
+  });
+
+  /** Credenciales de la cuenta (paso 1). */
+  readonly credencialesErrores = computed<Errores>(() => {
     const e: Errores = {};
     if (this.intento() !== 1 || this.sesionActiva()) return e;
     const c = this.cuenta();
-    if (c.metodo === 'registro' && c.nombre.trim().length < 2) {
-      e['nombre'] = 'Ingresa tu nombre completo (mínimo 2 caracteres).';
-    }
     if (!c.correo.trim()) {
       e['correo'] = 'El correo es obligatorio.';
     } else if (!this.emailRe.test(c.correo.trim())) {
@@ -261,34 +317,11 @@ export class InscripcionPublicaPage implements OnInit {
     return e;
   });
 
-  readonly responsableErrores = computed<Errores>(() => {
-    const e: Errores = {};
-    if (this.intento() !== 3) return e;
-    const r = this.responsable();
-    if (r.nombres.trim().length < 2) e['nombres'] = 'Obligatorio (mínimo 2 caracteres).';
-    if (r.apellidos.trim().length < 2) e['apellidos'] = 'Obligatorio (mínimo 2 caracteres).';
-    if (!this.dniRe.test(r.dni)) e['dni'] = 'El DNI debe tener 8 dígitos.';
-    if (!r.telefono.trim()) {
-      e['telefono'] = 'El teléfono es obligatorio (9 dígitos, empieza con 9).';
-    } else if (!this.telRe.test(r.telefono)) {
-      e['telefono'] = 'Debe tener 9 dígitos y empezar con 9.';
-    }
-    if (!r.correo.trim()) {
-      e['correoRes'] = 'El correo es obligatorio.';
-    } else if (!this.emailRe.test(r.correo.trim())) {
-      e['correoRes'] = 'El correo no tiene un formato válido.';
-    }
-    if (!r.departamento) e['departamento'] = 'Selecciona tu departamento.';
-    if (!r.provincia) e['provincia'] = 'Selecciona tu provincia.';
-    if (!r.distrito) e['distrito'] = 'Selecciona tu distrito.';
-    return e;
-  });
-
   readonly participanteErrores = computed<Errores[]>(() => {
     const list = this.participantes();
     return list.map((p) => {
       const e: Errores = {};
-      if (this.intento() !== 4) return e;
+      if (this.intento() !== 3) return e;
       if (p.nombres.trim().length < 2) e['nombres'] = 'Obligatorio (mínimo 2 caracteres).';
       if (!p.celular.trim()) {
         e['celular'] = 'El celular es obligatorio (9 dígitos, empieza con 9).';
@@ -300,11 +333,14 @@ export class InscripcionPublicaPage implements OnInit {
   });
 
   readonly participantesCountError = computed(() => {
-    if (this.intento() !== 4) return '';
+    if (this.intento() !== 3) return '';
     const min = this.minIntegrantes();
     const max = this.maxIntegrantes();
     const n = this.participantes().length;
     if (n < min || n > max) {
+      if (min === max) {
+        return `Esta modalidad requiere exactamente ${min} ${min === 1 ? 'integrante' : 'integrantes'} (tienes ${n}).`;
+      }
       return `Esta modalidad requiere entre ${min} y ${max} integrantes (tienes ${n}).`;
     }
     return '';
@@ -312,11 +348,11 @@ export class InscripcionPublicaPage implements OnInit {
 
   readonly pagoErrores = computed<Errores>(() => {
     const e: Errores = {};
-    if (this.intento() !== 5) return e;
+    if (this.intento() !== 4) return e;
     if (!this.numeroOperacion().trim()) {
       e['numeroOperacion'] = 'Ingresa el número de operación de tu Yape.';
-    } else if (!/^\d{5,20}$/.test(this.numeroOperacion().trim())) {
-      e['numeroOperacion'] = 'El número de operación debe ser numérico (5 a 20 dígitos).';
+    } else if (!/^\d{3,20}$/.test(this.numeroOperacion().trim())) {
+      e['numeroOperacion'] = 'El número de operación debe ser numérico (mínimo 3 dígitos).';
     }
     if (!this.comprobanteNombre()) {
       e['comprobante'] = 'Debes subir la foto del voucher (Yape) para confirmar.';
@@ -343,16 +379,31 @@ export class InscripcionPublicaPage implements OnInit {
     this.cargarCatalogo();
   }
 
+  private limpiarWizard(): void {
+    sessionStorage.removeItem(InscripcionPublicaPage.WIZARD_KEY);
+  }
+
   nuevaInscripcion(): void {
     sessionStorage.removeItem('chicote-registro-codigo');
     sessionStorage.removeItem('chicote-registro-nombre');
     sessionStorage.removeItem('chicote-registro-estado');
+    this.limpiarWizard();
     this.success.set(false);
     this.resultCodigo.set('');
     this.resultEstado.set('Pendiente de confirmación');
     this.nombreUsuario.set('');
-    this.step.set(this.sesionActiva() ? 2 : 1);
-    void this.bootstrapSesion();
+    this.cuentaRecienCreada.set(false);
+    // Nueva propuesta: se reutiliza el responsable (cuenta), el resto arranca limpio.
+    this.grupo.set({ eventoId: '', categoriaId: '', nombreGrupo: '' });
+    this.participantes.set([{ nombres: '', celular: '' }]);
+    this.numeroOperacion.set('');
+    this.comprobanteNombre.set('');
+    this.comprobantePreview.set(null);
+    this.comprobanteFile.set(null);
+    this.comprobanteError.set('');
+    this.errorMsg.set('');
+    this.intento.set(0);
+    this.step.set(2);
     this.cargarCatalogo();
   }
 
@@ -369,12 +420,10 @@ export class InscripcionPublicaPage implements OnInit {
     this.cuenta.update((c) => ({
       ...c,
       metodo: 'login',
-      nombre: u.nombre,
       correo: u.correo,
       password: '',
       confirmar: '',
     }));
-    this.step.set(2);
 
     // 1) Base: nombre/correo de la cuenta
     this.responsable.set({
@@ -397,10 +446,35 @@ export class InscripcionPublicaPage implements OnInit {
     } catch {
       if (cached) this.writeResponsableCache(this.responsable());
     }
-
-    this.syncNombres.set(false);
     this.syncCorreo.set(false);
+
+    // Solo salta el paso 1 si el usuario restauró un wizard avanzado;
+    // si no, se queda en el paso 1 para confirmar/completar sus datos.
+    if (this.step() <= 1 && this.datosCompletos()) {
+      this.step.set(2);
+    }
   }
+
+  /** ¿El responsable ya tiene todos los datos obligatorios? */
+  readonly datosCompletos = computed(() => {
+    const r = this.responsable();
+    return (
+      r.nombres.trim().length >= 2 &&
+      r.apellidos.trim().length >= 2 &&
+      this.dniRe.test(r.dni) &&
+      this.telRe.test(r.telefono.trim()) &&
+      !!r.departamento &&
+      !!r.provincia &&
+      !!r.distrito
+    );
+  });
+
+  /** ¿Se debe mostrar el bloque "Tus datos de contacto" en el paso 1? */
+  readonly mostrarDatosContacto = computed(() => {
+    if (this.cuenta().metodo === 'registro') return true;
+    // En login: solo si aún faltan datos (o hay errores por corregir).
+    return this.sesionActiva() && (!this.datosCompletos() || this.intento() === 1);
+  });
 
   private splitNombreCompleto(nombre: string): Pick<FormResponsable, 'nombres' | 'apellidos'> {
     const partes = nombre.trim().split(/\s+/).filter(Boolean);
@@ -411,16 +485,6 @@ export class InscripcionPublicaPage implements OnInit {
       nombres: partes.slice(0, -2).join(' '),
       apellidos: partes.slice(-2).join(' '),
     };
-  }
-
-  private aplicarNombreCorreoAResponsable(nombre: string, correo: string): void {
-    if (this.syncCorreo()) {
-      this.responsable.update((r) => ({ ...r, correo }));
-    }
-    if (this.syncNombres()) {
-      const parts = this.splitNombreCompleto(nombre);
-      this.responsable.update((r) => ({ ...r, ...parts }));
-    }
   }
 
   /** Completa o reemplaza campos con datos conocidos (no borra lo ya válido sin motivo). */
@@ -439,17 +503,19 @@ export class InscripcionPublicaPage implements OnInit {
 
   private applyResponsable(remoto: Responsable | FormResponsable): void {
     this.mergeResponsable(remoto);
-    this.syncNombres.set(false);
     this.syncCorreo.set(false);
   }
 
   private readResponsableCache(): FormResponsable | null {
+    // Solo aplica con sesión activa: un visitante anónimo nunca ve
+    // datos "autocompletados" de otra sesión pasada.
+    if (!this.auth.isAuthenticated() || !this.auth.usuario()) return null;
     try {
       const raw = localStorage.getItem(RESPONSABLE_CACHE_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw) as FormResponsable & { usuarioId?: string };
       const uid = this.auth.usuario()?.id;
-      if (parsed.usuarioId && uid && parsed.usuarioId !== uid) return null;
+      if (!uid || (parsed.usuarioId && parsed.usuarioId !== uid)) return null;
       return parsed;
     } catch {
       return null;
@@ -477,39 +543,35 @@ export class InscripcionPublicaPage implements OnInit {
     }
   }
 
-  irAAcceso(): void {
-    void this.router.navigate(['/acceso'], { queryParams: { returnUrl: '/inscribirse' } });
-  }
-
   cerrarSesionWizard(): void {
     this.auth.logout().subscribe({
       next: () => {
         this.sesionActiva.set(false);
         this.usuarioId = '';
         this.step.set(1);
-        void this.router.navigate(['/acceso'], { queryParams: { returnUrl: '/inscribirse' } });
+        this.limpiarWizard();
       },
     });
   }
 
   private cargarCatalogo(): void {
     this.loadingCatalog.set(true);
-    this.eventoApi.listar().subscribe({
-      next: (eventos) => {
+    // Catálogo en paralelo: eventos y categorías son independientes.
+    forkJoin({
+      eventos: this.eventoApi.listar(),
+      categorias: this.categoriaApi.listar(true),
+    }).subscribe({
+      next: ({ eventos, categorias }) => {
         this.eventos.set(
           eventos
             .filter((e) => e.estado === 'ACTIVO')
             .map((e) => ({ id: e.id, nombre: e.nombre, fecha: e.fecha })),
         );
-        this.categoriaApi.listar(true).subscribe({
-          next: (categorias) => {
-            this.categorias.set(categorias);
-            this.loadingCatalog.set(false);
-            const ev = this.eventos()[0];
-            if (ev) this.patchGrupo({ eventoId: ev.id });
-          },
-          error: () => this.loadingCatalog.set(false),
-        });
+        this.categorias.set(categorias);
+        this.loadingCatalog.set(false);
+        // Un solo evento activo = se selecciona solo (cero fricción).
+        const ev = this.eventos()[0];
+        if (ev && this.eventos().length === 1) this.patchGrupo({ eventoId: ev.id });
       },
       error: () => this.loadingCatalog.set(false),
     });
@@ -521,12 +583,9 @@ export class InscripcionPublicaPage implements OnInit {
 
   patchCuenta(partial: Partial<ReturnType<typeof this.cuenta>>): void {
     this.cuenta.update((c) => ({ ...c, ...partial }));
-    if (partial.correo !== undefined && this.syncCorreo()) {
+    // En registro el correo de contacto ES el correo de la cuenta.
+    if (partial.correo !== undefined && this.cuenta().metodo === 'registro' && this.syncCorreo()) {
       this.responsable.update((r) => ({ ...r, correo: partial.correo as string }));
-    }
-    if (partial.nombre !== undefined && this.syncNombres()) {
-      const parts = this.splitNombreCompleto(partial.nombre as string);
-      this.responsable.update((r) => ({ ...r, ...parts }));
     }
   }
 
@@ -536,7 +595,6 @@ export class InscripcionPublicaPage implements OnInit {
 
   patchResponsable(partial: Partial<ReturnType<typeof this.responsable>>): void {
     this.responsable.update((r) => ({ ...r, ...partial }));
-    if ('nombres' in partial || 'apellidos' in partial) this.syncNombres.set(false);
     if ('correo' in partial) this.syncCorreo.set(false);
   }
 
@@ -568,11 +626,71 @@ export class InscripcionPublicaPage implements OnInit {
     this.patchResponsable({ provincia: prov, distrito: '' });
   }
 
-  addParticipante(): void {
-    this.participantes.update((list) => [
-      ...list,
-      { nombres: '', celular: '' },
-    ]);
+  /* ============================================================
+     MODAL: elegir cantidad de participantes según la modalidad
+     ============================================================ */
+
+  readonly modalCantidadAbierto = signal(false);
+  readonly cantidadElegida = signal(1);
+
+  abrirModalCantidad(): void {
+    const min = this.minIntegrantes();
+    this.cantidadElegida.set(Math.min(this.maxIntegrantes(), Math.max(this.participantes().length, min)));
+    this.modalCantidadAbierto.set(true);
+  }
+
+  cerrarModalCantidad(): void {
+    this.modalCantidadAbierto.set(false);
+  }
+
+  cambiarCantidad(delta: number): void {
+    this.cantidadElegida.update((v) =>
+      Math.min(this.maxIntegrantes(), Math.max(this.minIntegrantes(), v + delta)),
+    );
+  }
+
+  /** Regenera la nómina con la cantidad elegida (conserva lo ya escrito). */
+  aplicarCantidad(): void {
+    const n = this.cantidadElegida();
+    const actuales = this.participantes();
+    if (n > actuales.length) {
+      const extra = Array.from({ length: n - actuales.length }, () => ({
+        nombres: '',
+        celular: '',
+      }));
+      this.participantes.set([...actuales, ...extra]);
+    } else {
+      this.participantes.set(actuales.slice(0, n));
+    }
+    this.intento.set(0);
+    this.modalCantidadAbierto.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscModal(): void {
+    if (this.modalCantidadAbierto()) this.cerrarModalCantidad();
+  }
+
+  /* ============================================================
+     MODAL: confirmar salto de la nómina de participantes
+     ============================================================ */
+
+  readonly modalSaltarAbierto = signal(false);
+
+  abrirModalSaltar(): void {
+    this.modalSaltarAbierto.set(true);
+  }
+
+  cerrarModalSaltar(): void {
+    this.modalSaltarAbierto.set(false);
+  }
+
+  /** Confirma el salto: avanza al pago sin nómina (la org la completa). */
+  confirmarSalto(): void {
+    this.modalSaltarAbierto.set(false);
+    this.errorMsg.set('');
+    this.intento.set(0);
+    this.step.set(4);
   }
 
   updateParticipante(index: number, partial: Partial<FormParticipante>): void {
@@ -621,8 +739,8 @@ export class InscripcionPublicaPage implements OnInit {
   prev(): void {
     this.errorMsg.set('');
     this.intento.set(0);
-    const min = this.sesionActiva() ? 2 : 1;
-    this.step.update((s) => Math.max(min, s - 1));
+    // El paso 1 es siempre el mínimo: ahí viven cuenta + datos de contacto.
+    this.step.update((s) => Math.max(1, s - 1));
   }
 
   async next(): Promise<void> {
@@ -631,18 +749,20 @@ export class InscripcionPublicaPage implements OnInit {
     this.intento.set(n);
 
     if (n === 1) {
-      if (this.sesionActiva()) {
-        this.intento.set(0);
-        this.step.set(2);
-        return;
+      if (!this.sesionActiva()) {
+        // 1ª fase: credenciales (registro o login).
+        if (Object.keys(this.credencialesErrores()).length > 0) return;
+        if (!(await this.resolverCuenta())) return;
       }
-      if (Object.keys(this.cuentaErrores()).length > 0) return;
-      if (!(await this.resolverCuenta())) return;
+      // 2ª fase: datos de contacto (ya prellenados tras autenticar).
+      if (Object.keys(this.datosErrores()).length > 0) return;
+      // Los datos de contacto viven en la cuenta: se sincronizan una vez.
+      await this.guardarContactoEnCuenta();
     } else if (n === 2) {
       if (Object.keys(this.grupoErrores()).length > 0) return;
+      // Prevalidación temprana: duplicados de grupo/DNI ANTES del pago.
+      if (!(await this.prevalidarAntesDePago())) return;
     } else if (n === 3) {
-      if (Object.keys(this.responsableErrores()).length > 0) return;
-    } else if (n === 4) {
       const tieneErrores = this.participanteErrores().some(
         (er) => Object.keys(er).length > 0,
       );
@@ -650,21 +770,126 @@ export class InscripcionPublicaPage implements OnInit {
     }
 
     this.intento.set(0);
-    this.step.update((s) => Math.min(5, s + 1));
+    this.step.update((s) => Math.min(4, s + 1));
+
+    // Al entrar a participantes: si la modalidad permite rango, preguntar cuántos son.
+    if (this.step() === 3 && this.minIntegrantes() !== this.maxIntegrantes()) {
+      queueMicrotask(() => this.abrirModalCantidad());
+    }
+  }
+
+  /** Guarda el contacto actual en la cuenta (BD). Falla silenciosamente:
+   *  la inscripción usa el responsable del formulario de todas formas. */
+  private async guardarContactoEnCuenta(): Promise<void> {
+    if (!this.sesionActiva() || !this.cuentaRecienSincronizada()) return;
+    const r = this.responsable();
+    try {
+      await firstValueFrom(
+        this.usuarioApi.actualizarMiContacto({
+          nombre: [r.nombres.trim(), r.apellidos.trim()].filter(Boolean).join(' '),
+          dni: r.dni || undefined,
+          telefono: r.telefono.trim() || undefined,
+          departamento: r.departamento || undefined,
+          provincia: r.provincia || undefined,
+          distrito: r.distrito || undefined,
+        }),
+      );
+    } catch {
+      /* no bloquea el flujo: el responsable del formulario ya es válido */
+    }
+    this.sincronizacionHecha();
+  }
+
+  /** true solo la primera vez tras autenticar/actualizar datos. */
+  private contactoSincronizado = false;
+
+  private cuentaRecienSincronizada(): boolean {
+    return !this.contactoSincronizado;
+  }
+
+  private sincronizacionHecha(): void {
+    this.contactoSincronizado = true;
+  }
+
+  /** La nómina está completa: toda fila válida y cantidad dentro del rango. */
+  readonly nominaCompleta = computed(() => {
+    const lista = this.participantes();
+    if (lista.length === 0) return false;
+    const enRango =
+      lista.length >= this.minIntegrantes() && lista.length <= this.maxIntegrantes();
+    const todasValidas = lista.every(
+      (p) => p.nombres.trim().length >= 2 && this.telRe.test(p.celular.trim()),
+    );
+    return enRango && todasValidas;
+  });
+
+  /**
+   * Llama al endpoint de prevalidación del backend con los datos actuales.
+   * Se ejecuta al pasar del paso 2 al 3: detecta duplicados de grupo/DNI
+   * ANTES del pago. La nómina se envía solo si está completa; si no, se
+   * omite (participantes opcionales en el backend).
+   */
+  private async prevalidarAntesDePago(): Promise<boolean> {
+    const g = this.grupo();
+    const r = this.responsable();
+    const cat = this.categoriaSeleccionada();
+    if (!cat) return true;
+    this.saving.set(true);
+    try {
+      await firstValueFrom(
+        this.inscripcionApi.prevalidar({
+          usuarioId: this.usuarioId || undefined,
+          eventoId: g.eventoId,
+          categoriaId: cat.id,
+          nombreGrupo: g.nombreGrupo.trim(),
+          observaciones: '',
+          responsable: {
+            nombres: r.nombres.trim(),
+            apellidos: r.apellidos.trim(),
+            dni: r.dni,
+            telefono: r.telefono.trim(),
+            correo: r.correo.trim(),
+            departamento: r.departamento,
+            provincia: r.provincia,
+            distrito: r.distrito,
+          },
+          participantes: this.nominaCompleta()
+            ? this.participantes().map((p) => ({
+                nombres: p.nombres.trim(),
+                celular: p.celular.trim(),
+              }))
+            : undefined,
+        }),
+      );
+      return true;
+    } catch (err) {
+      this.errorMsg.set((err as Error).message || 'No pudimos validar tus datos. Intenta de nuevo.');
+      return false;
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   private async resolverCuenta(): Promise<boolean> {
     const c = this.cuenta();
     this.saving.set(true);
     try {
+      const r = this.responsable();
       if (c.metodo === 'registro') {
         await firstValueFrom(
           this.auth.register({
-            nombre: c.nombre.trim(),
+            nombre: [r.nombres.trim(), r.apellidos.trim()].filter(Boolean).join(' '),
             correo: c.correo.trim(),
             password: c.password,
+            // Contacto: se guarda EN la cuenta para no volver a pedirlo nunca.
+            dni: r.dni || undefined,
+            telefono: r.telefono.trim() || undefined,
+            departamento: r.departamento || undefined,
+            provincia: r.provincia || undefined,
+            distrito: r.distrito || undefined,
           }),
         );
+        this.cuentaRecienCreada.set(true);
       } else {
         await firstValueFrom(
           this.auth.loginPublic({ correo: c.correo.trim(), password: c.password }),
@@ -673,13 +898,27 @@ export class InscripcionPublicaPage implements OnInit {
       const u = this.auth.usuario();
       if (!u?.id) throw new Error('No se pudo obtener tu cuenta.');
       this.usuarioId = u.id;
-      this.nombreUsuario.set(u.nombre || c.nombre.trim());
+      this.nombreUsuario.set(u.nombre);
       this.sesionActiva.set(true);
-      this.responsable.update((r) => ({
-        ...r,
-        ...this.splitNombreCompleto(u.nombre || c.nombre.trim()),
-        correo: u.correo || c.correo.trim() || r.correo,
-      }));
+      if (c.metodo === 'login') {
+        // Login: precargar lo que falte desde la cuenta (BD) y la última inscripción.
+        this.responsable.update((resp) => ({
+          ...resp,
+          ...this.splitNombreCompleto(u.nombre || ''),
+          dni: resp.dni || (u.dni ?? ''),
+          telefono: resp.telefono || (u.telefono ?? ''),
+          departamento: resp.departamento || (u.departamento ?? ''),
+          provincia: resp.provincia || (u.provincia ?? ''),
+          distrito: resp.distrito || (u.distrito ?? ''),
+          correo: u.correo || resp.correo,
+        }));
+      } else {
+        // Registro: el correo de contacto es el de la cuenta recién creada.
+        this.responsable.update((resp) => ({
+          ...resp,
+          correo: u.correo || resp.correo,
+        }));
+      }
       this.saving.set(false);
       try {
         const cached = this.readResponsableCache();
@@ -690,7 +929,6 @@ export class InscripcionPublicaPage implements OnInit {
       } catch {
         this.writeResponsableCache(this.responsable());
       }
-      this.syncNombres.set(false);
       this.syncCorreo.set(false);
       return true;
     } catch (err) {
@@ -708,7 +946,7 @@ export class InscripcionPublicaPage implements OnInit {
   }
 
   async confirmar(): Promise<void> {
-    this.intento.set(5);
+    this.intento.set(4);
     if (Object.keys(this.pagoErrores()).length > 0) return;
     const voucher = this.comprobanteFile();
     if (!voucher) {
@@ -721,6 +959,7 @@ export class InscripcionPublicaPage implements OnInit {
     }
     this.errorMsg.set('');
     this.saving.set(true);
+    let inscripcionIdRegistrada = '';
     try {
       const g = this.grupo();
       const r = this.responsable();
@@ -746,13 +985,23 @@ export class InscripcionPublicaPage implements OnInit {
               provincia: r.provincia,
               distrito: r.distrito,
             },
-            participantes: this.participantes().map((p) => ({
-              nombres: p.nombres.trim(),
-              celular: p.celular.trim(),
-            })),
+            participantes: this.nominaCompleta()
+              ? this.participantes().map((p) => ({
+                  nombres: p.nombres.trim(),
+                  celular: p.celular.trim(),
+                }))
+              : undefined,
           })
           .subscribe({ next: resolve, error: reject }),
       );
+
+      // La inscripción ya existe: si algo falla después, NO dejamos que el
+      // usuario reintente (duplicaría) ni que la pierda.
+      inscripcionIdRegistrada = inscripcion.id;
+      this.resultCodigo.set(inscripcion.codigo);
+      sessionStorage.setItem('chicote-registro-codigo', inscripcion.codigo);
+      sessionStorage.setItem('chicote-registro-nombre', this.nombreUsuario() || this.nombreCuenta);
+      this.limpiarWizard();
 
       this.writeResponsableCache(r);
 
@@ -774,7 +1023,6 @@ export class InscripcionPublicaPage implements OnInit {
         }),
       );
 
-      this.resultCodigo.set(inscripcion.codigo);
       this.resultEstado.set(
         inscripcion.estado === 'CONFIRMADA'
           ? 'Confirmada'
@@ -782,14 +1030,24 @@ export class InscripcionPublicaPage implements OnInit {
             ? 'Rechazada'
             : 'Pendiente de confirmación',
       );
+      sessionStorage.setItem('chicote-registro-estado', this.resultEstado());
       this.saving.set(false);
       this.success.set(true);
-      sessionStorage.setItem('chicote-registro-codigo', inscripcion.codigo);
-      sessionStorage.setItem('chicote-registro-nombre', this.nombreUsuario() || this.cuenta().nombre);
-      sessionStorage.setItem('chicote-registro-estado', this.resultEstado());
     } catch (err) {
       this.saving.set(false);
-      this.errorMsg.set((err as Error).message || 'No se pudo completar la inscripción.');
+      const msg = (err as Error).message || '';
+      if (inscripcionIdRegistrada) {
+        // Pago/voucher falló pero la inscripción YA existe.
+        this.success.set(true);
+        this.resultEstado.set('Pendiente de confirmación');
+        sessionStorage.setItem('chicote-registro-estado', 'Pendiente de confirmación');
+        this.errorMsg.set(
+          'Tu inscripción quedó registrada, pero no pudimos guardar el voucher. ' +
+            'Vuelve a intentarlo desde "Consultar mi inscripción" o escríbenos por WhatsApp.',
+        );
+        return;
+      }
+      this.errorMsg.set(msg || 'No se pudo completar la inscripción.');
     }
   }
 
@@ -827,6 +1085,51 @@ export class InscripcionPublicaPage implements OnInit {
     return 'is-pendiente';
   }
 
+  readonly yapeNumero = '926 266 295';
+  readonly yapeCopiado = signal(false);
+  private yapeCopiadoTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  async copiarYape(): Promise<void> {
+    await this.copiarTexto(this.yapeNumero.replace(/\s/g, ''));
+    this.yapeCopiado.set(true);
+    if (this.yapeCopiadoTimeout) clearTimeout(this.yapeCopiadoTimeout);
+    this.yapeCopiadoTimeout = setTimeout(() => this.yapeCopiado.set(false), 2000);
+  }
+
+  /** Envía el código de inscripción por WhatsApp al propio usuario. */
+  enviarCodigoWhatsApp(): void {
+    const codigo = this.resultCodigo();
+    if (!codigo) return;
+    const telefono = this.responsable().telefono.replace(/\D/g, '');
+    const texto = encodeURIComponent(
+      `Hola! Mi inscripción al Chicote de Oro quedó registrada. Código: ${codigo}`,
+    );
+    const destino = telefono ? `51${telefono}` : '';
+    window.open(
+      destino
+        ? `https://wa.me/${destino}?text=${texto}`
+        : `https://wa.me/51926266295?text=${texto}`,
+      '_blank',
+      'noopener',
+    );
+  }
+
+  private async copiarTexto(texto: string): Promise<void> {
+    if (!texto) return;
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = texto;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+    }
+  }
+
   async downloadComprobante(): Promise<void> {
     if (!this.resultCodigo()) return;
     const g = this.grupo();
@@ -856,6 +1159,7 @@ export class InscripcionPublicaPage implements OnInit {
     const input = e.target as HTMLInputElement;
     input.value = input.value.replace(/\D/g, '');
   };
+
   protected readonly onCelularInput = (e: Event) => {
     const input = e.target as HTMLInputElement;
     input.value = input.value.replace(/\D/g, '').slice(0, 9);
@@ -894,5 +1198,14 @@ export class InscripcionPublicaPage implements OnInit {
       this.comprobantePreview.set(null);
     }
     input.value = '';
+  }
+
+  /** Aviso del navegador si el usuario cierra/recarga mientras se guarda. */
+  @HostListener('window:beforeunload', ['$event'])
+  avisarSalida(e: BeforeUnloadEvent): void {
+    if (this.saving()) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
   }
 }

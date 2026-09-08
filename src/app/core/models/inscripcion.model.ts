@@ -19,15 +19,17 @@ export interface Inscripcion {
   createdAt: string;
 }
 
-/** POST /api/inscripciones — crea además responsable y participantes en el backend. */
+/** POST /api/inscripciones — crea además responsable y participantes en el backend.
+ *  El backend IGNORA usuarioId para clientes (usa el JWT); solo aplica para ADMIN.
+ *  participantes opcional: el cliente puede saltar la nómina y la organización la completa. */
 export interface InscripcionRequest {
-  usuarioId: string;
+  usuarioId?: string;
   eventoId: string;
   categoriaId: string;
   nombreGrupo: string;
   observaciones?: string;
   responsable: ResponsableRequest;
-  participantes: ParticipanteRequest[];
+  participantes?: ParticipanteRequest[];
 }
 
 /** Vista denormalizada para UI (joins en cliente). */

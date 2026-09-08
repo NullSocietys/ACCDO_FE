@@ -53,11 +53,11 @@
 .login-brand em {
   font-style: normal;
   font-size: 10.5px;
-  color: #d4af37;
+  color: #fbbf24; /* gold-400 en el header también */
 }
 
 .login-back {
-  color: #d3d3d3;
+  color: #d6d3d1;
   text-decoration: none;
   font-size: 12.5px;
   transition: color 0.2s;
@@ -77,8 +77,8 @@
 .login-card {
   width: min(420px, 100%);
   padding: 32px 28px;
-  border: 1px solid rgba(212, 175, 55, 0.22);
-  background: rgba(18, 18, 17, 0.92);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  background: rgba(18, 18, 17, 0.94);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -89,7 +89,7 @@
   font-size: 10px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #d4af37;
+  color: #fbbf24; /* gold-400: dorado brillante legible sobre tarjeta */
 }
 
 .login-card h1 {
@@ -98,11 +98,12 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.15;
+  color: #fafaf9; /* stone-50: título bien definido sobre la tarjeta */
 }
 
 .login-lead {
   margin: 0 0 6px;
-  color: #b8b4ae;
+  color: #d6d3d1; /* stone-300: legible sobre la tarjeta oscura */
   font-size: 13.5px;
   line-height: 1.55;
 }
@@ -125,7 +126,7 @@
 .login-field span {
   font-size: 12px;
   letter-spacing: 0.04em;
-  color: #a8a29e;
+  color: #d6d3d1; /* stone-300: etiqueta legible sobre tarjeta oscura */
 }
 
 .login-field input,
@@ -140,6 +141,11 @@
   font-size: 14px;
   outline: none;
   transition: border-color 0.15s;
+}
+
+.login-field input::placeholder,
+.login-password input::placeholder {
+  color: #78716c; /* stone-500: visible sin competir con el texto */
 }
 
 .login-field input:focus,
@@ -168,7 +174,7 @@
   transform: translateY(-50%);
   border: 0;
   background: transparent;
-  color: #d4af37;
+  color: #fbbf24; /* gold-400, consistente con la etiqueta */
   font: inherit;
   font-size: 12px;
   cursor: pointer;

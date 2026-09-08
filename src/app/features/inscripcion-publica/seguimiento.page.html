@@ -18,7 +18,7 @@
     <!-- ============ BUSCADOR ============ -->
     <div class="ipo-card ipo-card--compact">
       <div class="ipo-search">
-        <input type="text" placeholder="Ej: CAP-2026-4F3A2B" maxlength="16"
+        <input type="text" placeholder="Ej: CHO2026-001"
           [ngModel]="codigoInput()" (ngModelChange)="codigoInput.set($event)"
           (keyup.enter)="buscar()">
         <button type="button" class="ipo-btn ipo-btn--gold" (click)="buscar()" [disabled]="loading()">

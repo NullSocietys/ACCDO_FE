@@ -11,7 +11,7 @@
   </header>
 
   <main class="login-main">
-    <form class="login-card" (ngSubmit)="submit()" autocomplete="on">
+    <form class="login-card" (ngSubmit)="submit()" autocomplete="off">
       <p class="login-eyebrow">Acceso restringido</p>
       <h1>Iniciar sesión</h1>
       <p class="login-lead">
@@ -26,8 +26,8 @@
         <span>Correo electrónico</span>
         <input
           type="email"
-          name="correo"
-          autocomplete="username"
+          name="admin-correo"
+          autocomplete="off"
           placeholder="admin@chicotedeoro.pe"
           [ngModel]="correo()"
           (ngModelChange)="correo.set($event); errorMsg.set('')"
@@ -41,8 +41,8 @@
         <div class="login-password">
           <input
             [type]="showPassword() ? 'text' : 'password'"
-            name="password"
-            autocomplete="current-password"
+            name="admin-password"
+            autocomplete="new-password"
             placeholder="••••••••"
             [ngModel]="password()"
             (ngModelChange)="password.set($event); errorMsg.set('')"
