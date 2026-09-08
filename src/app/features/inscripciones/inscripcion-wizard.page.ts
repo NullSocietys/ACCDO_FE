@@ -10,6 +10,7 @@ import { IconComponent } from '../../shared/icons/icon.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { CardComponent } from '../../shared/ui/card.component';
 import { InputComponent } from '../../shared/ui/input.component';
+import { ComboBuscadorComponent } from '../../shared/ui/combo-buscador/combo-buscador.component';
 import departamentoData from '../../core/ubigeo-json/1_ubigeo_departamentos.json';
 import provinciaData from '../../core/ubigeo-json/2_ubigeo_provincias.json';
 import distritoData from '../../core/ubigeo-json/3_ubigeo_distritos.json';
@@ -61,6 +62,7 @@ interface WizardParticipante {
     ButtonComponent,
     CardComponent,
     InputComponent,
+    ComboBuscadorComponent,
   ],
   styleUrl: './inscripcion-wizard.page.css',
   templateUrl: './inscripcion-wizard.page.html',
@@ -127,6 +129,46 @@ export class InscripcionWizardPage {
 
   readonly eventosActivos = computed(() =>
     this.store.eventos().filter((e) => e.estado === 'ACTIVO'),
+  );
+
+  /** Label legible de un evento: "Nombre · 25 de setiembre de 2026". */
+  private labelDeEvento(ev: { nombre: string; fecha: string }): string {
+    return `${ev.nombre} - ${this.formatearFecha(ev.fecha)}`;
+  }
+
+  readonly eventoLabels = computed(() =>
+    this.eventosActivos().map((e) => this.labelDeEvento(e)),
+  );
+
+  readonly eventoLabelSeleccionado = computed(() => {
+    const ev = this.eventosActivos().find((e) => e.id === this.step1().eventoId);
+    return ev ? this.labelDeEvento(ev) : '';
+  });
+
+  onEventoLabel(label: string): void {
+    const ev = this.eventosActivos().find((e) => this.labelDeEvento(e) === label);
+    if (ev) this.patch1({ eventoId: ev.id });
+  }
+
+  /** "2026-09-25" -> "25 de setiembre de 2026". */
+  formatearFecha(fecha: string): string {
+    if (!fecha) return '';
+    const partes = fecha.slice(0, 10).split('-').map(Number);
+    if (partes.length !== 3 || partes.some(isNaN)) return fecha;
+    return new Intl.DateTimeFormat('es-PE', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(new Date(partes[0], partes[1] - 1, partes[2]));
+  }
+
+  /** Label de modalidad con rango y precio. */
+  private labelDeCategoria(cat: { nombre: string; minIntegrantes: number; maxIntegrantes: number; precio: number }): string {
+    return `${cat.nombre} (${cat.minIntegrantes}-${cat.maxIntegrantes}) - S/ ${cat.precio}`;
+  }
+
+  readonly categoriaLabels = computed(() =>
+    this.categorias().map((c) => this.labelDeCategoria(c)),
   );
 
   readonly monto = computed(() => {

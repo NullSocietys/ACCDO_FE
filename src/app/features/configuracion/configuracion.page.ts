@@ -1,5 +1,8 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { Configuracion } from '../../core/models';
+import { environment } from '../../../environments/environment';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
 import { IconComponent } from '../../shared/icons/icon.component';
@@ -17,9 +20,11 @@ import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 export class ConfiguracionPage {
   private readonly store = inject(DataStoreService);
   private readonly toast = inject(ToastService);
+  private readonly http = inject(HttpClient);
 
   readonly form = signal<Configuracion>({ ...this.store.configuracion() });
   readonly saving = signal(false);
+  readonly subiendoLogo = signal(false);
   readonly errores = signal<Record<string, string>>({});
   /** Esqueleto de carga inicial (igual que el dashboard). */
   readonly cargando = signal(true);
@@ -49,9 +54,25 @@ export class ConfiguracionPage {
     });
   }
 
-  onLogo(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) this.patch({ logoUrl: file.name });
+  async onLogo(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.subiendoLogo.set(true);
+    try {
+      const form = new FormData();
+      form.append('archivo', file, file.name);
+      const res = await firstValueFrom(
+        this.http.post<{ url: string }>(`${environment.apiUrl}/api/configuracion/logo`, form),
+      );
+      this.patch({ logoUrl: res.url });
+      this.toast.success('Logo subido', 'Recuerda guardar para aplicar los cambios');
+    } catch (err) {
+      this.toast.error('No se pudo subir el logo', (err as Error).message);
+    } finally {
+      this.subiendoLogo.set(false);
+      input.value = '';
+    }
   }
 
   private validar(): boolean {

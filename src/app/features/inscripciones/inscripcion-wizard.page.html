@@ -54,34 +54,22 @@
           <div class="form-grid">
             <div class="field">
               <label for="w-evento">Evento</label>
-              <select autocomplete="off"
-                id="w-evento"
-                class="ui-select"
-                [class.is-invalid]="!!errores1()['eventoId']"
-                [ngModel]="step1().eventoId"
-                (ngModelChange)="patch1({ eventoId: $event })"
-              >
-                <option value="">Seleccionar evento</option>
-                @for (ev of eventosActivos(); track ev.id) {
-                  <option [value]="ev.id">{{ ev.nombre }}</option>
-                }
-              </select>
+              <app-combo-buscador
+                [opciones]="eventoLabels()"
+                [valor]="eventoLabelSeleccionado()"
+                placeholder="Seleccionar evento…"
+                (valorSalida)="onEventoLabel($event)"
+              />
               <span class="field-error">{{ errores1()['eventoId'] }}</span>
             </div>
             <div class="field">
               <label for="w-cat">Modalidad</label>
-              <select autocomplete="off"
-                id="w-cat"
-                class="ui-select"
-                [class.is-invalid]="!!errores1()['categoria']"
-                [ngModel]="step1().categoria"
-                (ngModelChange)="onCategoria($event)"
-              >
-                <option value="">Seleccionar modalidad</option>
-                @for (cat of categorias(); track cat.id) {
-                  <option [value]="cat.nombre">{{ cat.nombre }}</option>
-                }
-              </select>
+              <app-combo-buscador
+                [opciones]="categoriaLabels()"
+                [valor]="step1().categoria"
+                placeholder="Seleccionar modalidad…"
+                (valorSalida)="onCategoria($event)"
+              />
               <span class="field-error">{{ errores1()['categoria'] }}</span>
             </div>
             <div class="field">
@@ -143,30 +131,32 @@
             </div>
             <div class="field">
               <label for="w-dep">Departamento</label>
-              <select autocomplete="off" id="w-dep" class="ui-select" [ngModel]="step2().departamento" (ngModelChange)="onDepartamento($event)">
-                <option value="">Seleccionar</option>
-                @for (d of departamentos; track d) {
-                  <option [value]="d">{{ d }}</option>
-                }
-              </select>
+              <app-combo-buscador
+                [opciones]="departamentos"
+                [valor]="step2().departamento"
+                placeholder="Seleccionar…"
+                (valorSalida)="onDepartamento($event)"
+              />
             </div>
             <div class="field">
               <label for="w-prov">Provincia</label>
-              <select autocomplete="off" id="w-prov" class="ui-select" [ngModel]="step2().provincia" (ngModelChange)="onProvincia($event)">
-                <option value="">Seleccionar</option>
-                @for (p of provincias(); track p) {
-                  <option [value]="p">{{ p }}</option>
-                }
-              </select>
+              <app-combo-buscador
+                [opciones]="provincias()"
+                [valor]="step2().provincia"
+                placeholder="Seleccionar…"
+                [disabled]="!step2().departamento"
+                (valorSalida)="onProvincia($event)"
+              />
             </div>
             <div class="field">
               <label for="w-dist">Distrito</label>
-              <select autocomplete="off" id="w-dist" class="ui-select" [ngModel]="step2().distrito" (ngModelChange)="patch2({ distrito: $event })">
-                <option value="">Seleccionar</option>
-                @for (d of distritos(); track d) {
-                  <option [value]="d">{{ d }}</option>
-                }
-              </select>
+              <app-combo-buscador
+                [opciones]="distritos()"
+                [valor]="step2().distrito"
+                placeholder="Seleccionar…"
+                [disabled]="!step2().provincia"
+                (valorSalida)="patch2({ distrito: $event })"
+              />
             </div>
           </div>
         }

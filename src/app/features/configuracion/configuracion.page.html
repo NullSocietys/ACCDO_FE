@@ -170,15 +170,27 @@
     <div class="form-grid">
       <div class="field form-span-2">
         <label>Logo</label>
-        <label class="logo-box" style="cursor: pointer">
-          <input autocomplete="off" type="file" accept="image/*" class="sr-only" (change)="onLogo($event)" />
-          <div class="logo-preview" aria-hidden="true">C</div>
+        <label class="logo-box" [style.cursor]="subiendoLogo() ? 'wait' : 'pointer'">
+          <input autocomplete="off" type="file" accept="image/*" class="sr-only" (change)="onLogo($event)" [disabled]="subiendoLogo()" />
+          <div class="logo-preview" aria-hidden="true">{{ subiendoLogo() ? '…' : 'C' }}</div>
           <div>
             <div style="font-weight: 600; color: var(--color-primary)">
-              {{ form().logoUrl || 'Subir logo de la asociación' }}
+              @if (subiendoLogo()) {
+                Subiendo logo…
+              } @else if (form().logoUrl) {
+                Logo cargado ✓
+              } @else {
+                Subir logo de la asociación
+              }
             </div>
             <div class="text-muted" style="font-size: 12px; margin-top: 4px">
-              PNG o SVG recomendado, fondo transparente.
+              @if (subiendoLogo()) {
+                Subiendo a la nube…
+              } @else if (form().logoUrl) {
+                {{ form().logoUrl }}
+              } @else {
+                PNG o SVG recomendado, fondo transparente (máx. 8 MB).
+              }
             </div>
           </div>
           <app-icon name="upload" [size]="18" />

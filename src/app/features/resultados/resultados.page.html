@@ -167,20 +167,12 @@
   <div class="form-grid">
     <div class="field form-span-2">
       <label for="r-ins">Inscripción</label>
-      <select autocomplete="off"
-        id="r-ins"
-        class="ui-select"
-        [ngModel]="form().inscripcionId"
-        [class.is-invalid]="!!errores()['inscripcionId']"
-        (ngModelChange)="patch({ inscripcionId: $event })"
-      >
-        <option value="">Seleccionar inscripción</option>
-        @for (ins of inscripcionesDelEvento(); track ins.id) {
-          <option [value]="ins.id">
-            {{ ins.nombreGrupo }} · {{ ins.categoriaNombre }} ({{ ins.codigo }})
-          </option>
-        }
-      </select>
+      <app-combo-buscador
+        [opciones]="inscripcionLabels()"
+        [valor]="inscripcionLabelSeleccionada()"
+        placeholder="Seleccionar inscripción…"
+        (valorSalida)="onInscripcionLabel($event)"
+      />
       <span class="field-error">{{ errores()['inscripcionId'] }}</span>
     </div>
     <div class="field">

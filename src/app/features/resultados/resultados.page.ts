@@ -8,6 +8,7 @@ import { ButtonComponent } from '../../shared/ui/button.component';
 import { CardComponent } from '../../shared/ui/card.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { InputComponent } from '../../shared/ui/input.component';
+import { ComboBuscadorComponent } from '../../shared/ui/combo-buscador/combo-buscador.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
@@ -21,6 +22,7 @@ import { SkeletonComponent } from '../../shared/ui/skeleton.component';
     CardComponent,
     EmptyStateComponent,
     InputComponent,
+    ComboBuscadorComponent,
     ModalComponent,
     PaginationComponent,
     SkeletonComponent,
@@ -74,6 +76,26 @@ export class ResultadosPage {
   readonly inscripcionesDelEvento = computed(() =>
     this.store.inscripcionesView().filter((i) => i.eventoId === this.eventoId()),
   );
+
+  /** Labels legibles para el combo con buscador. */
+  readonly inscripcionLabels = computed(() =>
+    this.inscripcionesDelEvento().map(
+      (i) => `${i.nombreGrupo} · ${i.categoriaNombre} (${i.codigo})`,
+    ),
+  );
+
+  readonly inscripcionLabelSeleccionada = computed(() => {
+    const id = this.form().inscripcionId;
+    const ins = this.inscripcionesDelEvento().find((i) => i.id === id);
+    return ins ? `${ins.nombreGrupo} · ${ins.categoriaNombre} (${ins.codigo})` : '';
+  });
+
+  onInscripcionLabel(label: string): void {
+    const ins = this.inscripcionesDelEvento().find(
+      (i) => `${i.nombreGrupo} · ${i.categoriaNombre} (${i.codigo})` === label,
+    );
+    if (ins) this.patch({ inscripcionId: ins.id });
+  }
 
   readonly filtered = computed(() =>
     this.store

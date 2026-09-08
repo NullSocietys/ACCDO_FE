@@ -5,35 +5,37 @@
       <app-skeleton variant="table" [count]="8" />
     </div>
   } @else {
+  <!-- 1) HEADER: título + acción -->
   <header class="mast">
     <div class="mast__copy">
       <p class="mast__eyebrow">Panel · Cuentas</p>
       <h1>Usuarios</h1>
       <p class="mast__lead">
-        Acceso al panel: alta, restauración y depuración de cuentas.
+        Acceso al panel: alta, roles, restauración y depuración de cuentas.
       </p>
     </div>
-    <div class="mast__aside">
-      <dl class="mast__pulse" aria-label="Resumen rápido">
-        <div>
-          <dt>Total</dt>
-          <dd>{{ overview().total }}</dd>
-        </div>
-        <div>
-          <dt>Activos</dt>
-          <dd>{{ overview().activos }}</dd>
-        </div>
-        <div class="mast__pulse--gold">
-          <dt>Inactivos</dt>
-          <dd>{{ overview().inactivos }}</dd>
-        </div>
-      </dl>
-      <div class="mast__cta">
-        <app-button icon="plus" [fullWidth]="true" (clicked)="openCreate()">Nuevo usuario</app-button>
-      </div>
+    <div class="mast__cta">
+      <app-button icon="plus" [fullWidth]="true" (clicked)="openCreate()">Nuevo usuario</app-button>
     </div>
   </header>
 
+  <!-- 2) KPIs -->
+  <dl class="kpi-strip" aria-label="Resumen rápido">
+    <div class="kpi-strip__item">
+      <dt>Total de cuentas</dt>
+      <dd>{{ overview().total }}</dd>
+    </div>
+    <div class="kpi-strip__item kpi-strip__item--ok">
+      <dt>Activos</dt>
+      <dd>{{ overview().activos }}</dd>
+    </div>
+    <div class="kpi-strip__item kpi-strip__item--gold">
+      <dt>Inactivos</dt>
+      <dd>{{ overview().inactivos }}</dd>
+    </div>
+  </dl>
+
+  <!-- 3) LISTADO -->
   @if (store.usuarios().length + store.usuariosInactivos().length === 0) {
     <app-empty-state
       icon="user"
@@ -88,6 +90,7 @@
         <div class="folio__cols" aria-hidden="true">
           <span class="folio__cols-mark">#</span>
           <span>Cuenta</span>
+          <span>Rol</span>
           <span>Registro</span>
           <span>Estado</span>
           <span></span>
@@ -106,6 +109,14 @@
                 <a class="row__mail mono" [href]="'mailto:' + usuario.correo" [attr.title]="usuario.correo">
                   {{ usuario.correo }}
                 </a>
+              </div>
+
+              <div class="row__rol">
+                @if (esAdmin(usuario)) {
+                  <span class="rol-badge rol-badge--admin">Administrador</span>
+                } @else {
+                  <span class="rol-badge">Cliente</span>
+                }
               </div>
 
               <div class="row__meta">
@@ -173,13 +184,13 @@
   [open]="modalOpen()"
   label="Usuario"
   [title]="editingId() ? 'Editar usuario' : 'Nuevo usuario'"
-  description="Cuenta de acceso al panel de administración."
+  description="Cuenta de acceso al panel. El rol define qué puede hacer."
   (closed)="modalOpen.set(false)"
 >
   <div class="sheet">
     <div class="sheet__grid sheet__grid--form">
       <div>
-        <label class="k" for="us-nombre">Nombre</label>
+        <label class="k" for="us-nombre">Nombre completo</label>
         <app-input
           controlId="us-nombre"
           [value]="form().nombre"
@@ -191,7 +202,7 @@
         <span class="field-error">{{ errores()['nombre'] }}</span>
       </div>
       <div>
-        <label class="k" for="us-correo">Correo</label>
+        <label class="k" for="us-correo">Correo electrónico</label>
         <app-input
           controlId="us-correo"
           type="email"
@@ -203,18 +214,20 @@
         />
         <span class="field-error">{{ errores()['correo'] }}</span>
       </div>
+
       <div class="sheet__wide">
         <div class="sheet__row">
           <label class="k" for="us-password">Contraseña</label>
-          <app-button
-            variant="outline"
-            size="sm"
-            icon="sparkles"
-            [disabled]="!!editingId()"
-            (clicked)="generarPassword()"
-          >
-            Generar
-          </app-button>
+          @if (!editingId()) {
+            <app-button
+              variant="outline"
+              size="sm"
+              icon="sparkles"
+              (clicked)="generarPassword()"
+            >
+              Generar segura
+            </app-button>
+          }
         </div>
         <app-input
           controlId="us-password"
@@ -223,10 +236,27 @@
           [toggle]="true"
           [value]="form().password"
           [invalid]="!!errores()['password']"
-          [placeholder]="editingId() ? 'Dejar en blanco para no cambiarla' : 'Mínimo 8 caracteres'"
+          [placeholder]="editingId() ? 'Dejar en blanco para no cambiarla' : 'Mínimo 8 caracteres, con mayúscula y número'"
           (valueChange)="patch({ password: $event })"
         />
         <span class="field-error">{{ errores()['password'] }}</span>
+      </div>
+
+      <div class="sheet__wide">
+        <label class="k" for="us-rol">Rol de la cuenta</label>
+        <select autocomplete="off" id="us-rol" class="ui-select"
+          [ngModel]="form().rol" (ngModelChange)="patch({ rol: $event })"
+        >
+          <option value="CLIENTE">Cliente — se inscribe al concurso</option>
+          <option value="ADMIN">Administrador — gestiona el panel</option>
+        </select>
+        <span class="field-hint">
+          @if (form().rol === 'ADMIN') {
+            Podrá gestionar inscripciones, pagos y resultados.
+          } @else {
+            Solo podrá inscribirse y ver sus inscripciones.
+          }
+        </span>
       </div>
     </div>
   </div>

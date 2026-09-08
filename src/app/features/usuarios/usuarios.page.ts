@@ -1,6 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { Usuario } from '../../core/models';
+import { environment } from '../../../environments/environment';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -16,6 +19,7 @@ const emptyForm = () => ({
   nombre: '',
   correo: '',
   password: '',
+  rol: 'CLIENTE',
 });
 
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -43,6 +47,7 @@ export class UsuariosPage {
   readonly store = inject(DataStoreService);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
+  private readonly http = inject(HttpClient);
 
   readonly busqueda = signal('');
   readonly estadoFiltro = signal<EstadoFiltro>('activos');
@@ -124,6 +129,10 @@ export class UsuariosPage {
       .join('');
   }
 
+  esAdmin(usuario: Usuario): boolean {
+    return usuario.roles?.includes('ADMIN') ?? false;
+  }
+
   fechaCorta(fecha: string): string {
     if (!fecha) return '—';
     const d = new Date(fecha);
@@ -145,16 +154,22 @@ export class UsuariosPage {
   async openEdit(usuario: Usuario): Promise<void> {
     this.editingId.set(usuario.id);
     this.errores.set({});
+    const rolActual = usuario.roles?.includes('ADMIN') ? 'ADMIN' : 'CLIENTE';
     try {
       const fresco = await this.store.obtenerUsuario(usuario.id);
-      this.form.set({ nombre: fresco.nombre, correo: fresco.correo, password: '' });
+      this.form.set({
+        nombre: fresco.nombre,
+        correo: fresco.correo,
+        password: '',
+        rol: fresco.roles?.includes('ADMIN') ? 'ADMIN' : rolActual,
+      });
     } catch {
-      this.form.set({ nombre: usuario.nombre, correo: usuario.correo, password: '' });
+      this.form.set({ nombre: usuario.nombre, correo: usuario.correo, password: '', rol: rolActual });
     }
     this.modalOpen.set(true);
   }
 
-  patch(partial: Partial<{ nombre: string; correo: string; password: string }>): void {
+  patch(partial: Partial<{ nombre: string; correo: string; password: string; rol: string }>): void {
     this.form.update((f) => ({ ...f, ...partial }));
     this.errores.update((e) => {
       const clave = Object.keys(partial)[0];
@@ -248,19 +263,29 @@ export class UsuariosPage {
           correo: data.correo.trim(),
           password: data.password || undefined,
         });
+        await this.cambiarRolSiNecesario(id, data.rol);
         this.toast.success('Usuario actualizado');
       } else {
-        await this.store.registrar({
+        const creado = await this.store.registrar({
           nombre: data.nombre.trim(),
           correo: data.correo.trim(),
           password: data.password,
         });
+        await this.cambiarRolSiNecesario(creado.id, data.rol);
         this.toast.success('Usuario creado');
       }
       this.modalOpen.set(false);
     } catch (err) {
       this.toast.error('No se pudo guardar', (err as Error).message);
     }
+  }
+
+  /** Aplica el rol elegido solo si difiere del actual (los clientes nacen con CLIENTE). */
+  private async cambiarRolSiNecesario(id: string, rol: string): Promise<void> {
+    if (!rol || rol === 'CLIENTE') return;
+    await firstValueFrom(
+      this.http.patch(`${environment.apiUrl}/api/usuarios/${id}/rol`, { rol }),
+    );
   }
 
   async remove(usuario: Usuario): Promise<void> {

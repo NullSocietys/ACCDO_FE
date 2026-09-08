@@ -278,19 +278,22 @@
         />
         <span class="field-error">{{ errores()['lugar'] }}</span>
       </div>
-      <div class="sheet__wide">
-        <label class="k" for="ev-estado">Estado</label>
-        <select autocomplete="off"
-          id="ev-estado"
-          class="ui-select"
-          [ngModel]="form().estado"
-          (ngModelChange)="patch({ estado: $event })"
-        >
-          <option value="ACTIVO">Activo</option>
-          <option value="CERRADO">Cerrado</option>
-          <option value="CANCELADO">Cancelado</option>
-        </select>
-      </div>
+      @if (editingId()) {
+        <div class="sheet__wide">
+          <label class="k" for="ev-estado">Estado</label>
+          <select autocomplete="off"
+            id="ev-estado"
+            class="ui-select"
+            [ngModel]="form().estado"
+            (ngModelChange)="patch({ estado: $event })"
+          >
+            <option value="ACTIVO">Activo</option>
+            <option value="CERRADO">Cerrado</option>
+            <option value="CANCELADO">Cancelado</option>
+          </select>
+          <span class="field-hint">Un evento nuevo se crea Activo automáticamente.</span>
+        </div>
+      }
     </div>
   </div>
 
