@@ -57,8 +57,9 @@
 }
 
 .ipo-brand__text strong {
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 0.04em;
+  max-width: 210px;
 }
 
 .ipo-brand__text em {

@@ -7,7 +7,7 @@
   --gold-dark: #997a15;
   --border-gold: rgba(212, 175, 55, 0.28);
   --font-body: 'Geist', system-ui, sans-serif;
-  --header-h: 72px;
+  --header-h: 132px;
   --header-cta-h: 40px;
   display: block;
   color: var(--text-main);
@@ -35,6 +35,7 @@
   -webkit-backdrop-filter: none;
   box-shadow: none;
   transition:
+    height 0.35s ease,
     background 0.35s ease,
     border-color 0.35s ease,
     backdrop-filter 0.35s ease,
@@ -42,6 +43,7 @@
 }
 
 .site-header.is-solid {
+  --header-h: 72px;
   background: var(--bg-glass);
   backdrop-filter: blur(18px) saturate(1.15);
   -webkit-backdrop-filter: blur(18px) saturate(1.15);
@@ -55,6 +57,7 @@
   justify-content: space-between;
   gap: 1.25rem;
   height: var(--header-h);
+  transition: height 0.35s ease;
 }
 
 .brand {
@@ -72,6 +75,11 @@
   object-fit: contain;
   flex-shrink: 0;
   filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.4));
+  transition: height 0.35s ease;
+}
+
+.site-header:not(.is-solid) .brand-logo {
+  height: 54px;
 }
 
 /* Nav + acciones agrupados a la derecha */
@@ -673,7 +681,15 @@
 
 @media (max-width: 1080px) {
   :host {
+    --header-h: 124px;
+  }
+
+  .site-header.is-solid {
     --header-h: 64px;
+  }
+
+  .site-header:not(.is-solid) .brand-logo {
+    height: 42px;
   }
 
   .header-inner { gap: 0.5rem; }

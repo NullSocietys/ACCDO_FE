@@ -281,16 +281,16 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
         gsap.set(q('.frame-corner'), { autoAlpha: 0, scale: 0.88 });
 
         ScrollTrigger.batch(q('.reveal'), {
-          start: 'top 86%',
+          start: 'top 90%',
           once: true,
-          interval: 0.12,
+          interval: 0.06,
           batchMax: 6,
           onEnter: (batch) => {
             gsap.to(batch, {
               autoAlpha: 1,
               y: 0,
-              duration: 0.95,
-              stagger: { each: 0.08, from: 'start' },
+              duration: 0.55,
+              stagger: { each: 0.05, from: 'start' },
               ease: 'power3.out',
               overwrite: 'auto',
             });
@@ -299,7 +299,7 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
 
         // Títulos de sección: entrada un poco más marcada
         ScrollTrigger.batch(q('.sec-head, .sec-title'), {
-          start: 'top 88%',
+          start: 'top 92%',
           once: true,
           onEnter: (batch) => {
             gsap.fromTo(
@@ -308,8 +308,8 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
               {
                 autoAlpha: 1,
                 y: 0,
-                duration: 0.85,
-                stagger: 0.06,
+                duration: 0.5,
+                stagger: 0.04,
                 ease: 'power2.out',
                 overwrite: 'auto',
               },
@@ -503,12 +503,12 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
       gsap.to(cells, {
         autoAlpha: 1,
         y: 0,
-        duration: 0.65,
-        stagger: 0.09,
+        duration: 0.45,
+        stagger: 0.05,
         ease: 'power3.out',
         scrollTrigger: {
           trigger: facts,
-          start: 'top 82%',
+          start: 'top 88%',
           once: true,
         },
       });
@@ -518,15 +518,15 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     if (processSteps.length) {
       gsap.set(processSteps, { autoAlpha: 0, y: 28 });
       ScrollTrigger.batch(processSteps, {
-        start: 'top 85%',
+        start: 'top 90%',
         once: true,
-        interval: 0.1,
+        interval: 0.06,
         onEnter: (batch) => {
           gsap.to(batch, {
             autoAlpha: 1,
             y: 0,
-            duration: 0.75,
-            stagger: 0.1,
+            duration: 0.5,
+            stagger: 0.05,
             ease: 'power3.out',
             overwrite: 'auto',
           });
@@ -634,23 +634,23 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
     tl.addLabel('intro', 0)
       .to(
         q('.frame-corner'),
-        { autoAlpha: 1, scale: 1, duration: 0.85, stagger: 0.06 },
+        { autoAlpha: 1, scale: 1, duration: 0.5, stagger: 0.04 },
         'intro',
       )
-      .to(q('.hero-top.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.75 }, 'intro+=0.12')
+      .to(q('.hero-top.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.45 }, 'intro+=0.08')
       .to(
         q('.hero-media.hero-anim'),
-        { autoAlpha: 1, y: 0, duration: 1, ease: 'power4.out' },
-        'intro+=0.18',
+        { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power4.out' },
+        'intro+=0.12',
       )
-      .to(q('.hero-title.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.85 }, 'intro+=0.32')
-      .to(q('.hero-sub.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.7 }, 'intro+=0.45')
-      .to(q('.hero-side.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.7 }, 'intro+=0.52')
+      .to(q('.hero-title.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.5 }, 'intro+=0.2')
+      .to(q('.hero-sub.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.4 }, 'intro+=0.28')
+      .to(q('.hero-side.hero-anim'), { autoAlpha: 1, y: 0, duration: 0.4 }, 'intro+=0.32')
       .fromTo(
         q('.hero-actions .btn'),
         { autoAlpha: 0, y: 16 },
-        { autoAlpha: 1, y: 0, duration: 0.55, stagger: 0.09 },
-        'intro+=0.62',
+        { autoAlpha: 1, y: 0, duration: 0.35, stagger: 0.05 },
+        'intro+=0.38',
       );
 
     const logo = q('.hero-logo')[0];
@@ -660,9 +660,9 @@ export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
         { scale: 0.9 },
         {
           scale: 1,
-          duration: 1.25,
+          duration: 0.7,
           ease: 'power2.out',
-          delay: 0.25,
+          delay: 0.15,
           force3D: true,
         },
       );
