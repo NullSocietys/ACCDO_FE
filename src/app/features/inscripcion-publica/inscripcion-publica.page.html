@@ -65,8 +65,8 @@
               <div class="ipo-panel__head">
                 <span class="ipo-panel__num">01</span>
                 <div>
-                  <h2>Tu cuenta y datos de contacto</h2>
-                  <p>Una sola vez: esto llenará tu ficha de responsable para todas tus inscripciones.</p>
+                  <h2>Tu cuenta, datos y agrupación</h2>
+                  <p>Se registran una sola vez y se reutilizan en todas tus modalidades.</p>
                 </div>
               </div>
 
@@ -75,11 +75,14 @@
                   <p class="ipo-session-card__k">Sesión activa</p>
                   <strong>{{ nombreUsuario() }}</strong>
                   <em>{{ cuenta().correo }}</em>
-                  @if (datosCompletos()) {
+                  @if (datosCuentaCompletos()) {
                     <p>Tus datos están completos y listos para esta inscripción.</p>
                   } @else {
                     <p>Completa tus datos de contacto abajo; se guardarán en tu cuenta
                       para que no los vuelvas a escribir.</p>
+                  }
+                  @if (agrupacion()) {
+                    <p>Tu agrupación: <strong>{{ agrupacion()?.nombre }}</strong>.</p>
                   }
                 </div>
               } @else {
@@ -270,6 +273,21 @@
                 </div>
               </div>
               }
+
+              @if (!agrupacion() && (cuenta().metodo === 'registro' || sesionActiva())) {
+                <p class="ipo-subsection">Tu agrupación</p>
+                <div class="ipo-grid ipo-grid--2">
+                  <div class="ipo-field ipo-field--full" [class.is-invalid]="agrupacionErrores()['nombre']">
+                    <span>Nombre de la agrupación o institución</span>
+                    <input type="text" placeholder="Ej: Ballet Folklórico San Martín de Porres"
+                      [ngModel]="nombreAgrupacion()" (ngModelChange)="nombreAgrupacion.set($event)">
+                    <small>Se registrará una única vez para esta cuenta.</small>
+                    @if (agrupacionErrores()['nombre']) {
+                      <span class="ipo-error-text">{{ agrupacionErrores()['nombre'] }}</span>
+                    }
+                  </div>
+                </div>
+              }
             </div>
           }
 
@@ -279,8 +297,8 @@
               <div class="ipo-panel__head">
                 <span class="ipo-panel__num">02</span>
                 <div>
-                  <h2>Modalidad y grupo</h2>
-                  <p>Elige la categoría en la que participará tu institución.</p>
+                  <h2>Elige una modalidad</h2>
+                  <p>Inscribirás a <strong>{{ agrupacion()?.nombre ?? nombreAgrupacion() }}</strong>.</p>
                 </div>
               </div>
 
@@ -332,14 +350,6 @@
                   <span class="ipo-error-text ipo-error-text--block">{{ grupoErrores()['categoria'] }}</span>
                 }
 
-                <div class="ipo-field ipo-field--full" [class.is-invalid]="grupoErrores()['nombreGrupo']">
-                  <span>Nombre del grupo o institución</span>
-                  <input type="text" placeholder="Ej: Ballet Folklórico San Martín de Porres"
-                    [ngModel]="grupo().nombreGrupo" (ngModelChange)="patchGrupo({ nombreGrupo: $event })">
-                  @if (grupoErrores()['nombreGrupo']) {
-                    <span class="ipo-error-text">{{ grupoErrores()['nombreGrupo'] }}</span>
-                  }
-                </div>
               }
             </div>
           }
@@ -428,7 +438,7 @@
                 </div>
                 <div class="ipo-resumen__row">
                   <span>Grupo</span>
-                  <strong>{{ grupo().nombreGrupo }}</strong>
+                  <strong>{{ agrupacion()?.nombre ?? nombreAgrupacion() }}</strong>
                 </div>
                 <div class="ipo-resumen__row">
                   <span>Participantes</span>
@@ -496,6 +506,31 @@
           @if (errorMsg()) {
             <div class="ipo-error" role="alert">
               <strong>No se pudo continuar:</strong> {{ errorMsg() }}
+              @if (grupoDuplicado()) {
+                <button type="button" class="ipo-btn ipo-btn--gold ipo-reclamo-cta" (click)="irAReclamo()">
+                  Reclamar mi grupo <span aria-hidden="true">→</span>
+                </button>
+              }
+              @if (agrupacionDuplicada()) {
+                <div class="ipo-error__acciones">
+                  <a class="ipo-btn ipo-btn--gold ipo-reclamo-cta" [href]="waAgrupacionHref()" target="_blank" rel="noopener noreferrer">
+                    Apelar agrupación
+                  </a>
+                  <button type="button" class="ipo-btn ipo-btn--ghost ipo-reclamo-cta" (click)="limpiarNombreAgrupacion()">
+                    Usar otro nombre
+                  </button>
+                </div>
+              }
+              @if (dniDuplicado()) {
+                <div class="ipo-error__acciones">
+                  <button type="button" class="ipo-btn ipo-btn--gold ipo-reclamo-cta" (click)="cambiarCuenta()">
+                    Cambiar de cuenta
+                  </button>
+                  <a class="ipo-btn ipo-btn--ghost ipo-reclamo-cta" [href]="waDniHref()" target="_blank" rel="noopener noreferrer">
+                    Contactar a la organización
+                  </a>
+                </div>
+              }
             </div>
           }
 
@@ -507,9 +542,9 @@
               </button>
             }
             @if (step() === 3 && !nominaCompleta()) {
-              <button type="button" class="ipo-saltar" (click)="abrirModalSaltar()" [disabled]="saving()">
-                Saltar este paso
-              </button>
+            <button type="button" class="ipo-saltar" (click)="saltarPaso()" [disabled]="saving()">
+              Saltar este paso
+            </button>
             }
             @if (step() < 4) {
               <button type="button" class="ipo-btn ipo-btn--gold" (click)="next()" [disabled]="saving() || loadingCatalog()">
@@ -550,8 +585,26 @@
 
             @if (cuentaRecienCreada()) {
               <div class="ipo-error" style="border-color: #2e7d32; background: rgba(46,125,50,.12);">
-                <strong>Guarda tu contraseña:</strong> con tu correo podrás inscribir otras agrupaciones
-                sin repetir tus datos.
+                <strong>Guarda tu contraseña:</strong> con tu correo podrás inscribir más modalidades
+                de tu agrupación sin repetir tus datos.
+              </div>
+            }
+
+            @if (voucherFallido()) {
+              <div class="ipo-error ipo-voucher-reintento" role="alert">
+                <strong>No se pudo subir tu voucher.</strong> Tu inscripción está registrada,
+                pero la organización necesita la foto del Yape para confirmarla.
+                <div class="ipo-error__acciones">
+                  <button type="button" class="ipo-btn ipo-btn--gold ipo-reclamo-cta"
+                    (click)="reintentarVoucher()" [disabled]="reintentandoVoucher()">
+                    {{ reintentandoVoucher() ? 'Subiendo…' : 'Reintentar subir voucher' }}
+                  </button>
+                  <a class="ipo-btn ipo-btn--ghost ipo-reclamo-cta"
+                    href="https://wa.me/51926266295?text=Hola%2C%20mi%20inscripci%C3%B3n%20qued%C3%B3%20registrada%20pero%20no%20pudo%20subirse%20el%20voucher."
+                    target="_blank" rel="noopener noreferrer">
+                    Enviarlo por WhatsApp
+                  </a>
+                </div>
               </div>
             }
 
@@ -621,7 +674,7 @@
             </div>
 
             <button type="button" class="ipo-registrar-otro" (click)="nuevaInscripcion()">
-              ¿Inscribir a otra agrupación? Haz clic aquí
+              ¿Inscribir otra modalidad? Haz clic aquí
             </button>
           </div>
         </div>
@@ -675,30 +728,3 @@
   </div>
 }
 
-<!-- ============ MODAL: CONFIRMAR SALTO DE LA NÓMINA ============ -->
-@if (modalSaltarAbierto()) {
-  <div class="ipo-modal" role="dialog" aria-modal="true" aria-label="Saltar nómina de participantes">
-    <div class="ipo-modal__backdrop" (click)="cerrarModalSaltar()"></div>
-    <div class="ipo-modal__panel">
-      <button class="ipo-modal__close" type="button" (click)="cerrarModalSaltar()" aria-label="Cerrar">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
-
-      <span class="ipo-modal__icono" aria-hidden="true">?</span>
-      <h3 class="ipo-modal__title">¿Seguro que quieres saltar este paso?</h3>
-      <p class="ipo-modal__sub">
-        Podría servir registrar el <strong>nombre y celular</strong> de tus integrantes.
-        Si saltas, la organización completará la nómina por ti durante la verificación.
-      </p>
-
-      <div class="ipo-modal__actions">
-        <button type="button" class="ipo-btn ipo-btn--ghost" (click)="cerrarModalSaltar()">
-          Volver a completar
-        </button>
-        <button type="button" class="ipo-btn ipo-btn--gold" (click)="confirmarSalto()">
-          Sí, saltar e ir al pago
-        </button>
-      </div>
-    </div>
-  </div>
-}

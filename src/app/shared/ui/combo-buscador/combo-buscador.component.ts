@@ -126,12 +126,17 @@ import {
     .cb__panel {
       position: fixed;
       z-index: 120;
+      display: flex;
+      flex-direction: column;
+      max-height: 340px;
+      overflow: hidden;
       border: 1px solid rgba(212, 175, 55, 0.35);
       background: #16130f;
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
     }
 
     .cb__search {
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -157,7 +162,9 @@ import {
       list-style: none;
       margin: 0;
       padding: 4px;
-      max-height: 240px;
+      flex: 1;
+      min-height: 0;
+      max-height: 300px;
       overflow-y: auto;
       scrollbar-width: none;        /* Firefox: barra invisible */
       -ms-overflow-style: none;     /* IE/Edge legacy: invisible */
@@ -229,7 +236,9 @@ export class ComboBuscadorComponent {
     this.abierto.update((v) => !v);
     this.busqueda.set('');
     if (this.abierto()) {
+      // 1) estimado (el panel aún no está en el DOM), 2) altura real ya renderizado.
       this.posicionarPanel();
+      setTimeout(() => this.posicionarPanel(), 0);
       queueMicrotask(() => {
         const input = this.host.nativeElement.querySelector('.cb__input') as HTMLInputElement | null;
         input?.focus();
@@ -237,21 +246,28 @@ export class ComboBuscadorComponent {
     }
   }
 
-  /** Calcula la posición del panel respecto al viewport (position: fixed). */
+  /** Calcula la posición del panel respecto al viewport (position: fixed).
+   *  El top queda recortado dentro de la ventana: si no hay espacio, la
+   *  lista interna hace scroll y el panel nunca se corta abajo. */
   private posicionarPanel(): void {
+    if (!this.abierto()) return;
     const control = this.host.nativeElement.querySelector('.cb__control') as HTMLElement | null;
     if (!control) return;
     const r = control.getBoundingClientRect();
-    const espacioAbajo = window.innerHeight - r.bottom;
-    const altoPanel = 280;
-    const margen = 6;
     this.panelAncho.set(Math.round(r.width));
-    // Si no cabe abajo, se abre hacia arriba.
-    this.panelTop.set(
-      espacioAbajo < Math.min(altoPanel, 240) + margen
-        ? Math.round(r.top - altoPanel - margen)
-        : Math.round(r.bottom + margen),
-    );
+    const panel = this.host.nativeElement.querySelector('.cb__panel') as HTMLElement | null;
+    const alto = panel?.offsetHeight || 360;
+    const margen = 6;
+    const espacioAbajo = window.innerHeight - r.bottom - margen;
+    const espacioArriba = r.top - margen;
+    // Prefiere abrir hacia abajo; si no cabe y arriba hay más espacio, sube.
+    const top =
+      espacioAbajo >= alto || espacioAbajo >= espacioArriba
+        ? r.bottom + margen
+        : r.top - alto - margen;
+    // Recorte final: siempre visible de principio a fin (cota 8px por lado).
+    const topCotado = Math.min(Math.max(top, 8), Math.max(8, window.innerHeight - alto - 8));
+    this.panelTop.set(Math.round(topCotado));
     this.panelLeft.set(Math.round(r.left));
   }
 

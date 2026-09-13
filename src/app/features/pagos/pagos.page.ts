@@ -77,6 +77,10 @@ export class PagosPage implements OnDestroy {
   readonly comprobanteSrc = signal<string | null>(null);
   readonly comprobanteEsPdf = signal(false);
   private comprobanteBlobUrl: string | null = null;
+  /** Subida manual del voucher desde el panel (reenvío/reemplazo). */
+  readonly subiendo = signal(false);
+  readonly voucherPendiente = signal<File | null>(null);
+  readonly voucherError = signal('');
 
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
     { key: 'todos', label: 'Todos' },
@@ -192,6 +196,8 @@ export class PagosPage implements OnDestroy {
 
   viewComprobante(pago: PagoView): void {
     this.selected.set(pago);
+    this.voucherPendiente.set(null);
+    this.voucherError.set('');
     void this.cargarVistaComprobante(pago);
   }
 
@@ -237,6 +243,56 @@ export class PagosPage implements OnDestroy {
     } catch {
       this.toast.warning('No se pudo cargar el comprobante', 'Intente de nuevo o revise el archivo.');
     }
+  }
+
+  /* ============================================================
+     SUBIDA MANUAL DEL VOUCHER (reenvío / reemplazo)
+     ============================================================ */
+
+  onVoucherFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      this.voucherError.set('Solo fotos (JPG/PNG) o PDF.');
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      this.voucherError.set('El archivo supera los 8 MB.');
+      return;
+    }
+    this.voucherError.set('');
+    this.voucherPendiente.set(file);
+  }
+
+  async subirVoucher(): Promise<void> {
+    const pago = this.selected();
+    const file = this.voucherPendiente();
+    if (!pago || !file || this.subiendo()) return;
+    this.subiendo.set(true);
+    this.voucherError.set('');
+    try {
+      const actualizado = await firstValueFrom(
+        this.pagoApi.adjuntarComprobante(pago.id, file),
+      );
+      this.store.pagos.update((list) =>
+        list.map((p) => (p.id === pago.id ? actualizado : p)),
+      );
+      this.selected.set({ ...pago, comprobante: actualizado.comprobante });
+      this.voucherPendiente.set(null);
+      this.toast.success('Voucher guardado', pago.codigo);
+      await this.cargarVistaComprobante({ ...pago, comprobante: actualizado.comprobante });
+    } catch (err) {
+      this.voucherError.set((err as Error).message || 'No se pudo subir el archivo.');
+    } finally {
+      this.subiendo.set(false);
+    }
+  }
+
+  descartarVoucherPendiente(): void {
+    this.voucherPendiente.set(null);
+    this.voucherError.set('');
   }
 
   async accept(pago: PagoView): Promise<void> {

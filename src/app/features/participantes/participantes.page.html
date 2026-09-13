@@ -9,17 +9,17 @@
     <div class="mast__copy">
       <p class="mast__eyebrow">Temporada · Elenco</p>
       <h1>Participantes</h1>
-      <p class="mast__lead">Nómina por grupo: modalidad, evento y encargado. El elenco se consulta en detalle.</p>
+      <p class="mast__lead">Nómina de bailarines: participante, responsable, agrupación y modalidad.</p>
     </div>
     <div class="mast__aside">
       <dl class="mast__pulse" aria-label="Resumen rápido">
         <div>
-          <dt>Grupos</dt>
-          <dd>{{ groups().length }}</dd>
+          <dt>Bailarines</dt>
+          <dd>{{ totalBailarines() }}</dd>
         </div>
         <div>
-          <dt>Bailarines</dt>
-          <dd>{{ totalMembers() }}</dd>
+          <dt>Inscripciones</dt>
+          <dd>{{ totalGrupos() }}</dd>
         </div>
         <div class="mast__pulse--gold">
           <dt>Modalidades</dt>
@@ -32,7 +32,7 @@
     </div>
   </header>
 
-  @if (groups().length === 0) {
+  @if (bailarines().length === 0) {
     <app-empty-state
       icon="users"
       title="Sin participantes"
@@ -44,7 +44,7 @@
         <app-input
           controlId="part-search"
           icon="search"
-          placeholder="Buscar grupo, modalidad, evento o encargado…"
+          placeholder="Buscar participante, responsable, agrupación o código…"
           [value]="search()"
           (valueChange)="search.set($event)"
         />
@@ -64,70 +64,58 @@
         class="ui-select"
         [ngModel]="grupoFilter()"
         (ngModelChange)="grupoFilter.set($event)"
-        aria-label="Filtrar por grupo"
+        aria-label="Filtrar por agrupación"
       >
-        <option value="">Todos los grupos</option>
+        <option value="">Todas las agrupaciones</option>
         @for (g of grupos(); track g) {
           <option [value]="g">{{ g }}</option>
         }
       </select>
     </div>
 
-      <section class="folio" aria-label="Grupos inscritos">
+      <section class="folio" aria-label="Nómina de participantes">
         <div class="folio__head">
-          <h2>Grupos</h2>
-          <span>{{ filtered().length }} grupos · {{ memberCount() }} bailarines</span>
+          <h2>Bailarines</h2>
+          <span>{{ filtered().length }} de {{ bailarines().length }} participantes</span>
         </div>
 
         <div class="folio__cols" aria-hidden="true">
-          <span>Grupo</span>
+          <span>Participante</span>
+          <span>Celular</span>
+          <span>Responsable</span>
+          <span>Agrupación</span>
           <span>Modalidad</span>
-          <span>Evento</span>
-          <span>Encargado</span>
-          <span>Elenco</span>
           <span>Estado</span>
-          <span></span>
         </div>
 
         <div class="folio__list" role="list">
-          @for (g of paged(); track g.key) {
-            <article class="row" role="listitem" [class.is-rechazada]="g.estado === 'RECHAZADA'">
+          @for (b of paged(); track b.id) {
+            <article class="row" role="listitem" [class.is-rechazada]="b.estado === 'RECHAZADA'">
               <div class="row__cell">
-                <h3>{{ g.grupo }}</h3>
-                <span class="row__code">{{ g.codigo }}</span>
+                <h3>{{ b.nombre }}</h3>
+                <span class="row__code">{{ b.codigo }}</span>
               </div>
 
               <div class="row__cell">
-                <span class="row__text row__text--gold">{{ g.modalidad }}</span>
+                <span class="row__text mono">{{ b.celular }}</span>
               </div>
 
               <div class="row__cell">
-                <span class="row__text">{{ g.eventoNombre }}</span>
+                <span class="row__text">{{ b.responsable }}</span>
               </div>
 
               <div class="row__cell">
-                <span class="row__text">{{ g.encargado }}</span>
+                <span class="row__text">{{ b.agrupacion }}</span>
               </div>
 
               <div class="row__cell">
-                <span class="row__text">{{ g.members.length }}</span>
+                <span class="row__text row__text--gold">{{ b.modalidad }}</span>
               </div>
 
               <div class="row__cell">
-                <app-badge [tone]="statusTone(g.estado)" [dot]="false">
-                  {{ statusLabel(g.estado) }}
+                <app-badge [tone]="statusTone(b.estado)" [dot]="false">
+                  {{ statusLabel(b.estado) }}
                 </app-badge>
-              </div>
-
-              <div class="row__actions">
-                <app-button
-                  variant="outline"
-                  size="sm"
-                  icon="users"
-                  (clicked)="openMembers(g)"
-                >
-                  Ver
-                </app-button>
               </div>
             </article>
           }
@@ -144,61 +132,3 @@
   }
   }
 </div>
-
-<app-modal
-  [open]="!!selectedGroup()"
-  label="Elenco"
-  [title]="selectedGroup()?.grupo ?? 'Integrantes'"
-  [description]="modalDescription()"
-  size="lg"
-  (closed)="closeMembers()"
->
-  @if (selectedGroup(); as g) {
-    @if (modalUsesPairs()) {
-      <div class="pairs" role="list" aria-label="Parejas del elenco">
-        @for (pair of modalPairs(); track pair.a.id; let i = $index) {
-          <article class="pair" role="listitem">
-            <header class="pair__head">
-              <span>Pareja {{ i + 1 }}</span>
-            </header>
-            <div class="pair__body">
-              <div class="person">
-                <span class="person__avatar" aria-hidden="true">{{ pair.a.iniciales }}</span>
-                <div class="person__info">
-                  <strong>{{ pair.a.nombreCompleto }}</strong>
-                  <span class="mono">{{ pair.a.celular }}</span>
-                </div>
-              </div>
-              @if (pair.b; as b) {
-                <div class="pair__join" aria-hidden="true">+</div>
-                <div class="person">
-                  <span class="person__avatar" aria-hidden="true">{{ b.iniciales }}</span>
-                  <div class="person__info">
-                    <strong>{{ b.nombreCompleto }}</strong>
-                    <span class="mono">{{ b.celular }}</span>
-                  </div>
-                </div>
-              }
-            </div>
-          </article>
-        }
-      </div>
-    } @else {
-      <div class="people" role="list" aria-label="Integrantes del elenco">
-        @for (m of g.members; track m.id) {
-          <article class="person person--card" role="listitem">
-            <span class="person__avatar" aria-hidden="true">{{ m.iniciales }}</span>
-            <div class="person__info">
-              <strong>{{ m.nombreCompleto }}</strong>
-              <span class="mono">{{ m.celular }}</span>
-            </div>
-          </article>
-        }
-      </div>
-    }
-  }
-
-  <div modal-footer>
-    <app-button variant="outline" (clicked)="closeMembers()">Cerrar</app-button>
-  </div>
-</app-modal>

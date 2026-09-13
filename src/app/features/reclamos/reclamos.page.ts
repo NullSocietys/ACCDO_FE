@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
 import { EventoApiService } from '../../core/services/api/evento.api.service';
@@ -33,6 +33,21 @@ const emptyForm = () => ({
 export class ReclamosPage {
   private readonly reclamoApi = inject(ReclamoApiService);
   private readonly eventoApi = inject(EventoApiService);
+  private readonly route = inject(ActivatedRoute);
+
+  /** Datos precargables desde el wizard de inscripción (?grupo=…). */
+  private readonly prefill = (() => {
+    const q = this.route.snapshot.queryParamMap;
+    return {
+      eventoId: q.get('eventoId') ?? '',
+      grupo: q.get('grupo') ?? '',
+      nombres: q.get('nombres') ?? '',
+      apellidos: q.get('apellidos') ?? '',
+      dni: q.get('dni') ?? '',
+      telefono: q.get('telefono') ?? '',
+      correo: q.get('correo') ?? '',
+    };
+  })();
 
   readonly eventos = signal<EventoOption[]>([]);
   readonly loadingEventos = signal(true);
@@ -43,13 +58,28 @@ export class ReclamosPage {
   readonly errorMsg = signal('');
 
   constructor() {
+    // Prellenado inmediato de campos que no dependen del catálogo.
+    const p = this.prefill;
+    const patchInicial: Partial<ReturnType<typeof emptyForm>> = {};
+    if (p.grupo.trim().length >= 2) patchInicial.nombreGrupo = p.grupo.trim().slice(0, 150);
+    if (p.nombres.trim().length >= 2) patchInicial.encargadoNombres = p.nombres.trim().slice(0, 100);
+    if (p.apellidos.trim().length >= 2) patchInicial.encargadoApellidos = p.apellidos.trim().slice(0, 100);
+    if (/^\d{8}$/.test(p.dni.trim())) patchInicial.encargadoDni = p.dni.trim();
+    if (p.telefono.trim()) patchInicial.telefono = p.telefono.trim().slice(0, 20);
+    if (p.correo.trim()) patchInicial.correo = p.correo.trim().slice(0, 150);
+    if (Object.keys(patchInicial).length) this.patch(patchInicial);
+
     this.eventoApi.listar().subscribe({
       next: (lista) => {
         const activos = lista
           .filter((e) => e.estado === 'ACTIVO' && e.activo)
           .map((e) => ({ id: e.id, nombre: e.nombre, fecha: e.fecha }));
         this.eventos.set(activos);
-        if (activos.length === 1) {
+        // El evento precargado solo aplica si existe entre los activos.
+        const pre = this.prefill.eventoId;
+        if (pre && activos.some((e) => e.id === pre)) {
+          this.patch({ eventoId: pre });
+        } else if (activos.length === 1) {
           this.patch({ eventoId: activos[0].id });
         }
         this.loadingEventos.set(false);

@@ -143,6 +143,34 @@ export class InscripcionesPage {
       }));
   });
 
+  /** Rellenado de nómina: cuando el cliente saltó el paso de participantes,
+   *  el admin agrega los bailarines (nombre + celular) desde el detalle. */
+  readonly nuevoNombre = signal('');
+  readonly nuevoCelular = signal('');
+  readonly agregandoParticipante = signal(false);
+
+  async agregarParticipante(): Promise<void> {
+    const ins = this.selected();
+    const nombre = this.nuevoNombre().trim();
+    const celular = this.nuevoCelular().trim();
+    if (!ins || !nombre || this.agregandoParticipante()) return;
+    if (!/^9\d{8}$/.test(celular)) {
+      this.toast.error('El celular debe tener 9 dígitos y empezar con 9');
+      return;
+    }
+    this.agregandoParticipante.set(true);
+    try {
+      await this.store.addParticipante(ins.id, { nombres: nombre, celular });
+      this.nuevoNombre.set('');
+      this.nuevoCelular.set('');
+      this.toast.success('Participante agregado a la nómina');
+    } catch (err) {
+      this.toast.error((err as Error).message || 'No se pudo agregar el participante');
+    } finally {
+      this.agregandoParticipante.set(false);
+    }
+  }
+
   constructor() {
     window.setTimeout(() => this.cargando.set(false), 500);
     effect(() => {

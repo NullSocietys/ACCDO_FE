@@ -1,6 +1,7 @@
 /** Modelos alineados al esquema PostgreSQL (Caporales / Chicote de Oro), por módulo. */
 
 export * from './usuario.model';
+export * from './agrupacion.model';
 export * from './evento.model';
 export * from './categoria.model';
 export * from './responsable.model';

@@ -1,6 +1,6 @@
-/* Minimalism & Swiss Style — Directorio de usuarios
-   Ink + stone + gold. Escala legible (≥14px cuerpo). Targets ≥44px.
-   Hairlines. Monograma geométrico. Sin sombras ni pills. */
+﻿/* Minimalism & Swiss Style â€” Directorio de usuarios
+   Ink + stone + gold. Escala legible (â‰¥14px cuerpo). Targets â‰¥44px.
+   Hairlines. Monograma geomÃ©trico. Sin sombras ni pills. */
 
 :host {
   display: block;
@@ -19,7 +19,7 @@
   gap: calc(var(--unit) * 3);
 }
 
-/* —— Mast —— */
+/* â€”â€” Mast â€”â€” */
 .mast {
   flex-shrink: 0;
   display: grid;
@@ -118,7 +118,7 @@
   width: 100%;
 }
 
-/* —— Controls —— */
+/* â€”â€” Controls â€”â€” */
 .controls {
   flex-shrink: 0;
   display: grid;
@@ -182,7 +182,7 @@
   min-width: 0;
 }
 
-/* —— Folio ledger —— */
+/* â€”â€” Folio ledger â€”â€” */
 .folio {
   display: flex;
   flex-direction: column;
@@ -385,7 +385,7 @@
   align-items: center;
 }
 
-/* Badge y botones icono: escala legible en este módulo (≥44px / tipografía visible) */
+/* Badge y botones icono: escala legible en este mÃ³dulo (â‰¥44px / tipografÃ­a visible) */
 .row__status ::ng-deep span {
   font-size: 12px;
   padding: 7px 12px;
@@ -411,7 +411,7 @@
   min-width: 44px;
 }
 
-/* —— Modal form —— */
+/* â€”â€” Modal form â€”â€” */
 .sheet__grid--form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -451,7 +451,7 @@
   color: var(--stone-500);
 }
 
-/* —— Responsive —— */
+/* â€”â€” Responsive â€”â€” */
 @media (max-width: 960px) {
   .folio__cols,
   .row {
@@ -624,3 +624,24 @@
   margin-top: 5px;
   line-height: 1.4;
 }
+
+.sheet__row--contacto {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.sheet__row--contacto .ubigeo {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+@media (max-width: 640px) {
+  .sheet__row--contacto,
+  .sheet__row--contacto .ubigeo {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -131,6 +131,10 @@
                     <dd class="row__facts-gold">{{ statusLabel(pago.metodoPago) }}</dd>
                   </div>
                   <div>
+                    <dt>Modalidad</dt>
+                    <dd [attr.title]="pago.modalidad">{{ pago.modalidad }}</dd>
+                  </div>
+                  <div>
                     <dt>Encargado</dt>
                     <dd [attr.title]="pago.responsableNombre">{{ pago.responsableNombre }}</dd>
                   </div>
@@ -262,11 +266,33 @@
               {{
                 selected()?.comprobante
                   ? 'Cargando archivo…'
-                  : 'Sin archivo adjunto.'
+                  : 'Sin archivo adjunto. Puedes subirlo ahora:'
               }}
             </p>
           </div>
         }
+
+        <!-- Reenvío / reemplazo manual del voucher -->
+        <div class="sheet__upload">
+          @if (voucherPendiente(); as file) {
+            <div class="sheet__upload-file">
+              <span>{{ file.name }}</span>
+              <button type="button" class="sheet__upload-x" (click)="descartarVoucherPendiente()"
+                [disabled]="subiendo()" aria-label="Quitar archivo seleccionado">✕</button>
+            </div>
+            <app-button [disabled]="subiendo()" (clicked)="subirVoucher()">
+              {{ subiendo() ? 'Subiendo…' : 'Guardar voucher' }}
+            </app-button>
+          } @else {
+            <label class="sheet__upload-btn">
+              <input type="file" accept="image/*,.pdf" (change)="onVoucherFile($event)" [disabled]="subiendo()" />
+              {{ selected()?.comprobante ? 'Reemplazar voucher' : 'Subir voucher' }}
+            </label>
+          }
+          @if (voucherError()) {
+            <span class="sheet__upload-err" role="alert">{{ voucherError() }}</span>
+          }
+        </div>
       </div>
     </div>
   }

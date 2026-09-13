@@ -1,6 +1,7 @@
 export * from './api-base.service';
 export * from './auth.api.service';
 export * from './usuario.api.service';
+export * from './agrupacion.api.service';
 export * from './categoria.api.service';
 export * from './evento.api.service';
 export * from './inscripcion.api.service';

@@ -1174,6 +1174,18 @@
   line-height: 1.45;
 }
 
+.ipo-reclamo-cta {
+  margin-top: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+}
+
+.ipo-error__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .ipo-loading,
 .ipo-empty {
   text-align: center;
@@ -1555,5 +1567,154 @@
 
   .ipo-actions__fila {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   MODAL (cantidad de participantes y avisos)
+   ============================================================ */
+
+.ipo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.ipo-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.ipo-modal__panel {
+  position: relative;
+  width: min(460px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 26px 26px 22px;
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  animation: ipo-modal-in 180ms ease;
+}
+
+@keyframes ipo-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ipo-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #d3d3d3;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ipo-modal__close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.ipo-modal__title {
+  margin: 8px 0 8px;
+  font-size: 21px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.ipo-modal__sub {
+  margin: 0 0 18px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #d3d3d3;
+}
+
+.ipo-modal__stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 0 auto 14px;
+}
+
+.ipo-modal__step-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s, opacity 0.15s;
+}
+
+.ipo-modal__step-btn:hover:not(:disabled) {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateY(-1px);
+}
+
+.ipo-modal__step-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.ipo-modal__cantidad {
+  min-width: 72px;
+  font-size: 34px;
+  font-weight: 750;
+  color: #d4af37;
+  font-variant-numeric: tabular-nums;
+}
+
+.ipo-modal__hint {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 20px;
+}
+
+.ipo-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .ipo-modal__panel {
+    padding: 22px 18px 18px;
+  }
+
+  .ipo-modal__actions .ipo-btn {
+    flex: 1 1 100%;
   }
 }

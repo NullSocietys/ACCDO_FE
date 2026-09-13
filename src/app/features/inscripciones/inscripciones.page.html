@@ -273,7 +273,7 @@
           <span>{{ detailMembers().length }}</span>
         </div>
         @if (detailMembers().length === 0) {
-          <p class="sheet__empty">Aún no hay bailarines vinculados.</p>
+          <p class="sheet__empty">Aún no hay bailarines vinculados. Agrégalos aquí abajo.</p>
         } @else {
           <div class="cast" role="list">
             @for (m of detailMembers(); track m.id) {
@@ -287,6 +287,30 @@
             }
           </div>
         }
+
+        <!-- Rellenado de nómina (cliente saltó el paso de participantes) -->
+        <div class="sheet__add">
+          <app-input
+            controlId="add-nombre"
+            icon="users"
+            placeholder="Nombre completo del bailarín"
+            [value]="nuevoNombre()"
+            (valueChange)="nuevoNombre.set($event)"
+          />
+          <app-input
+            controlId="add-celular"
+            placeholder="Celular (9 dígitos, empieza con 9)"
+            [value]="nuevoCelular()"
+            (valueChange)="nuevoCelular.set($event)"
+          />
+          <app-button
+            icon="plus"
+            [disabled]="agregandoParticipante() || !nuevoNombre().trim()"
+            (clicked)="agregarParticipante()"
+          >
+            {{ agregandoParticipante() ? 'Agregando…' : 'Agregar participante' }}
+          </app-button>
+        </div>
       </section>
     </div>
   }

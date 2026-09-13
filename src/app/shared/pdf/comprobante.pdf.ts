@@ -17,6 +17,8 @@ export interface ComprobantePdfData {
     nombres: string;
     celular: string;
   }>;
+  /** Conteo real cuando la nómina no está disponible (el backend la expone al admin). */
+  integrantesCount?: number;
 }
 
 export async function descargarComprobantePdf(data: ComprobantePdfData): Promise<void> {
@@ -108,7 +110,7 @@ export async function descargarComprobantePdf(data: ComprobantePdfData): Promise
     ['DNI responsable', data.dniResponsable],
     ['Teléfono', data.telefono],
     ['Correo', data.correo],
-    ['Integrantes', `${data.integrantes.length}`],
+    ['Integrantes', `${data.integrantesCount ?? data.integrantes.length}`],
     ['Método de pago', data.metodoPago],
     ['Nº de operación', data.numeroOperacion],
     ['Monto pagado', data.monto],

@@ -150,6 +150,13 @@
                     ariaLabel="Desactivar usuario"
                     (clicked)="remove(usuario)"
                   />
+                  <app-button
+                    variant="ghost"
+                    size="icon"
+                    icon="x"
+                    ariaLabel="Eliminar definitivamente (libera su nombre de agrupación)"
+                    (clicked)="removeFisico(usuario)"
+                  />
                 } @else {
                   <app-button variant="outline" size="lg" icon="check" (clicked)="restore(usuario)">
                     Restaurar
@@ -258,6 +265,76 @@
           }
         </span>
       </div>
+
+      <!-- Datos de contacto: el backend los usa como responsable de sus inscripciones -->
+      <div class="sheet__wide">
+        <label class="k">Datos de contacto del responsable</label>
+        <div class="sheet__row sheet__row--contacto">
+          <div>
+            <label class="k" for="us-dni">DNI</label>
+            <app-input
+              controlId="us-dni"
+              [value]="form().dni"
+              [invalid]="!!errores()['dni']"
+              placeholder="8 dígitos"
+              (valueChange)="patch({ dni: soloDigitos($event, 8) })"
+            />
+            <span class="field-error">{{ errores()['dni'] }}</span>
+          </div>
+          <div>
+            <label class="k" for="us-telefono">Teléfono</label>
+            <app-input
+              controlId="us-telefono"
+              [value]="form().telefono"
+              [invalid]="!!errores()['telefono']"
+              placeholder="9 dígitos, empieza con 9"
+              (valueChange)="patch({ telefono: soloDigitos($event, 9) })"
+            />
+            <span class="field-error">{{ errores()['telefono'] }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet__row sheet__row--contacto ubigeo">
+        <div>
+          <label class="k" for="us-departamento">Departamento</label>
+          <select autocomplete="off" id="us-departamento" class="ui-select"
+            [ngModel]="form().departamento" (ngModelChange)="onDepartamento($event)"
+          >
+            <option value="">Selecciona departamento…</option>
+            @for (dep of departamentos; track dep) {
+              <option [value]="dep">{{ dep }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="k" for="us-provincia">Provincia</label>
+          <select autocomplete="off" id="us-provincia" class="ui-select"
+            [ngModel]="form().provincia" (ngModelChange)="onProvincia($event)"
+            [disabled]="!provincias().length"
+          >
+            <option value="">Selecciona provincia…</option>
+            @for (prov of provincias(); track prov) {
+              <option [value]="prov">{{ prov }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="k" for="us-distrito">Distrito</label>
+          <select autocomplete="off" id="us-distrito" class="ui-select"
+            [ngModel]="form().distrito" (ngModelChange)="patch({ distrito: $event })"
+            [disabled]="!distritos().length"
+          >
+            <option value="">Selecciona distrito…</option>
+            @for (dis of distritos(); track dis) {
+              <option [value]="dis">{{ dis }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <span class="field-hint sheet__wide">
+        Estos datos se usan como responsable (encargado) en las inscripciones del usuario.
+      </span>
     </div>
   </div>
 

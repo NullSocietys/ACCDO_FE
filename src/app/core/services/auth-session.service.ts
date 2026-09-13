@@ -128,6 +128,72 @@ export class AuthSessionService {
     this.usuarioSignal.set(null);
   }
 
+  /**
+   * Valida la sesión contra el backend (/api/auth/me). Un token guardado en
+   * localStorage puede quedar huérfano (usuario borrado o BD restaurada):
+   * el token sigue siendo válido criptográficamente, así que no hay 401 y
+   * el backend rechaza recién en las operaciones con errores de negocio.
+   *
+   * OJO: este servicio usa HttpClient SIN interceptores (evita dependencia
+   * circular), así que el header Authorization se agrega a mano. Sin él,
+   * /me respondería 401 y limpiaría la sesión en cada carga de página.
+   * En 4xx limpia la sesión local; en errores de red la conserva.
+   */
+  validarSesion(): Observable<AuthUsuario> {
+    return this.verificarSesion().pipe(
+      catchError((err) => {
+        const status = (err as HttpErrorResponse)?.status ?? 0;
+        if (status !== 401) {
+          // 403/404/400 (usuario borrado/inactivo): limpiar. Red (0) o 5xx: conservar.
+          if (status >= 400 && status < 500) {
+            this.clearSession();
+          }
+          return throwError(() => err);
+        }
+        // Access token expirado: refrescar y reintentar una vez.
+        return this.refreshAccessToken().pipe(
+          switchMap(() => this.verificarSesion()),
+          catchError((err2) => {
+            const status2 = (err2 as HttpErrorResponse)?.status ?? 0;
+            if (status2 >= 400 && status2 < 500) {
+              this.clearSession();
+            }
+            return throwError(() => err2);
+          }),
+        );
+      }),
+    );
+  }
+
+  /** GET /me con el token manual. 401 si no hay token. */
+  private verificarSesion(): Observable<AuthUsuario> {
+    const token = this.accessTokenSignal();
+    const req$: Observable<AuthUsuario> = token
+      ? this.http.get<AuthUsuario>(`${AUTH_URL}/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      : throwError(() => new HttpErrorResponse({ status: 401, statusText: 'Sin token' }));
+    return req$.pipe(
+      timeout({ first: 10_000 }),
+      map((u) => {
+        const usuario: AuthUsuario = { ...u, roles: this.normalizeRoles(u.roles) };
+        localStorage.setItem(USER_KEY, JSON.stringify(usuario));
+        this.usuarioSignal.set(usuario);
+        return usuario;
+      }),
+    );
+  }
+
+  /** Mantiene la sesión local alineada tras actualizar el perfil de contacto. */
+  actualizarContactoLocal(contacto: Pick<AuthUsuario,
+    'nombre' | 'dni' | 'telefono' | 'departamento' | 'provincia' | 'distrito'>): void {
+    const actual = this.usuarioSignal();
+    if (!actual) return;
+    const usuario: AuthUsuario = { ...actual, ...contacto };
+    localStorage.setItem(USER_KEY, JSON.stringify(usuario));
+    this.usuarioSignal.set(usuario);
+  }
+
   /** Destino por defecto tras autenticarse. */
   defaultHome(): string {
     return this.isAdmin() ? '/admin' : '/';

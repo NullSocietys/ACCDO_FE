@@ -14,12 +14,47 @@ import { InputComponent } from '../../shared/ui/input.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
+import departamentoData from '../../core/ubigeo-json/1_ubigeo_departamentos.json';
+import provinciaData from '../../core/ubigeo-json/2_ubigeo_provincias.json';
+import distritoData from '../../core/ubigeo-json/3_ubigeo_distritos.json';
+
+interface UbigeoDepartamento {
+  id: number;
+  departamento: string;
+}
+
+interface UbigeoProvincia {
+  id: number;
+  provincia: string;
+  departamento_id: number;
+}
+
+interface UbigeoDistrito {
+  id: number;
+  distrito: string;
+  provincia_id: number;
+}
+
+const ubigeoDepartamentos = (
+  departamentoData as { ubigeo_departamentos: UbigeoDepartamento[] }
+).ubigeo_departamentos;
+const ubigeoProvincias = (
+  provinciaData as { ubigeo_provincias: UbigeoProvincia[] }
+).ubigeo_provincias;
+const ubigeoDistritos = (
+  distritoData as { ubigeo_distritos: UbigeoDistrito[] }
+).ubigeo_distritos;
 
 const emptyForm = () => ({
   nombre: '',
   correo: '',
   password: '',
   rol: 'CLIENTE',
+  dni: '',
+  telefono: '',
+  departamento: '',
+  provincia: '',
+  distrito: '',
 });
 
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -109,6 +144,44 @@ export class UsuariosPage {
     this.page.set(1);
   }
 
+  /* ============================================================
+     UBIGEO EN CASCADA (departamento -> provincia -> distrito)
+     ============================================================ */
+
+  readonly departamentos: string[] = ubigeoDepartamentos.map((d) => d.departamento);
+
+  readonly provincias = computed(() => {
+    const dep = ubigeoDepartamentos.find((d) => d.departamento === this.form().departamento);
+    if (!dep) return [];
+    return ubigeoProvincias
+      .filter((p) => p.departamento_id === dep.id)
+      .map((p) => p.provincia);
+  });
+
+  readonly distritos = computed(() => {
+    const dep = ubigeoDepartamentos.find((d) => d.departamento === this.form().departamento);
+    const prov = ubigeoProvincias.find(
+      (p) => p.provincia === this.form().provincia && (!dep || p.departamento_id === dep.id),
+    );
+    if (!prov) return [];
+    return ubigeoDistritos
+      .filter((d) => d.provincia_id === prov.id)
+      .map((d) => d.distrito);
+  });
+
+  onDepartamento(dep: string): void {
+    this.patch({ departamento: dep, provincia: '', distrito: '' });
+  }
+
+  onProvincia(prov: string): void {
+    this.patch({ provincia: prov, distrito: '' });
+  }
+
+  /** Solo dígitos para DNI/celular. */
+  soloDigitos(v: string, max = 9): string {
+    return v.replace(/\D/g, '').slice(0, max);
+  }
+
   onPageChange(next: number): void {
     this.page.set(next);
     const folio = document.querySelector('.folio');
@@ -162,14 +235,41 @@ export class UsuariosPage {
         correo: fresco.correo,
         password: '',
         rol: fresco.roles?.includes('ADMIN') ? 'ADMIN' : rolActual,
+        dni: (fresco.dni ?? '').trim(),
+        telefono: (fresco.telefono ?? '').trim(),
+        departamento: (fresco.departamento ?? '').trim(),
+        provincia: (fresco.provincia ?? '').trim(),
+        distrito: (fresco.distrito ?? '').trim(),
       });
     } catch {
-      this.form.set({ nombre: usuario.nombre, correo: usuario.correo, password: '', rol: rolActual });
+      this.form.set({
+        nombre: usuario.nombre,
+        correo: usuario.correo,
+        password: '',
+        rol: rolActual,
+        dni: (usuario.dni ?? '').trim(),
+        telefono: (usuario.telefono ?? '').trim(),
+        departamento: (usuario.departamento ?? '').trim(),
+        provincia: (usuario.provincia ?? '').trim(),
+        distrito: (usuario.distrito ?? '').trim(),
+      });
     }
     this.modalOpen.set(true);
   }
 
-  patch(partial: Partial<{ nombre: string; correo: string; password: string; rol: string }>): void {
+  patch(
+    partial: Partial<{
+      nombre: string;
+      correo: string;
+      password: string;
+      rol: string;
+      dni: string;
+      telefono: string;
+      departamento: string;
+      provincia: string;
+      distrito: string;
+    }>,
+  ): void {
     this.form.update((f) => ({ ...f, ...partial }));
     this.errores.update((e) => {
       const clave = Object.keys(partial)[0];
@@ -245,6 +345,14 @@ export class UsuariosPage {
       e['password'] = 'La nueva contraseña debe tener al menos 8 caracteres.';
     }
 
+    if (d.dni && !/^\d{8}$/.test(d.dni)) {
+      e['dni'] = 'El DNI debe tener 8 dígitos.';
+    }
+
+    if (d.telefono && !/^9\d{8}$/.test(d.telefono)) {
+      e['telefono'] = 'El teléfono debe tener 9 dígitos y empezar con 9.';
+    }
+
     this.errores.set(e);
     return Object.keys(e).length === 0;
   }
@@ -256,12 +364,21 @@ export class UsuariosPage {
     }
     const data = this.form();
     const id = this.editingId();
+    /** Contacto: el backend lo usa como responsable de sus inscripciones. */
+    const contacto = {
+      dni: data.dni.trim() || undefined,
+      telefono: data.telefono.trim() || undefined,
+      departamento: data.departamento.trim() || undefined,
+      provincia: data.provincia.trim() || undefined,
+      distrito: data.distrito.trim() || undefined,
+    };
     try {
       if (id) {
         await this.store.actualizarUsuario(id, {
           nombre: data.nombre.trim(),
           correo: data.correo.trim(),
           password: data.password || undefined,
+          ...contacto,
         });
         await this.cambiarRolSiNecesario(id, data.rol);
         this.toast.success('Usuario actualizado');
@@ -270,6 +387,10 @@ export class UsuariosPage {
           nombre: data.nombre.trim(),
           correo: data.correo.trim(),
           password: data.password,
+          // Alta administrativa: conserva el flujo existente y crea la
+          // agrupación inicial; el responsable podrá verla al ingresar.
+          agrupacionNombre: data.nombre.trim(),
+          ...contacto,
         });
         await this.cambiarRolSiNecesario(creado.id, data.rol);
         this.toast.success('Usuario creado');
@@ -322,13 +443,16 @@ export class UsuariosPage {
   async removeFisico(usuario: Usuario): Promise<void> {
     const ok = await this.confirm.ask({
       title: 'Eliminar definitivamente',
-      description: `«${usuario.nombre}» se borrará de forma permanente. Esta acción no se puede deshacer.`,
+      description:
+        `«${usuario.nombre}» se borrará permanentemente junto con sus inscripciones ` +
+        `y su agrupación. El nombre del grupo quedará libre para que su encargado real se registre. ` +
+        `Esta acción no se puede deshacer.`,
       confirmLabel: 'Eliminar para siempre',
       tone: 'danger',
     });
     if (!ok) return;
     try {
-      await this.store.eliminarFisicoUsuario(usuario.id, true);
+      await this.store.eliminarFisicoUsuario(usuario.id, this.estadoFiltro() === 'inactivos');
       this.toast.success('Usuario eliminado definitivamente');
     } catch (err) {
       this.toast.error('No se pudo eliminar', (err as Error).message);

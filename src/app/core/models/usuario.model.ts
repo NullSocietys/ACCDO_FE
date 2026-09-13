@@ -11,6 +11,12 @@ export interface Usuario {
   activo: boolean;
   createdAt: string;
   roles?: RolNombre[];
+  /** Datos de contacto del responsable (el backend los usa en sus inscripciones). */
+  dni?: string | null;
+  telefono?: string | null;
+  departamento?: string | null;
+  provincia?: string | null;
+  distrito?: string | null;
 }
 
 /** POST /api/usuarios/registro — incluye el contacto que se guarda en la cuenta. */
@@ -23,6 +29,7 @@ export interface RegistroRequest {
   departamento?: string;
   provincia?: string;
   distrito?: string;
+  agrupacionNombre: string;
 }
 
 /** PATCH /api/usuarios/mi/contacto — actualiza el contacto del usuario autenticado. */
@@ -35,11 +42,16 @@ export interface ContactoRequest {
   distrito?: string;
 }
 
-/** PUT /api/usuarios/{id} — password opcional (vacío = no cambia) */
+/** PUT /api/usuarios/{id} — password opcional (vacío = no cambia); contacto opcional (null = no cambia) */
 export interface ActualizarRequest {
   nombre: string;
   correo: string;
   password?: string;
+  dni?: string;
+  telefono?: string;
+  departamento?: string;
+  provincia?: string;
+  distrito?: string;
 }
 
 /** POST /api/auth/login y POST /api/auth/refresh */

@@ -40,4 +40,5 @@ export interface PagoView extends Pago {
   codigo: string;
   nombreGrupo: string;
   responsableNombre: string;
+  modalidad: string;
 }
