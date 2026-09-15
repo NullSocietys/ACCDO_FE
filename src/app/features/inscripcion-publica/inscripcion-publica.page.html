@@ -309,16 +309,16 @@
                     <span class="ipo-section__title">Tu agrupación o institución</span>
                     <span class="ipo-section__badge">Una vez</span>
                   </div>
-                  <p class="ipo-section__desc">El nombre identifica a tu grupo en el concurso. Escríbelo tal como quieres que aparezca.</p>
+                  <p class="ipo-section__desc">El nombre identifica a tu grupo en el concurso. Escríbelo tal como quieres que aparezca. Si tu institución tiene varias filiales, incluye la tuya: “Sambos del Socavón — Filial Chincha”.</p>
 
                   <div class="ipo-grid ipo-grid--2">
                     <div class="ipo-field ipo-field--full" [class.is-invalid]="agrupacionErrores()['nombre']">
                       <span>Nombre del grupo</span>
-                      <input type="text" placeholder="Ej: Sambos del Socavón"
+                      <input type="text" placeholder="Ej: Sambos del Socavón — Filial Chincha"
                         [ngModel]="nombreAgrupacion()" (ngModelChange)="onNombreAgrupacionChange($event)">
                       <small>Se guardará permanentemente para esta cuenta.</small>
                       @if (similitud()?.hayCoincidencia && nombreConfirmado()) {
-                        <span class="ipo-hint ipo-hint--warn">Nombre confirmado como diferente por ti.</span>
+                        <span class="ipo-hint ipo-hint--warn">Registrado como grupo diferente: cada filial se inscribe por separado.</span>
                       }
                       @if (agrupacionErrores()['nombre']) {
                         <span class="ipo-error-text">{{ agrupacionErrores()['nombre'] }}</span>
@@ -793,7 +793,7 @@
 
       <p class="ipo-modal__hint">
         Si <strong>este es tu grupo</strong> y otra persona lo registró sin tu autorización, puedes reclamarlo.
-        Si es un <strong>grupo diferente</strong>, puedes confirmar y continuar.
+        Si es un <strong>grupo diferente</strong> (por ejemplo, otra filial de la misma institución), confirma y continúa.
       </p>
 
       <div class="ipo-modal__actions">

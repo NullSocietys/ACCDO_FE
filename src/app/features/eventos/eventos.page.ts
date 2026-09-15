@@ -29,7 +29,7 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
 const DIAS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 const PAGE_SIZE = 5;
 
-type EstadoFiltro = 'todos' | EventoEstado;
+type EstadoFiltro = 'todos' | 'inactivos' | EventoEstado;
 
 @Component({
   selector: 'app-eventos-page',
@@ -77,10 +77,18 @@ export class EventosPage {
     { key: 'ACTIVO', label: 'Activos' },
     { key: 'CERRADO', label: 'Cerrados' },
     { key: 'CANCELADO', label: 'Cancelados' },
+    { key: 'inactivos', label: 'Inactivos' },
   ];
 
+  private readonly lista = computed(() => {
+    const f = this.estadoFiltro();
+    if (f === 'inactivos') return this.store.eventosInactivos();
+    if (f === 'todos') return [...this.store.eventos(), ...this.store.eventosInactivos()];
+    return this.store.eventos();
+  });
+
   private readonly ordenados = computed(() =>
-    [...this.store.eventos()].sort(
+    [...this.lista()].sort(
       (a, b) => a.fecha.localeCompare(b.fecha) || a.hora.localeCompare(b.hora),
     ),
   );
@@ -90,7 +98,7 @@ export class EventosPage {
     const f = this.estadoFiltro();
     return this.ordenados().filter(
       (e) =>
-        (f === 'todos' || e.estado === f) &&
+        (f === 'todos' || f === 'inactivos' || e.estado === f) &&
         (!q ||
           e.nombre.toLowerCase().includes(q) ||
           e.lugar.toLowerCase().includes(q) ||
@@ -102,6 +110,12 @@ export class EventosPage {
     const start = (this.page() - 1) * this.pageSize;
     return this.filtrados().slice(start, start + this.pageSize);
   });
+
+  /** true cuando la página actual tiene exactamente pageSize filas.
+   *  Página llena → la card usa flex:1 y llena el alto disponible.
+   *  Página parcial → la card mide lo justo (altura natural).
+   */
+  readonly isFullPage = computed(() => this.paged().length >= this.pageSize);
 
   readonly rangeLabel = computed(() => {
     const total = this.filtrados().length;
@@ -125,10 +139,12 @@ export class EventosPage {
 
   readonly overview = computed(() => {
     const eventos = this.store.eventos();
+    const inactivos = this.store.eventosInactivos();
     return {
-      total: eventos.length,
+      total: eventos.length + inactivos.length,
       activos: eventos.filter((e) => e.estado === 'ACTIVO').length,
       cerrados: eventos.filter((e) => e.estado === 'CERRADO').length,
+      inactivos: inactivos.length,
       grupos: this.store.inscripcionesView().filter((i) => i.estado !== 'RECHAZADA').length,
     };
   });
@@ -148,7 +164,8 @@ export class EventosPage {
   }
 
   cuentaEstado(key: EstadoFiltro): number {
-    if (key === 'todos') return this.store.eventos().length;
+    if (key === 'todos') return this.store.eventos().length + this.store.eventosInactivos().length;
+    if (key === 'inactivos') return this.store.eventosInactivos().length;
     return this.store.eventos().filter((e) => e.estado === key).length;
   }
 
@@ -193,6 +210,12 @@ export class EventosPage {
   limpiarFiltros(): void {
     this.busqueda.set('');
     this.estadoFiltro.set('todos');
+    this.page.set(1);
+  }
+
+  onEstadoChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value as EstadoFiltro;
+    this.estadoFiltro.set(value);
     this.page.set(1);
   }
 
@@ -290,14 +313,47 @@ export class EventosPage {
   async remove(evento: Evento): Promise<void> {
     const ok = await this.confirm.ask({
       title: 'Eliminar evento',
-      description: `¿Eliminar «${evento.nombre}»?`,
-      confirmLabel: 'Eliminar',
+      description: `«${evento.nombre}» pasará al archivo inactivo y podrá restaurarse después. ¿Continuar?`,
+      confirmLabel: 'Desactivar',
       tone: 'danger',
     });
     if (!ok) return;
     try {
       await this.store.removeEvento(evento.id);
-      this.toast.success('Evento eliminado');
+      this.toast.success('Evento desactivado');
+    } catch (err) {
+      this.toast.error('No se pudo eliminar', (err as Error).message);
+    }
+  }
+
+  async restore(evento: Evento): Promise<void> {
+    const ok = await this.confirm.ask({
+      title: 'Restaurar evento',
+      description: `¿Reactivar «${evento.nombre}» para que vuelva al calendario?`,
+      confirmLabel: 'Restaurar',
+    });
+    if (!ok) return;
+    try {
+      await this.store.restaurarEvento(evento.id);
+      this.toast.success('Evento restaurado');
+    } catch (err) {
+      this.toast.error('No se pudo restaurar', (err as Error).message);
+    }
+  }
+
+  async removeFisico(evento: Evento): Promise<void> {
+    const ok = await this.confirm.ask({
+      title: 'Eliminar definitivamente',
+      description:
+        `«${evento.nombre}» se borrará permanentemente. Solo es posible si no tiene inscripciones asociadas. ` +
+        `Esta acción no se puede deshacer.`,
+      confirmLabel: 'Eliminar para siempre',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await this.store.eliminarFisicoEvento(evento.id);
+      this.toast.success('Evento eliminado definitivamente');
     } catch (err) {
       this.toast.error('No se pudo eliminar', (err as Error).message);
     }

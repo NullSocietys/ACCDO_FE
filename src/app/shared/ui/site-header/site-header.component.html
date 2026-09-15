@@ -75,6 +75,15 @@
               >
                 Panel organización
               </button>
+            } @else if (esAdminLogueado()) {
+              <button
+                type="button"
+                class="hdr-act hdr-act--primary"
+                role="menuitem"
+                (click)="onPanelAdmin()"
+              >
+                Panel organización
+              </button>
             } @else {
               <button
                 type="button"

@@ -1,13 +1,66 @@
 /* Swiss Minimal — Caporales consola
    Ink + stone + gold. Mast / folio / ranking. Hairlines. No soft cards. */
 
+:host {
+  /* ── Paleta sidebar dark + gold (patrón usuarios) ──
+     Remapea los tokens globales que consume esta página. */
+  --stone-50:  #1c1917;
+  --stone-100: #211f1d;
+  --stone-200: rgba(255,255,255,.16);
+  --stone-300: #a8a29e;
+  --stone-400: #a8a29e;
+  --stone-500: #78716c;
+  --stone-600: #a8a29e;
+  --stone-700: #a8a29e;
+  --stone-800: #292524;
+  --stone-900: #e7e5e4;
+
+  --gold-50:  rgba(251,191,36,.06);
+  --gold-100: rgba(251,191,36,.1);
+  --gold-200: #fbbf24;
+  --gold-700: #fbbf24;
+  --gold-800: #fbbf24;
+
+  --color-primary:          #fbbf24;
+  --color-on-primary:       #0c0a09;
+  --color-accent:           #fbbf24;
+  --color-accent-hover:     #f59e0b;
+  --color-accent-soft:      rgba(161,98,7,.14);
+  --color-accent-border:    rgba(251,191,36,.35);
+  --color-background:       #1a1816;
+  --color-foreground:       #e7e5e4;
+  --color-card:             #211f1d;
+  --color-muted:            #1c1917;
+  --color-muted-foreground: #78716c;
+  --color-border:           rgba(255,255,255,.09);
+  --color-border-strong:    rgba(255,255,255,.16);
+  --color-destructive:      #f87171;
+  --color-ring:             #fbbf24;
+
+  min-height: 0;
+  min-width: 0;
+  /* Extiende el host sobre el padding del shell (igual que usuarios) */
+  margin-top:    calc(-1 * clamp(1rem, 1.5vw, 1.25rem));
+  margin-bottom: calc(-1 * clamp(1rem, 1.5vw, 1.25rem));
+  margin-left:   calc(-1 * clamp(0.875rem, 1.4vw, 1.25rem));
+  margin-right:  calc(-1 * clamp(0.875rem, 1.4vw, 1.25rem));
+  background: var(--color-background);
+}
+
 .dash {
   --rule: var(--color-border);
-  --ink: var(--stone-900);
-  --quiet: var(--stone-500);
-  --paper: var(--color-card);
-  --field: var(--stone-50);
-  --accent: var(--gold-700);
+  --ink: #e7e5e4;
+  --quiet: #78716c;
+  --paper: #211f1d;
+  --field: #1c1917;
+  --accent: #fbbf24;
+
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--color-background);
 }
 
 /* —— Skeleton —— */
@@ -17,114 +70,99 @@
   gap: 20px;
 }
 
-.skel__kpis {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-/* —— Mast —— */
-.mast {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
-  gap: 24px 40px;
-  align-items: start;
-  padding-bottom: 20px;
-  border-bottom: 2px solid var(--ink);
-}
-
-.mast__eyebrow {
-  margin: 0 0 8px;
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.mast h1 {
-  margin: 0;
-  font-size: clamp(2rem, 3.2vw, 2.65rem);
-  font-weight: 700;
-  letter-spacing: -0.045em;
-  line-height: 0.95;
-  color: var(--ink);
-}
-
-.mast__lead {
-  margin: 12px 0 0;
-  max-width: 44ch;
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--quiet);
-}
-
-.mast__aside {
+/* —— Topbar (patrón pagos/reportes) —— */
+.topbar {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   gap: 16px;
-  align-items: stretch;
+  flex-shrink: 0;
 }
 
-.mast__pulse {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 0;
-}
-
-.mast__pulse > div {
-  padding: 9px 24px;
-  border: 1px solid var(--rule);
-  background: var(--paper);
-  border-radius: 6px;
+.topbar__left {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
   min-width: 0;
 }
 
-.mast__pulse dt {
-  margin: 0 0 4px;
-  font-size: 11px;
+.topbar__breadcrumb {
+  font-size: 10.5px;
   font-weight: 650;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--quiet);
 }
 
-.mast__pulse dd {
+.topbar__sep {
+  color: var(--quiet);
+  font-size: 11px;
+}
+
+.topbar__title {
   margin: 0;
-  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar__right > a {
+  text-decoration: none;
+  display: flex;
+}
+
+/* —— KPIs (patrón: acento superior + etiqueta mayúscula) —— */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.kpi {
+  padding: 12px 16px;
+  border: 1px solid var(--rule);
+  border-top: 2px solid var(--quiet);
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.kpi--gold {
+  border-top-color: var(--accent);
+}
+
+.kpi__label {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--quiet);
+}
+
+.kpi__value {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
-  line-height: 1;
+  line-height: 1.05;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.mast__pulse--gold dd {
+.kpi--gold .kpi__value {
   color: var(--accent);
-}
-
-.mast__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  justify-content: stretch;
-}
-
-.mast__actions > a {
-  text-decoration: none;
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-}
-
-.mast__actions > a > app-button {
-  width: 100%;
-  flex: 1;
 }
 
 /* —— Alert strip —— */
@@ -645,13 +683,12 @@
 }
 
 @media (max-width: 720px) {
-  .mast {
-    grid-template-columns: 1fr;
-    gap: 18px;
+  .kpi-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .skel__kpis {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .topbar {
+    flex-wrap: wrap;
   }
 
   .strip {
@@ -686,11 +723,7 @@
 }
 
 @media (max-width: 480px) {
-  .skel__kpis {
-    grid-template-columns: 1fr;
-  }
-
-  .mast__pulse {
+  .kpi-row {
     grid-template-columns: 1fr;
   }
 

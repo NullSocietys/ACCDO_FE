@@ -7,16 +7,9 @@
 
   <aside class="sidebar" aria-label="Navegación principal">
     <div class="brand">
-      <div class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M4 18c4-1 7-6 8-10" />
-          <path d="M12 8c1.5 2 4 4 8 4" />
-          <circle cx="12" cy="7" r="1.4" fill="currentColor" stroke="none" />
-        </svg>
-      </div>
+      <img class="brand-logo" src="logo/logo.png" alt="" width="40" height="40" />
       <div class="brand-text">
-        <strong>Chicote de Oro</strong>
-        <span>Inscripciones Caporales</span>
+        <img class="brand-slogan" src="logo/eslogan.png" alt="Chicote de Oro — Elegancia en movimiento" />
       </div>
       <button
         class="collapse-btn"
@@ -48,17 +41,19 @@
     </nav>
 
     <div class="sidebar-footer">
-
-      <div class="admin">
+      <button
+        class="admin"
+        type="button"
+        (click)="perfilOpen.set(true)"
+        [attr.aria-haspopup]="'dialog'"
+        aria-label="Abrir perfil de usuario"
+      >
         <div class="admin-avatar" aria-hidden="true">{{ initials() }}</div>
         <div class="admin-meta">
           <strong>{{ displayName() }}</strong>
           <span>{{ displayEmail() }}</span>
         </div>
-      </div>
-      <button class="logout" type="button" (click)="logout()" [disabled]="loggingOut()">
-        <app-icon name="logOut" [size]="17" />
-        <span class="logout-label">{{ loggingOut() ? 'Cerrando…' : 'Cerrar sesión' }}</span>
+        <app-icon class="admin-chev" name="chevronRight" [size]="14" />
       </button>
     </div>
   </aside>
@@ -74,3 +69,27 @@
 
 <app-toast-host />
 <app-confirm-dialog />
+
+<!-- ══ Modal de perfil: datos del usuario + cerrar sesión ══ -->
+<app-modal
+  [open]="perfilOpen()"
+  label="Perfil"
+  title="Mi perfil"
+  description="Datos de la cuenta con la que iniciaste sesión en el panel."
+  (closed)="perfilOpen.set(false)"
+>
+  <div class="perfil-card">
+    <div class="perfil-avatar" aria-hidden="true">{{ initials() }}</div>
+    <div class="perfil-datos">
+      <strong class="perfil-nombre">{{ displayName() }}</strong>
+      <span class="perfil-correo">{{ displayEmail() }}</span>
+      <span class="perfil-rol">Organizador · Acceso total</span>
+    </div>
+  </div>
+  <div modal-footer>
+    <app-button variant="outline" (clicked)="perfilOpen.set(false)">Cerrar perfil</app-button>
+    <app-button variant="destructive" icon="logOut" [disabled]="loggingOut()" (clicked)="logout()">
+      {{ loggingOut() ? 'Cerrando…' : 'Cerrar sesión' }}
+    </app-button>
+  </div>
+</app-modal>

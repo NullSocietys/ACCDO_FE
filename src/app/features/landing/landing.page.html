@@ -74,7 +74,7 @@
         </button>
 
         <div class="hero-top hero-anim">
-          <span class="hero-tag">VII Concurso Nacional 2026 · Dom 16 ago · Coliseo de Imperial, Cañete · 10:00 am</span>
+          <span class="hero-tag">{{ contenido.hero.etiqueta }}</span>
         </div>
 
         <div class="hero-bottom">
@@ -89,11 +89,10 @@
 
               <div class="hero-text">
                 <h1 class="hero-title hero-anim">
-                  <span class="hero-brand-text">Asociación Cultural<br>Chicote de Oro<span class="hero-brand-sub">Elegancia en movimiento</span></span>
+                  <span class="hero-brand-text">{{ contenido.hero.marcaLinea1 }}<br>{{ contenido.hero.marcaLinea2 }}<span class="hero-brand-sub">{{ contenido.hero.eslogan }}</span></span>
                 </h1>
                 <p class="hero-sub hero-anim">
-                  Vive la pasión por la danza en un escenario de lujo: concursos, categorías y resultados
-                  que celebran el talento con elegancia dorada.
+                  {{ contenido.hero.descripcion }}
                 </p>
               </div>
             </div>
@@ -102,14 +101,14 @@
           <div class="hero-divider" aria-hidden="true"></div>
 
           <div class="hero-side hero-anim">
-            <span class="hero-side-label">Inscripciones hasta el 12 de agosto</span>
+            <span class="hero-side-label">{{ contenido.hero.avisoInscripciones }}</span>
             <div class="hero-actions">
               <a class="btn btn-gold" routerLink="/inscribirse">
-                <span>Inscribirme ahora</span>
+                <span>{{ contenido.hero.botonPrincipal }}</span>
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
               <a class="btn btn-outline" href="#experiencia">
-                <span>Ver el concurso</span>
+                <span>{{ contenido.hero.botonSecundario }}</span>
               </a>
             </div>
           </div>
@@ -126,16 +125,16 @@
           <div>
             <span class="sec-eyebrow">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
-              El concurso · VII edición
+              {{ contenido.concurso.antetitulo }}
             </span>
             <h1 class="sec-title">
-              <span class="sec-title__line">VII Concurso Nacional de</span>
-              <span class="sec-title__emphasis">Caporales</span>
+              <span class="sec-title__line">{{ contenido.concurso.tituloLinea1 }}</span>
+              <span class="sec-title__emphasis">{{ contenido.concurso.tituloLinea2 }}</span>
             </h1>
           </div>
           <p class="sec-note">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            Semifinal y Gran Final el domingo 16 de agosto en el Coliseo de Imperial — Cañete. Organiza la Asociación Cultural Chicote de Oro.
+            {{ contenido.concurso.nota }}
           </p>
         </div>
 
@@ -146,30 +145,20 @@
             <img src="fotos/ballets/ballet4.png" alt="Ballet sobre el escenario — VII Concurso Nacional de Caporales" width="2000" height="1414" fetchpriority="high" decoding="async">
             <div class="prog-media__veil" aria-hidden="true"></div>
             <div class="prog-media__body">
-              <span class="prog-media__eyebrow">16 de agosto · 10:00 am</span>
-              <h2 class="prog-media__title">Semifinal y<br>Gran Final</h2>
-              <p class="prog-media__desc">Coliseo de Imperial — Cañete. Una jornada completa dedicada a la elegancia de los caporales.</p>
+              <span class="prog-media__eyebrow">{{ contenido.concurso.tarjeta.etiqueta }}</span>
+              <h2 class="prog-media__title">{{ contenido.concurso.tarjeta.tituloLinea1 }}<br>{{ contenido.concurso.tarjeta.tituloLinea2 }}</h2>
+              <p class="prog-media__desc">{{ contenido.concurso.tarjeta.descripcion }}</p>
             </div>
           </div>
 
           <!-- Datos clave en una franja compacta -->
           <div class="prog-facts">
-            <div class="prog-fact">
-              <span class="prog-fact__k">Organiza</span>
-              <strong class="prog-fact__v">Asociación Cultural Chicote de Oro</strong>
-            </div>
-            <div class="prog-fact">
-              <span class="prog-fact__k">Horario</span>
-              <strong class="prog-fact__v">10:00 am — jornada completa</strong>
-            </div>
-            <div class="prog-fact">
-              <span class="prog-fact__k">Sorteo oficial</span>
-              <strong class="prog-fact__v">Vie 14 ago · 09:00 pm — Facebook</strong>
-            </div>
-            <div class="prog-fact prog-fact--cta">
-              <span class="prog-fact__k">Inscripciones hasta 12 ago</span>
-              <strong class="prog-fact__v">Yape · WhatsApp · 926 266 295</strong>
-            </div>
+            @for (dato of contenido.datosClave; track dato.titulo) {
+              <div class="prog-fact" [class.prog-fact--cta]="dato.destacada">
+                <span class="prog-fact__k">{{ dato.titulo }}</span>
+                <strong class="prog-fact__v">{{ dato.valor }}</strong>
+              </div>
+            }
           </div>
 
           <!-- Muro de fotos por categoría -->
@@ -244,54 +233,42 @@
       <div class="container">
         <div class="sec-head reveal">
           <div>
-            <span class="sec-eyebrow">Inscripciones</span>
-            <h2 class="sec-title">Proceso de <em>inscripción</em></h2>
+            <span class="sec-eyebrow">{{ contenido.proceso.antetitulo }}</span>
+            <h2 class="sec-title">{{ contenido.proceso.tituloLinea1 }} <em>{{ contenido.proceso.tituloResaltado }}</em></h2>
           </div>
-          <p class="sec-note">Tres pasos simples desde tu celular. Cada paso toma menos de 2 minutos.</p>
+          <p class="sec-note">{{ contenido.proceso.nota }}</p>
         </div>
 
         <div class="process-flow">
-          <article class="process-step reveal">
-            <span class="process-step__num" aria-hidden="true">01</span>
-            <span class="process-step__kicker">Paso uno</span>
-            <div class="process-step__icon">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-            </div>
-            <h3 class="process-step__title">Completa el formulario</h3>
-            <p class="process-step__description">Registra tu cuenta, tu <strong>grupo</strong> y la nómina de participantes</p>
-            <div class="process-step__time">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-              ~3 min
-            </div>
-          </article>
-
-          <article class="process-step reveal">
-            <span class="process-step__num" aria-hidden="true">02</span>
-            <span class="process-step__kicker">Paso 2</span>
-            <div class="process-step__icon">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M2 11h20"/><path d="M6 15h4"/></svg>
-            </div>
-            <h3 class="process-step__title">Realiza tu Yape</h3>
-            <p class="process-step__description">Al <strong>926 266 295</strong> indicando el nombre de tu institución e ingresa el número de operación</p>
-            <div class="process-step__time">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-              ~1 min
-            </div>
-          </article>
-
-          <article class="process-step reveal">
-            <span class="process-step__num" aria-hidden="true">03</span>
-            <span class="process-step__kicker">Paso final</span>
-            <div class="process-step__icon">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/><path d="m20 6-4 14-7-6"/></svg>
-            </div>
-            <h3 class="process-step__title">Espera la confirmación</h3>
-            <p class="process-step__description">Con tu <strong>código de inscripción</strong> consulta cuándo la organización confirma tu cupo</p>
-            <div class="process-step__time">
-              <span class="process-step__live" aria-hidden="true"></span>
-              En revisión
-            </div>
-          </article>
+          @for (paso of contenido.proceso.pasos; track paso.numero) {
+            <article class="process-step reveal">
+              <span class="process-step__num" aria-hidden="true">{{ paso.numero }}</span>
+              <span class="process-step__kicker">{{ paso.kicker }}</span>
+              <div class="process-step__icon">
+                @switch (paso.numero) {
+                  @case ('01') {
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                  }
+                  @case ('02') {
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M2 11h20"/><path d="M6 15h4"/></svg>
+                  }
+                  @default {
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/><path d="m20 6-4 14-7-6"/></svg>
+                  }
+                }
+              </div>
+              <h3 class="process-step__title">{{ paso.titulo }}</h3>
+              <p class="process-step__description" [innerHTML]="paso.descripcion"></p>
+              <div class="process-step__time">
+                @if (paso.enVivo) {
+                  <span class="process-step__live" aria-hidden="true"></span>
+                } @else {
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                }
+                {{ paso.tiempo }}
+              </div>
+            </article>
+          }
         </div>
 
         <div class="sec-cta-row">
@@ -307,15 +284,15 @@
     </section>
 
     <!-- ===================== TARIFAS — PRICING TABLE REFINED ===================== -->
-    <!-- ===================== INVERSIÓN + PREMIOS + REGLAS — UNA SECCIÓN ===================== -->
+    <!-- ===================== INVERSIÓN + PREMIOS — UNA SECCIÓN ===================== -->
     <section class="cta inversion" id="inversion">
       <div class="container">
         <div class="sec-head sec-head--costos reveal">
           <div>
-            <span class="sec-eyebrow"><i class="sec-eyebrow__dot" aria-hidden="true"></i>Inversión y reglas 2026</span>
+            <span class="sec-eyebrow"><i class="sec-eyebrow__dot" aria-hidden="true"></i>{{ contenido.inversion.antetitulo }} {{ contenido.inversion.anio }}</span>
             <h2 class="sec-title">
-              <span class="sec-title__line">Todo lo que define tu</span>
-              <span class="sec-title__emphasis">participación</span>
+              <span class="sec-title__line">{{ contenido.inversion.tituloLinea1 }}</span>
+              <span class="sec-title__emphasis">{{ contenido.inversion.tituloLinea2 }}</span>
             </h2>
           </div>
         </div>
@@ -323,129 +300,62 @@
         <div class="costos-layout">
           <div class="tarifas-block" id="costos">
             <div class="block-head reveal">
-              <h3 class="block-title">Tarifas por modalidad</h3>
-              <span class="block-sub">Precio por inscripción · Pago único</span>
+              <h3 class="block-title">{{ contenido.inversion.tarifasTitulo }}</h3>
+              <span class="block-sub">{{ contenido.inversion.tarifasSub }}</span>
             </div>
             <div class="pricing-table">
               <div class="pricing-grid tarifas-list">
 
-            <article class="rate-item reveal">
-              <img class="rate-item__bg" src="fotos/unipersonal/unipersonal-M.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
-              <span class="rate-item__veil" aria-hidden="true"></span>
-              <div class="rate-item__index" aria-hidden="true">01</div>
-              <div class="rate-item__body">
-                <span class="rate-item__badge">Unipersonal</span>
-                <h3 class="rate-item__name">Macho Caporal</h3>
-                <span class="rate-item__meta">Individual · 2–3 min en escena</span>
-              </div>
-              <div class="rate-item__price">
-                <span class="rate-item__currency">S/</span>
-                <strong class="rate-item__amount">70</strong>
-              </div>
-            </article>
-
-            <article class="rate-item reveal">
-              <img class="rate-item__bg" src="fotos/unipersonal/unipersonal-V1.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
-              <span class="rate-item__veil" aria-hidden="true"></span>
-              <div class="rate-item__index" aria-hidden="true">02</div>
-              <div class="rate-item__body">
-                <span class="rate-item__badge">Unipersonal</span>
-                <h3 class="rate-item__name">Caporalita de Oro</h3>
-                <span class="rate-item__meta">Individual · 2–3 min en escena</span>
-              </div>
-              <div class="rate-item__price">
-                <span class="rate-item__currency">S/</span>
-                <strong class="rate-item__amount">70</strong>
-              </div>
-            </article>
-
-            <article class="rate-item reveal">
-              <img class="rate-item__bg" src="fotos/parejas/pareja1.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
-              <span class="rate-item__veil" aria-hidden="true"></span>
-              <div class="rate-item__index" aria-hidden="true">03</div>
-              <div class="rate-item__body">
-                <span class="rate-item__badge">Pareja</span>
-                <h3 class="rate-item__name">Libre</h3>
-                <span class="rate-item__meta">2 bailarines · 3 min + 45 s entrada</span>
-              </div>
-              <div class="rate-item__price">
-                <span class="rate-item__currency">S/</span>
-                <strong class="rate-item__amount">80</strong>
-              </div>
-            </article>
-
-            <article class="rate-item reveal">
-              <img class="rate-item__bg" src="fotos/parejas/pareja3.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
-              <span class="rate-item__veil" aria-hidden="true"></span>
-              <div class="rate-item__index" aria-hidden="true">04</div>
-              <div class="rate-item__body">
-                <span class="rate-item__badge">Dúos</span>
-                <h3 class="rate-item__name">Machos y Caporalitas</h3>
-                <span class="rate-item__meta">2 bailarines · 3 min + 45 s entrada</span>
-              </div>
-              <div class="rate-item__price">
-                <span class="rate-item__currency">S/</span>
-                <strong class="rate-item__amount">80</strong>
-              </div>
-            </article>
-
-            <article class="rate-item reveal">
-              <img class="rate-item__bg" src="fotos/ballets/ballet2.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
-              <span class="rate-item__veil" aria-hidden="true"></span>
-              <div class="rate-item__index" aria-hidden="true">05</div>
-              <div class="rate-item__body">
-                <span class="rate-item__badge">Tropas</span>
-                <h3 class="rate-item__name">Machos y Caporalitas</h3>
-                <span class="rate-item__meta">Grupo · 5 min + 45 s entrada</span>
-              </div>
-              <div class="rate-item__price">
-                <span class="rate-item__currency">S/</span>
-                <strong class="rate-item__amount">100</strong>
-              </div>
-            </article>
-
-            <article class="rate-item rate-item--featured reveal">
-              <img class="rate-item__bg" src="fotos/ballets/ballet4.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
-              <span class="rate-item__veil" aria-hidden="true"></span>
-              <div class="rate-item__ribbon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
-                La gran apuesta
-              </div>
-              <div class="rate-item__body">
-                <span class="rate-item__badge">Ballet libre · Elenco</span>
-                <h3 class="rate-item__name">Ballet — 5 min en escena</h3>
-                <span class="rate-item__meta">5 min + 45 s entrada · Trofeo + diploma</span>
-              </div>
-              <div class="rate-item__price price">
-                <span class="rate-item__currency">S/</span>
-                <strong class="rate-item__amount">170</strong>
-              </div>
-              <div class="rate-item__awards">
-                <span>Premio mayor</span>
-                <strong>S/ 2,500</strong>
-              </div>
-              <div class="rate-item__index rate-item__index--big" aria-hidden="true">06</div>
-              <div class="rate-item__shine" aria-hidden="true"></div>
-            </article>
+                @for (tarifa of contenido.inversion.tarifas; track tarifa.numero) {
+                  <article class="rate-item reveal" [class.rate-item--featured]="tarifa.destacada">
+                    <img class="rate-item__bg" [src]="tarifa.foto" alt="" aria-hidden="true" loading="lazy" decoding="async">
+                    <span class="rate-item__veil" aria-hidden="true"></span>
+                    @if (tarifa.destacada) {
+                      <div class="rate-item__ribbon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
+                        {{ tarifa.cinta }}
+                      </div>
+                    }
+                    <div class="rate-item__body">
+                      <span class="rate-item__badge">{{ tarifa.categoria }}</span>
+                      <h3 class="rate-item__name">{{ tarifa.nombre }}</h3>
+                      <span class="rate-item__meta">{{ tarifa.detalle }}</span>
+                    </div>
+                    <div class="rate-item__price" [class.price]="tarifa.destacada">
+                      <span class="rate-item__currency">S/</span>
+                      <strong class="rate-item__amount">{{ tarifa.precio }}</strong>
+                    </div>
+                    @if (tarifa.destacada) {
+                      <div class="rate-item__awards">
+                        <span>Premio mayor</span>
+                        <strong>{{ tarifa.premioMayor }}</strong>
+                      </div>
+                      <div class="rate-item__index rate-item__index--big" aria-hidden="true">{{ tarifa.numero }}</div>
+                      <div class="rate-item__shine" aria-hidden="true"></div>
+                    } @else {
+                      <div class="rate-item__index" aria-hidden="true">{{ tarifa.numero }}</div>
+                    }
+                  </article>
+                }
 
           </div><!-- /.pricing-grid -->
             </div><!-- /.pricing-table -->
             <div class="costos-foot costos-foot--inline reveal">
               <div class="costos-pay">
-                <span class="costos-pay__k">Pago único por Yape</span>
-                <strong class="costos-pay__v">926 266 295 <em>· a nombre de la organización</em></strong>
+                <span class="costos-pay__k">{{ contenido.inversion.pagoYapeTitulo }}</span>
+                <strong class="costos-pay__v">{{ contenido.inversion.pagoYapeNumero }} <em>{{ contenido.inversion.pagoYapeDetalle }}</em></strong>
               </div>
               <div class="costos-foot__actions">
-                <a class="btn btn-gold" routerLink="/inscribirse"><span>Inscribirme ahora</span></a>
-                <a class="btn btn-outline" href="/bases/BASES%20CHICOTE%20DE%20ORO%202026.pdf" target="_blank" rel="noopener"><span>Ver bases</span></a>
+                <a class="btn btn-gold" routerLink="/inscribirse"><span>{{ contenido.inversion.botonInscribirse }}</span></a>
+                <a class="btn btn-outline" [href]="contenido.basesPdfUrl" target="_blank" rel="noopener"><span>{{ contenido.inversion.botonBases }}</span></a>
               </div>
             </div>
           </div><!-- /.tarifas-block -->
 
           <div class="premios-block" id="premios">
             <div class="block-head reveal">
-              <h3 class="block-title">Premiación en la gran final</h3>
-              <span class="block-sub">Medallas, trofeos y diplomas</span>
+              <h3 class="block-title">{{ contenido.premios.titulo }}</h3>
+              <span class="block-sub">{{ contenido.premios.subtitulo }}</span>
             </div>
 
         <div class="prizes">
@@ -457,129 +367,76 @@
                 <circle cx="12" cy="6" r="1.2" />
               </svg>
             </div>
-            <span class="prize-lead__label">Premio mayor · Ballet</span>
-            <span class="prize-lead__amount">S/ <strong>2,500</strong></span>
-            <span class="prize-lead__sub">Trofeo de oro + diploma para la gran ganadora</span>
+            <span class="prize-lead__label">{{ contenido.premios.premioMayor.etiqueta }}</span>
+            <span class="prize-lead__amount">S/ <strong>{{ contenido.premios.premioMayor.monto }}</strong></span>
+            <span class="prize-lead__sub">{{ contenido.premios.premioMayor.subtitulo }}</span>
           </div>
 
           <div class="prize-grid">
-            <div class="prize-card reveal">
+            @for (cat of contenido.premios.categorias; track cat.numero) {
+            <div class="prize-card reveal" [class.prize-card--grand]="cat.destacada">
               <div class="prize-card__head">
-                <span class="prize-card__idx" aria-hidden="true">01</span>
+                <span class="prize-card__idx" aria-hidden="true">{{ cat.numero }}</span>
                 <div>
-                  <h3 class="prize-card__name">Macho Caporal de Oro</h3>
-                  <span class="prize-card__meta">Unipersonal · Individual</span>
+                  <h3 class="prize-card__name">{{ cat.nombre }}</h3>
+                  <span class="prize-card__meta">{{ cat.detalle }}</span>
                 </div>
               </div>
               <ol class="prize-places">
-                <li class="prize-place prize-place--gold"><span class="prize-medal prize-medal--gold" aria-hidden="true">1</span><span class="prize-place__pos">1.º puesto</span><strong class="prize-place__val">S/ 500</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--silver" aria-hidden="true">2</span><span class="prize-place__pos">2.º puesto</span><strong class="prize-place__val">S/ 250</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--bronze" aria-hidden="true">3</span><span class="prize-place__pos">3.º puesto</span><strong class="prize-place__val prize-place__val--kind">Medalla</strong></li>
+                @for (p of cat.puestos; track p.puesto; let i = $index) {
+                <li class="prize-place" [class.prize-place--gold]="i === 0"><span class="prize-medal" [class.prize-medal--gold]="i === 0" [class.prize-medal--silver]="i === 1" [class.prize-medal--bronze]="i === 2" aria-hidden="true">{{ i + 1 }}</span><span class="prize-place__pos">{{ p.puesto }}</span><strong class="prize-place__val" [class.prize-place__val--kind]="!p.premio.startsWith('S/')">{{ p.premio }}</strong></li>
+                }
               </ol>
             </div>
-            <div class="prize-card reveal">
-              <div class="prize-card__head">
-                <span class="prize-card__idx" aria-hidden="true">02</span>
-                <div>
-                  <h3 class="prize-card__name">Caporalita de Oro</h3>
-                  <span class="prize-card__meta">Unipersonal · Individual</span>
-                </div>
-              </div>
-              <ol class="prize-places">
-                <li class="prize-place prize-place--gold"><span class="prize-medal prize-medal--gold" aria-hidden="true">1</span><span class="prize-place__pos">1.º puesto</span><strong class="prize-place__val">S/ 500</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--silver" aria-hidden="true">2</span><span class="prize-place__pos">2.º puesto</span><strong class="prize-place__val">S/ 250</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--bronze" aria-hidden="true">3</span><span class="prize-place__pos">3.º puesto</span><strong class="prize-place__val prize-place__val--kind">Medalla</strong></li>
-              </ol>
-            </div>
-            <div class="prize-card reveal">
-              <div class="prize-card__head">
-                <span class="prize-card__idx" aria-hidden="true">03</span>
-                <div>
-                  <h3 class="prize-card__name">Pareja (Libre)</h3>
-                  <span class="prize-card__meta">Pareja · 2 bailarines</span>
-                </div>
-              </div>
-              <ol class="prize-places">
-                <li class="prize-place prize-place--gold"><span class="prize-medal prize-medal--gold" aria-hidden="true">1</span><span class="prize-place__pos">1.º puesto</span><strong class="prize-place__val">S/ 600</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--silver" aria-hidden="true">2</span><span class="prize-place__pos">2.º puesto</span><strong class="prize-place__val">S/ 300</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--bronze" aria-hidden="true">3</span><span class="prize-place__pos">3.º puesto</span><strong class="prize-place__val prize-place__val--kind">Medalla</strong></li>
-              </ol>
-            </div>
-            <div class="prize-card reveal">
-              <div class="prize-card__head">
-                <span class="prize-card__idx" aria-hidden="true">04</span>
-                <div>
-                  <h3 class="prize-card__name">Dúo</h3>
-                  <span class="prize-card__meta">Dúos · 2 bailarines</span>
-                </div>
-              </div>
-              <ol class="prize-places">
-                <li class="prize-place prize-place--gold"><span class="prize-medal prize-medal--gold" aria-hidden="true">1</span><span class="prize-place__pos">1.º puesto</span><strong class="prize-place__val">S/ 600</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--silver" aria-hidden="true">2</span><span class="prize-place__pos">2.º puesto</span><strong class="prize-place__val">S/ 300</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--bronze" aria-hidden="true">3</span><span class="prize-place__pos">3.º puesto</span><strong class="prize-place__val prize-place__val--kind">Medalla</strong></li>
-              </ol>
-            </div>
-            <div class="prize-card reveal">
-              <div class="prize-card__head">
-                <span class="prize-card__idx" aria-hidden="true">05</span>
-                <div>
-                  <h3 class="prize-card__name">Tropas</h3>
-                  <span class="prize-card__meta">Grupal · Machos y Caporalitas</span>
-                </div>
-              </div>
-              <ol class="prize-places">
-                <li class="prize-place prize-place--gold"><span class="prize-medal prize-medal--gold" aria-hidden="true">1</span><span class="prize-place__pos">1.º puesto</span><strong class="prize-place__val">S/ 800</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--silver" aria-hidden="true">2</span><span class="prize-place__pos">2.º puesto</span><strong class="prize-place__val">S/ 400</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--bronze" aria-hidden="true">3</span><span class="prize-place__pos">3.º puesto</span><strong class="prize-place__val prize-place__val--kind">Trofeo</strong></li>
-              </ol>
-            </div>
-            <div class="prize-card prize-card--grand reveal">
-              <div class="prize-card__head">
-                <span class="prize-card__idx" aria-hidden="true">06</span>
-                <div>
-                  <h3 class="prize-card__name">Ballet (Libre) · Premio mayor</h3>
-                  <span class="prize-card__meta">Elenco · Gran final</span>
-                </div>
-              </div>
-              <ol class="prize-places">
-                <li class="prize-place prize-place--gold"><span class="prize-medal prize-medal--gold" aria-hidden="true">1</span><span class="prize-place__pos">1.º puesto</span><strong class="prize-place__val">S/ 2,500</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--silver" aria-hidden="true">2</span><span class="prize-place__pos">2.º puesto</span><strong class="prize-place__val">S/ 1,200</strong></li>
-                <li class="prize-place"><span class="prize-medal prize-medal--bronze" aria-hidden="true">3</span><span class="prize-place__pos">3.º puesto</span><strong class="prize-place__val">S/ 300</strong></li>
-              </ol>
-            </div>
+            }
           </div>
           </div>
           </div><!-- /.premios-block -->
       </div><!-- /.costos-layout -->
+      </div>
+    </section>
 
-        <hr class="inversion-div" aria-hidden="true">
+    <!-- ===================== BASES — CRITERIOS · TIEMPOS · ORDEN · DESCALIFICACIÓN ===================== -->
+    <section class="cta" id="reglas">
+      <div class="container">
+        <div class="sec-head reveal">
+          <div>
+            <span class="sec-eyebrow"><i class="sec-eyebrow__dot" aria-hidden="true"></i>{{ contenido.bases.antetitulo }}</span>
+            <h2 class="sec-title">
+              <span class="sec-title__line">{{ contenido.bases.tituloLinea1 }}</span>
+              <span class="sec-title__emphasis">{{ contenido.bases.tituloResaltado }}</span>
+            </h2>
+          </div>
+          <p class="sec-note">{{ contenido.bases.nota }}</p>
+        </div>
 
         <div class="premios-tiempos-grid">
       <div class="criterios-block">
         <div class="block-head reveal">
-          <h3 class="block-title">Cómo se califica</h3>
-          <span class="block-sub">Paleta a mano alzada · 3 a 4 jurados</span>
+          <h3 class="block-title">{{ contenido.criterios.titulo }}</h3>
+          <span class="block-sub">{{ contenido.criterios.subtitulo }}</span>
         </div>
         <aside class="criteria criteria-panel reveal" aria-label="Cómo se califica">
           <div class="criteria-score">
             <span class="criteria-score__label">Puntaje máximo del jurado</span>
             <div class="criteria-score__main">
               <div class="criteria-score__dial" aria-hidden="true">
-                <span class="criteria-score__val">25</span>
+                <span class="criteria-score__val">{{ contenido.criterios.puntajeMaximo }}</span>
               </div>
               <div class="criteria-score__copy">
-                <strong>5 criterios × 5 puntos</strong>
-                <span>Paleta a mano alzada · 3 a 4 jurados</span>
+                <strong>{{ contenido.criterios.puntajeTitulo }}</strong>
+                <span>{{ contenido.criterios.puntajeDetalle }}</span>
               </div>
             </div>
           </div>
 
           <ol class="criteria-bars">
+            @for (criterio of contenido.criterios.barras; track criterio; let i = $index) {
             <li class="criteria-bar reveal">
-              <span class="criteria-bar__num" aria-hidden="true">01</span>
+              <span class="criteria-bar__num" aria-hidden="true">{{ (i + 1).toString().padStart(2, '0') }}</span>
               <div class="criteria-bar__body">
                 <div class="criteria-bar__head">
-                  <h3>Presentación y vestimenta</h3>
+                  <h3>{{ criterio }}</h3>
                   <span class="criteria-bar__pts">5<span class="criteria-bar__pts-max"> / 5</span></span>
                 </div>
                 <span class="criteria-bar__scale is-full" aria-hidden="true">
@@ -587,157 +444,74 @@
                 </span>
               </div>
             </li>
-            <li class="criteria-bar reveal">
-              <span class="criteria-bar__num" aria-hidden="true">02</span>
-              <div class="criteria-bar__body">
-                <div class="criteria-bar__head">
-                  <h3>Coreografía</h3>
-                  <span class="criteria-bar__pts">5<span class="criteria-bar__pts-max"> / 5</span></span>
-                </div>
-                <span class="criteria-bar__scale is-full" aria-hidden="true">
-                  <i></i><i></i><i></i><i></i><i></i>
-                </span>
-              </div>
-            </li>
-            <li class="criteria-bar reveal">
-              <span class="criteria-bar__num" aria-hidden="true">03</span>
-              <div class="criteria-bar__body">
-                <div class="criteria-bar__head">
-                  <h3>Armonía rítmica</h3>
-                  <span class="criteria-bar__pts">5<span class="criteria-bar__pts-max"> / 5</span></span>
-                </div>
-                <span class="criteria-bar__scale is-full" aria-hidden="true">
-                  <i></i><i></i><i></i><i></i><i></i>
-                </span>
-              </div>
-            </li>
-            <li class="criteria-bar reveal">
-              <span class="criteria-bar__num" aria-hidden="true">04</span>
-              <div class="criteria-bar__body">
-                <div class="criteria-bar__head">
-                  <h3>Mensaje</h3>
-                  <span class="criteria-bar__pts">5<span class="criteria-bar__pts-max"> / 5</span></span>
-                </div>
-                <span class="criteria-bar__scale is-full" aria-hidden="true">
-                  <i></i><i></i><i></i><i></i><i></i>
-                </span>
-              </div>
-            </li>
-            <li class="criteria-bar reveal">
-              <span class="criteria-bar__num" aria-hidden="true">05</span>
-              <div class="criteria-bar__body">
-                <div class="criteria-bar__head">
-                  <h3>Expresión</h3>
-                  <span class="criteria-bar__pts">5<span class="criteria-bar__pts-max"> / 5</span></span>
-                </div>
-                <span class="criteria-bar__scale is-full" aria-hidden="true">
-                  <i></i><i></i><i></i><i></i><i></i>
-                </span>
-              </div>
-            </li>
+            }
           </ol>
-          <p class="criteria-note">Los 2 mejores puntajes por bloque pasan a la gran final. El desempate del 1.º se baila.</p>
+          <p class="criteria-note">{{ contenido.criterios.nota }}</p>
         </aside>
       </div><!-- /.criterios-block -->
 
           <div class="tiempos-block" id="tiempos">
             <div class="block-head reveal">
-              <h3 class="block-title">Tiempos de participación</h3>
-              <span class="block-sub">+ 45 s de entrada</span>
+              <h3 class="block-title">{{ contenido.tiempos.titulo }}</h3>
+              <span class="block-sub">{{ contenido.tiempos.subtitulo }}</span>
             </div>
 
         <div class="times times--col">
-          <div class="time-lead reveal">
-            <span class="time-lead__label">Unipersonal</span>
-            <span class="time-lead__val">2–3 <em>min</em></span>
-            <span class="time-lead__scale" aria-hidden="true"><span class="time-lead__fill" style="--w:55%"></span></span>
-            <span class="time-lead__base">Entrada estándar</span>
+          @for (t of contenido.tiempos.items; track t.etiqueta) {
+          <div class="time-lead reveal" [class.time-lead--accent]="t.destacada">
+            <span class="time-lead__label">{{ t.etiqueta }}</span>
+            <span class="time-lead__val">{{ t.valor }} <em>min</em></span>
+            <span class="time-lead__scale" aria-hidden="true"><span class="time-lead__fill" [style.--w.%]="t.ancho"></span></span>
+            @if (t.nota) {
+              <span class="time-lead__base">{{ t.nota }}</span>
+            }
+            @if (t.chip) {
+              <span class="time-lead__chip">{{ t.chip }}</span>
+            }
           </div>
-          <div class="time-lead reveal">
-            <span class="time-lead__label">Pareja y Dúos</span>
-            <span class="time-lead__val">3 <em>min</em></span>
-            <span class="time-lead__scale" aria-hidden="true"><span class="time-lead__fill" style="--w:70%"></span></span>
-            <span class="time-lead__chip">+ 45 s de entrada</span>
-          </div>
-          <div class="time-lead reveal">
-            <span class="time-lead__label">Ballet tropa</span>
-            <span class="time-lead__val">5 <em>min</em></span>
-            <span class="time-lead__scale" aria-hidden="true"><span class="time-lead__fill" style="--w:92%"></span></span>
-            <span class="time-lead__chip">+ 45 s de entrada</span>
-          </div>
-          <div class="time-lead time-lead--accent reveal">
-            <span class="time-lead__label">Ballet libre</span>
-            <span class="time-lead__val">5 <em>min</em></span>
-            <span class="time-lead__scale" aria-hidden="true"><span class="time-lead__fill" style="--w:100%"></span></span>
-            <span class="time-lead__chip">+ 45 s de entrada</span>
-          </div>
+          }
         </div>
 
         <div class="orden-block" id="orden">
           <div class="block-head reveal">
-            <h3 class="block-title">Orden de presentación</h3>
-            <span class="block-sub">Semifinal · 10:00 am</span>
+            <h3 class="block-title">{{ contenido.orden.titulo }}</h3>
+            <span class="block-sub">{{ contenido.orden.subtitulo }}</span>
           </div>
           <ol class="order-rail">
-            <li class="order-step reveal">
-              <span class="order-step__num" aria-hidden="true">01</span>
-              <span class="order-step__name">Macho caporal</span>
+            @for (nombre of contenido.orden.pasos; track nombre; let i = $index) {
+            <li class="order-step reveal" [class.order-step--final]="i === contenido.orden.pasos.length - 1">
+              <span class="order-step__num" aria-hidden="true">{{ (i + 1).toString().padStart(2, '0') }}</span>
+              <span class="order-step__name">{{ nombre }}</span>
             </li>
-            <li class="order-step reveal">
-              <span class="order-step__num" aria-hidden="true">02</span>
-              <span class="order-step__name">Caporalita de Oro</span>
-            </li>
-            <li class="order-step reveal">
-              <span class="order-step__num" aria-hidden="true">03</span>
-              <span class="order-step__name">Dúo macho caporal</span>
-            </li>
-            <li class="order-step reveal">
-              <span class="order-step__num" aria-hidden="true">04</span>
-              <span class="order-step__name">Dúo caporalitas</span>
-            </li>
-            <li class="order-step reveal">
-              <span class="order-step__num" aria-hidden="true">05</span>
-              <span class="order-step__name">Tropas macho caporal</span>
-            </li>
-            <li class="order-step reveal">
-              <span class="order-step__num" aria-hidden="true">06</span>
-              <span class="order-step__name">Tropas caporalitas</span>
-            </li>
-            <li class="order-step reveal">
-              <span class="order-step__num" aria-hidden="true">07</span>
-              <span class="order-step__name">Categoría Pareja libre</span>
-            </li>
-            <li class="order-step order-step--final reveal">
-              <span class="order-step__num" aria-hidden="true">08</span>
-              <span class="order-step__name">Categoría Ballet libre</span>
-            </li>
+            }
           </ol>
-          <p class="orden-note">La semifinal inicia a las 10:00 am. Las agrupaciones que lleven más de dos ballets deberán sacar su ticket por bloque.</p>
+          <p class="orden-note">{{ contenido.orden.nota }}</p>
         </div>
 
         <div class="descalifica-subblock" id="descalificacion">
           <div class="block-head reveal">
-            <h3 class="block-title">Se descalifica por</h3>
-            <span class="block-sub">3 faltas graves</span>
+            <h3 class="block-title">{{ contenido.descalificacion.titulo }}</h3>
+            <span class="block-sub">{{ contenido.descalificacion.subtitulo }}</span>
           </div>
           <div class="rules-table rules-table--compact reveal">
-            <div class="rules-row rules-row--critical">
-              <span class="rules-table__num">01</span>
-              <p class="rules-table__text"><strong>Reclamos fuera de la mesa oficial</strong>: eliminación automática sin devolución.</p>
+            @for (regla of contenido.descalificacion.reglas; track regla.texto; let i = $index) {
+            <div class="rules-row" [class.rules-row--critical]="regla.grave">
+              <span class="rules-table__num">{{ (i + 1).toString().padStart(2, '0') }}</span>
+              <p class="rules-table__text" [innerHTML]="regla.texto"></p>
             </div>
-            <div class="rules-row">
-              <span class="rules-table__num">02</span>
-              <p class="rules-table__text">Bailar en estado de <strong>ebriedad</strong> o consumir alcohol durante el concurso.</p>
-            </div>
-            <div class="rules-row">
-              <span class="rules-table__num">03</span>
-              <p class="rules-table__text">No estar presente en el escenario al <strong>tercer llamado</strong>.</p>
-            </div>
-            <p class="rules-foot">Ver faltas y sanciones completas en las <a href="/bases/BASES%20CHICOTE%20DE%20ORO%202026.pdf" target="_blank" rel="noopener">bases oficiales</a>.</p>
+            }
+            <p class="rules-foot">{{ contenido.descalificacion.pieTexto }} <a [href]="contenido.basesPdfUrl" target="_blank" rel="noopener">{{ contenido.descalificacion.pieEnlace }}</a>.</p>
           </div>
         </div>
           </div><!-- /.tiempos-block -->
         </div><!-- /.premios-tiempos-grid -->
+
+        <div class="sec-cta-row reveal">
+          <a class="btn btn-gold" [href]="contenido.basesPdfUrl" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>{{ contenido.bases.botonDescargar }}</span>
+          </a>
+        </div>
       </div>
     </section>
 
@@ -748,11 +522,11 @@
           <div>
             <span class="sec-eyebrow">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
-              Gran final
+              {{ contenido.granFinal.antetitulo }}
             </span>
-            <h2 class="sec-title">Cómo se define la <em>ganadora</em></h2>
+            <h2 class="sec-title">{{ contenido.granFinal.tituloLinea1 }} <em>{{ contenido.granFinal.tituloResaltado }}</em></h2>
           </div>
-          <p class="sec-note">Reglas de clasificación y desempate para la etapa decisiva del concurso.</p>
+          <p class="sec-note">{{ contenido.granFinal.nota }}</p>
         </div>
 
         <!-- Grid de 2 columnas con layout interesante -->
@@ -774,9 +548,9 @@
               <div class="final-card__body">
                 <div class="final-card__header">
                   <span class="final-card__num">01</span>
-                  <h3 class="final-card__title">Clasificación a la gran final</h3>
+                  <h3 class="final-card__title">{{ contenido.granFinal.reglas[0].titulo }}</h3>
                 </div>
-                <p class="final-card__text">Pasan a la gran final <strong>2 instituciones por bloque</strong>, las de mayor puntaje. En caso de empate, pasan las empatadas.</p>
+                <p class="final-card__text" [innerHTML]="contenido.granFinal.reglas[0].texto"></p>
               </div>
             </article>
 
@@ -789,8 +563,8 @@
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                   </div>
                 </div>
-                <h3 class="final-card__title">Límite por bloque</h3>
-                <p class="final-card__text">Los bloques tienen <strong>máximo 5 participantes</strong>. Si se supera, pasa el 40% del total.</p>
+                <h3 class="final-card__title">{{ contenido.granFinal.reglas[1].titulo }}</h3>
+                <p class="final-card__text" [innerHTML]="contenido.granFinal.reglas[1].texto"></p>
               </div>
             </article>
 
@@ -803,8 +577,8 @@
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M7 12h10M10 18h4"/></svg>
                   </div>
                 </div>
-                <h3 class="final-card__title">Orden de presentación</h3>
-                <p class="final-card__text">El orden de la etapa final es <strong>de menor a mayor puntaje</strong>.</p>
+                <h3 class="final-card__title">{{ contenido.granFinal.reglas[2].titulo }}</h3>
+                <p class="final-card__text" [innerHTML]="contenido.granFinal.reglas[2].texto"></p>
               </div>
             </article>
           </div>
@@ -836,8 +610,8 @@
                     <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M8 4h8v6a4 4 0 0 1-8 0V4Z"/></svg>
                   </div>
                 </div>
-                <h3 class="final-card__title">Empate en 1.er puesto</h3>
-                <p class="final-card__text">Se vuelve a bailar. Si persiste el empate, lo decide el jurado sumando <strong>Mensaje y Expresión</strong>.</p>
+                <h3 class="final-card__title">{{ contenido.granFinal.reglas[3].titulo }}</h3>
+                <p class="final-card__text" [innerHTML]="contenido.granFinal.reglas[3].texto"></p>
               </div>
             </article>
 
@@ -850,8 +624,8 @@
                     <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M8 3H3v5M12 15c-1.1 0-2-.9-2-2V8h4v5c0 1.1-.9 2-2 2zM12 15v6M9 21h6"/></svg>
                   </div>
                 </div>
-                <h3 class="final-card__title">Empate en 2.º puesto</h3>
-                <p class="final-card__text">No se vuelve a bailar. Lo define el jurado sumando <strong>Mensaje y Expresión</strong>.</p>
+                <h3 class="final-card__title">{{ contenido.granFinal.reglas[4].titulo }}</h3>
+                <p class="final-card__text" [innerHTML]="contenido.granFinal.reglas[4].texto"></p>
               </div>
             </article>
           </div>
@@ -867,9 +641,9 @@
           <div>
             <span class="sec-eyebrow">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
-              Del jurado
+              {{ contenido.jurado.antetitulo }}
             </span>
-            <h2 class="sec-title">Calificación y <em>reclamos</em></h2>
+            <h2 class="sec-title">{{ contenido.jurado.tituloLinea1 }} <em>{{ contenido.jurado.tituloResaltado }}</em></h2>
           </div>
         </div>
 
@@ -879,27 +653,17 @@
             <div class="jury-seal" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M8 4h8v6a4 4 0 0 1-8 0V4Z"/></svg>
             </div>
-            <span class="jury-verdict__label">Veredicto final</span>
-            <h3 class="jury-verdict__title">El fallo del jurado es inapelable</h3>
-            <p class="jury-verdict__note">Las decisiones del jurado son definitivas y no admiten apelación ni revisión.</p>
+            <span class="jury-verdict__label">{{ contenido.jurado.veredicto.etiqueta }}</span>
+            <h3 class="jury-verdict__title">{{ contenido.jurado.veredicto.titulo }}</h3>
+            <p class="jury-verdict__note">{{ contenido.jurado.veredicto.nota }}</p>
           </div>
           <ol class="jury-steps">
+            @for (paso of contenido.jurado.pasos; track paso.texto; let i = $index) {
             <li>
-              <span class="jury-steps__num" aria-hidden="true">01</span>
-              <p>Jurado de <strong>especialistas del folklore y la danza</strong>: máximo 4, mínimo 3.</p>
+              <span class="jury-steps__num" aria-hidden="true">{{ (i + 1).toString().padStart(2, '0') }}</span>
+              <p [innerHTML]="paso.texto"></p>
             </li>
-            <li>
-              <span class="jury-steps__num" aria-hidden="true">02</span>
-              <p>Calificación con <strong>paleta a mano alzada</strong>.</p>
-            </li>
-            <li>
-              <span class="jury-steps__num" aria-hidden="true">03</span>
-              <p>Reclamos solo del <strong>delegado</strong>, grabados de inicio a fin.</p>
-            </li>
-            <li>
-              <span class="jury-steps__num" aria-hidden="true">04</span>
-              <p><strong>Autonomía, idoneidad e imparcialidad</strong> garantizadas.</p>
-            </li>
+            }
           </ol>
         </div>
       </div>
@@ -916,12 +680,12 @@
           <div class="cta-hero__content">
             <span class="cta-hero__eyebrow">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
-              Participa
+              {{ contenido.participa.antetitulo }}
             </span>
-<h2 class="cta-hero__title">¿Listo para <em>brillar</em>?</h2>
-            <p class="cta-hero__text">Inscríbete por Yape al <strong>926 266 295</strong> antes del 12 de agosto, o consúltanos por WhatsApp y te guiamos en cada paso.</p>
+<h2 class="cta-hero__title">{{ contenido.participa.tituloLinea1 }} <em>{{ contenido.participa.tituloResaltado }}</em>?</h2>
+            <p class="cta-hero__text" [innerHTML]="contenido.participa.texto"></p>
             <div class="cta-hero__actions">
-              <a class="btn btn-gold" href="https://wa.me/51926266295" target="_blank" rel="noopener noreferrer">
+              <a class="btn btn-gold" [href]="contenido.contacto.whatsappUrl" target="_blank" rel="noopener noreferrer">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 <span>Consultar por WhatsApp</span>
               </a>
@@ -930,7 +694,7 @@
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
             </div>
-            <p class="cta-hero__urgency">Cupos por modalidad · Sorteo oficial viernes 14 ago · 9:00 pm</p>
+            <p class="cta-hero__urgency">{{ contenido.participa.nota }}</p>
           </div>
         </div>
       </div>
@@ -947,21 +711,21 @@
           <a class="brand" href="#hero" aria-label="Asociación Cultural Chicote de Oro — inicio">
             <img class="brand-logo" src="logo/logo.png" alt="" width="960" height="955">
             <div class="brand-text">
-              <span class="brand-title-text">Asociación Cultural Chicote de Oro</span>
-              <span class="brand-subtitle">Elegancia en movimiento</span>
+              <span class="brand-title-text">{{ contenido.contacto.nombreAsociacion }}</span>
+              <span class="brand-subtitle">{{ contenido.hero.eslogan }}</span>
             </div>
           </a>
           <p class="footer-desc">
-            Asociación Cultural dedicada a promover y celebrar la danza de caporales con excelencia y pasión.
+            {{ contenido.footer.descripcion }}
           </p>
           <div class="footer-social">
-            <a href="https://www.facebook.com/profile.php?id=61551954963131" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+            <a [href]="contenido.contacto.facebookUrl" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
             </a>
-            <a href="https://wa.me/51926266295" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+            <a [href]="contenido.contacto.whatsappUrl" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             </a>
-            <a href="mailto:mbravomend@gmail.com" target="_blank" rel="noopener noreferrer" aria-label="Correo electrónico">
+            <a [href]="'mailto:' + contenido.contacto.correo" target="_blank" rel="noopener noreferrer" aria-label="Correo electrónico">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             </a>
           </div>
@@ -1000,15 +764,15 @@
           <ul class="footer-nav footer-contact-list">
             <li>
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              <a href="tel:+51926266295">+51 926 266 295</a>
+              <a [href]="contenido.contacto.telefonoLink">{{ contenido.contacto.telefono }}</a>
             </li>
             <li>
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              <a href="mailto:mbravomend@gmail.com">mbravomend@gmail.com</a>
+              <a [href]="'mailto:' + contenido.contacto.correo">{{ contenido.contacto.correo }}</a>
             </li>
             <li>
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span>Imperial, Cañete</span>
+              <span>{{ contenido.contacto.ubicacion }}</span>
             </li>
           </ul>
         </div>
@@ -1016,10 +780,10 @@
 
       <!-- Footer bottom -->
       <div class="footer-bottom">
-        <p class="footer-copy">© 2026 Asociación Cultural Chicote de Oro. Todos los derechos reservados.</p>
+        <p class="footer-copy">{{ contenido.footer.copyright }}</p>
         <div class="footer-badge">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3 1.2-6.8-5-4.9 6.9-1z"/></svg>
-          <span>VII Edición · 2026</span>
+          <span>{{ contenido.footer.insignia }}</span>
         </div>
       </div>
     </div>

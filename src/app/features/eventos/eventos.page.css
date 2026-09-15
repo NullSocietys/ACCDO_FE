@@ -91,7 +91,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
-  padding: var(--sp-4) var(--sp-5);
+  padding: var(--sp-3) var(--sp-4);
   overflow: hidden;
   background: var(--surface-page);
   animation: pg-enter 180ms ease both;
@@ -278,47 +278,58 @@
   flex-shrink:0;
 }
 
-/* Tabs de filtro */
-.toolbar__tabs {
-  display:flex; align-items:center;
-  border-bottom:1px solid var(--border-strong);
-  flex-shrink:0;
-}
+.toolbar__filters { flex-shrink: 0; }
 
-.tab-btn {
-  appearance:none; border:none; border-bottom:2px solid transparent;
-  background:transparent; color:var(--stone-quiet);
-  font-family:inherit; font-size:.8125rem; font-weight:500;
-  padding:var(--sp-2) var(--sp-3); margin-bottom:-1px;
-  cursor:pointer; display:inline-flex; align-items:center; gap:var(--sp-1);
-  white-space:nowrap;
-  transition:color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+/* Select combobox — igual que usuarios */
+.sel {
+  height: 28px;
+  padding: 0 var(--sp-6) 0 var(--sp-2);
+  border: 1px solid var(--border-strong) !important;
+  background: var(--surface-card) !important;
+  color: var(--stone-text) !important;
+  font-family: inherit;
+  font-size: .75rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 5L10 1' stroke='%23a8a29e' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 6px center !important;
+  width: 160px;
+  box-sizing: border-box;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
-.tab-btn:hover { color:var(--stone-text); background:rgba(255,255,255,.03); }
-.tab-btn--active {
-  color:var(--stone-text); border-bottom-color:var(--gold); font-weight:650;
-}
-
-.tab-btn__count {
-  font-family:var(--font-mono, ui-monospace, monospace);
-  font-size:.6875rem; font-weight:700; color:var(--stone-quiet);
-  font-variant-numeric:tabular-nums;
-}
-.tab-btn--active .tab-btn__count { color:var(--gold); }
+.sel:hover { background-color: var(--ink-2) !important; }
+.sel:focus { outline: none; border-color: var(--gold) !important; box-shadow: 0 0 0 2px var(--gold-glow); }
+.sel option { background: var(--ink-1) !important; color: var(--stone-text) !important; }
 
 /* Search */
 .toolbar__search {
   flex:1; min-width:180px; max-width:300px;
 }
 
+.toolbar__search ::ng-deep app-input {
+  display: block;
+  height: 28px;
+}
+.toolbar__search ::ng-deep app-input .wrap {
+  height: 28px;
+  box-sizing: border-box;
+}
 .toolbar__search ::ng-deep app-input input {
-  height:34px; border:1px solid var(--border-strong) !important;
-  border-radius:var(--r-sm);
-  background:var(--surface-card) !important;
-  background-color:var(--surface-card) !important;
-  color:var(--stone-text) !important;
-  font-size:.8125rem; width:100%;
-  transition:border-color var(--t-fast), box-shadow var(--t-fast);
+  height: 28px !important;
+  min-height: 28px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--r-sm);
+  background: var(--surface-card) !important;
+  color: var(--stone-text) !important;
+  font-size: .75rem;
+  box-sizing: border-box;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
 .toolbar__search ::ng-deep app-input input:focus {
   outline:none !important; border-color:var(--gold) !important;
@@ -329,10 +340,10 @@
 /* Limpiar */
 .btn-clear {
   display:inline-flex; align-items:center; gap:var(--sp-1);
-  height:34px; padding:0 var(--sp-3);
+  height:28px; padding:0 var(--sp-2);
   border:1px solid var(--border-strong); border-radius:var(--r-sm);
   background:transparent; color:var(--stone-muted);
-  font-family:inherit; font-size:.8125rem; font-weight:500;
+  font-family:inherit; font-size:.75rem; font-weight:500;
   cursor:pointer; white-space:nowrap; flex-shrink:0;
   transition:color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
 }
@@ -340,13 +351,34 @@
 
 
 /* ================================================================
-   TABLE-CARD
+   TABLE SECTION + TABLE-CARD
    ================================================================ */
+
+.table-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
 
 .table-card {
   background:var(--surface-card); border:1px solid var(--border);
   display:flex; flex-direction:column; overflow:hidden;
   flex:1; min-height:0;
+}
+
+.table-card--partial {
+  flex: 0 0 auto;
+}
+
+/* Paginación pegada al fondo */
+.pagination-footer {
+  margin-top: auto;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  background: var(--ink-2);
+  padding: var(--sp-1) var(--sp-3);
 }
 
 .table-card__header {
@@ -364,7 +396,14 @@
   font-variant-numeric:tabular-nums; white-space:nowrap;
 }
 
-.table-wrap { overflow-x:auto; overflow-y:auto; flex:1; min-height:0; }
+.table-wrap {
+  overflow-x:auto;
+  overflow-y: hidden;
+  flex:1;
+  min-height:0;
+  display: flex;
+  flex-direction: column;
+}
 
 .table-card__footer {
   flex-shrink:0; border-top:1px solid var(--border);
@@ -377,6 +416,20 @@
    ================================================================ */
 
 .tbl { width:100%; border-collapse:collapse; min-width:640px; font-size:.875rem; }
+
+.tbl--full {
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.tbl--full tbody {
+  height: 100%;
+}
+
+.tbl--full .trow {
+  height: 1px;
+}
 
 .th {
   padding:var(--sp-3) var(--sp-4); text-align:left;
@@ -404,6 +457,10 @@
 .trow--activo:hover td { background:rgba(161,98,7,.1); }
 .trow--cancelado { opacity:.5; }
 .trow--cancelado:hover { opacity:.75; }
+
+/* Evento en archivo inactivo (patrón usuarios) */
+.trow--inactivo td { opacity:.55; }
+.trow--inactivo:hover td { opacity:1; background:var(--surface-row); }
 
 /* Celda fecha */
 .td--date {

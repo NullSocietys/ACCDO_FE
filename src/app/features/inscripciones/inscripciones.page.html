@@ -66,31 +66,19 @@
         </aside>
       }
 
+      <div class="table-section">
+
       <!-- ── TOOLBAR ── -->
       <div class="toolbar">
-        <nav class="toolbar__tabs" role="group" aria-label="Filtrar por estado">
-          @for (f of filtros; track f.key) {
-            <button
-              type="button"
-              class="tab-btn"
-              [class.tab-btn--active]="estadoFiltro() === f.key"
-              [attr.aria-pressed]="estadoFiltro() === f.key"
-              (click)="estadoFiltro.set(f.key)"
-            >
-              {{ f.label }}
-              <span class="tab-btn__count">{{ cuentaEstado(f.key) }}</span>
-            </button>
-          }
-        </nav>
-
         <div class="toolbar__filters">
-          <app-input
-            controlId="ins-search"
-            icon="search"
-            [value]="busqueda()"
-            placeholder="Buscar…"
-            (valueChange)="busqueda.set($event)"
-          />
+          <select autocomplete="off" class="sel"
+                  [ngModel]="estadoFiltro()"
+                  (ngModelChange)="estadoFiltro.set($event)"
+                  aria-label="Filtrar por estado">
+            @for (f of filtros; track f.key) {
+              <option [value]="f.key">{{ f.label }} ({{ cuentaEstado(f.key) }})</option>
+            }
+          </select>
           <select autocomplete="off" class="sel"
                   [ngModel]="eventoFilter()"
                   (ngModelChange)="eventoFilter.set($event)"
@@ -110,6 +98,24 @@
             }
           </select>
         </div>
+
+        <div class="toolbar__search">
+          <app-input
+            controlId="ins-search"
+            icon="search"
+            [value]="busqueda()"
+            placeholder="Grupo, código o encargado…"
+            (valueChange)="busqueda.set($event)"
+          />
+        </div>
+
+        @if (busqueda() || estadoFiltro() !== 'todos' || eventoFilter() || categoriaFilter()) {
+          <button class="btn-clear" type="button"
+                  (click)="limpiarFiltros()" aria-label="Limpiar filtros">
+            <app-icon name="x" [size]="13" />
+            Limpiar
+          </button>
+        }
       </div>
 
       <!-- ── TABLA ── -->
@@ -123,7 +129,7 @@
           (actioned)="limpiarFiltros()"
         />
       } @else {
-        <div class="table-card">
+        <div class="table-card" [class.table-card--partial]="!isFullPage()">
 
           <div class="table-card__header">
             <p class="table-card__title">Registro de grupos</p>
@@ -131,7 +137,7 @@
           </div>
 
           <div class="table-wrap">
-            <table class="tbl">
+            <table class="tbl" [class.tbl--full]="isFullPage()">
               <thead>
                 <tr>
                   <th class="th th--amount" scope="col">Tarifa</th>
@@ -207,18 +213,21 @@
             </table>
           </div>
 
-          <div class="table-card__footer">
-            <app-pagination
-              [total]="filtered().length"
-              [pageSize]="pageSize"
-              [page]="page()"
-              ariaLabel="Paginación de inscripciones"
-              (pageChange)="onPageChange($event)"
-            />
-          </div>
-
         </div>
       }
+
+      <!-- paginación pegada al fondo -->
+      <div class="pagination-footer">
+        <app-pagination
+          [total]="filtered().length"
+          [pageSize]="pageSize"
+          [page]="page()"
+          ariaLabel="Paginación de inscripciones"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+
+      </div><!-- /table-section -->
     }
   }
 </div>

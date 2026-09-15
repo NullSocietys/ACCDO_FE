@@ -1,0 +1,14 @@
+dist/
+tmp/
+out-tsc/
+node_modules/
+.angular/
+.git/
+.vscode/
+.idea/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+skills-lock.json

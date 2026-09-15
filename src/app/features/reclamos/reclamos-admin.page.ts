@@ -10,6 +10,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
+import { IconComponent } from '../../shared/icons/icon.component';
 import { InputComponent } from '../../shared/ui/input.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
@@ -17,7 +18,7 @@ import { SkeletonComponent } from '../../shared/ui/skeleton.component';
 
 type EstadoFiltro = 'pendientes' | 'atendidos';
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 10;
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 @Component({
@@ -27,6 +28,7 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
+    IconComponent,
     InputComponent,
     ModalComponent,
     PaginationComponent,
@@ -98,6 +100,12 @@ export class ReclamosAdminPage {
     const to = Math.min(this.page() * this.pageSize, total);
     return `${from}–${to} de ${total}`;
   });
+
+  /** true cuando la página actual tiene exactamente pageSize filas.
+   *  Página llena → la card usa flex:1 y llena el alto disponible.
+   *  Página parcial → la card mide lo justo (altura natural).
+   */
+  readonly isFullPage = computed(() => this.paginado().length >= this.pageSize);
 
   constructor() {
     this.cargar();

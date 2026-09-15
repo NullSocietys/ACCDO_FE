@@ -12,7 +12,9 @@ import { AuthSessionService } from '../core/services/auth-session.service';
 import { ToastService } from '../core/services/toast.service';
 import { IconComponent } from '../shared/icons/icon.component';
 import { ConfirmDialogComponent } from '../shared/ui/confirm-dialog.component';
+import { ModalComponent } from '../shared/ui/modal.component';
 import { ToastHostComponent } from '../shared/ui/toast-host.component';
+import { ButtonComponent } from '../shared/ui/button.component';
 
 interface NavItem {
   label: string;
@@ -34,6 +36,8 @@ interface NavGroup {
     IconComponent,
     ToastHostComponent,
     ConfirmDialogComponent,
+    ModalComponent,
+    ButtonComponent,
   ],
   styleUrl: './shell.component.css',
   templateUrl: './shell.component.html',
@@ -49,6 +53,8 @@ export class ShellComponent {
   readonly pageTitle = signal('Dashboard');
   readonly sectionLabel = signal('General');
   readonly loggingOut = signal(false);
+  /** Modal de perfil (datos del usuario + cerrar sesión). */
+  readonly perfilOpen = signal(false);
 
   readonly usuario = this.auth.usuario;
   readonly initials = computed(() => this.auth.initials());
@@ -76,7 +82,6 @@ export class ShellComponent {
       label: 'Sistema',
       items: [
         { label: 'Bases', path: '/admin/bases', icon: 'fileText' },
-        { label: 'Configuración', path: '/admin/configuracion', icon: 'settings' },
       ],
     },
   ];
@@ -92,7 +97,6 @@ export class ShellComponent {
     '/admin/resultados': { title: 'Ganadores', section: 'Gestión' },
     '/admin/reportes': { title: 'Reportes', section: 'Gestión' },
     '/admin/bases': { title: 'Bases del concurso', section: 'Sistema' },
-    '/admin/configuracion': { title: 'Configuración', section: 'Sistema' },
   };
 
   constructor() {
@@ -125,6 +129,7 @@ export class ShellComponent {
   logout(): void {
     if (this.loggingOut()) return;
     this.loggingOut.set(true);
+    this.perfilOpen.set(false);
     this.auth.logout().subscribe({
       next: () => {
         this.loggingOut.set(false);

@@ -31,8 +31,8 @@
         <strong class="kpi__value">{{ overview().activos }}</strong>
       </div>
       <div class="kpi kpi--muted">
-        <span class="kpi__label">Cerrados</span>
-        <strong class="kpi__value">{{ overview().cerrados }}</strong>
+        <span class="kpi__label">Inactivos</span>
+        <strong class="kpi__value">{{ overview().inactivos }}</strong>
       </div>
       <div class="kpi kpi--gold">
         <span class="kpi__label">Grupos inscritos</span>
@@ -95,22 +95,23 @@
       />
     } @else {
 
+      <div class="table-section">
+
       <!-- ── TOOLBAR ── -->
       <div class="toolbar">
-        <nav class="toolbar__tabs" role="group" aria-label="Filtrar por estado">
-          @for (f of filtros; track f.key) {
-            <button
-              type="button"
-              class="tab-btn"
-              [class.tab-btn--active]="estadoFiltro() === f.key"
-              [attr.aria-pressed]="estadoFiltro() === f.key"
-              (click)="estadoFiltro.set(f.key); page.set(1)"
-            >
-              {{ f.label }}
-              <span class="tab-btn__count">{{ cuentaEstado(f.key) }}</span>
-            </button>
-          }
-        </nav>
+        <div class="toolbar__filters">
+          <label class="sr-only" for="ev-filtro-estado">Filtrar por estado</label>
+          <select
+            id="ev-filtro-estado"
+            class="sel"
+            [value]="estadoFiltro()"
+            (change)="onEstadoChange($event)"
+          >
+            @for (f of filtros; track f.key) {
+              <option [value]="f.key">{{ f.label }} ({{ cuentaEstado(f.key) }})</option>
+            }
+          </select>
+        </div>
         <div class="toolbar__search">
           <app-input
             controlId="ev-search"
@@ -140,7 +141,7 @@
           (actioned)="limpiarFiltros()"
         />
       } @else {
-        <div class="table-card">
+        <div class="table-card" [class.table-card--partial]="!isFullPage()">
 
           <div class="table-card__header">
             <p class="table-card__title">Agenda de temporada</p>
@@ -148,7 +149,7 @@
           </div>
 
           <div class="table-wrap">
-            <table class="tbl">
+            <table class="tbl" [class.tbl--full]="isFullPage()">
               <thead>
                 <tr>
                   <th class="th th--date" scope="col">Fecha</th>
@@ -165,8 +166,9 @@
               <tbody>
                 @for (evento of paged(); track evento.id; let i = $index) {
                   <tr class="trow"
-                      [class.trow--activo]="evento.estado === 'ACTIVO'"
-                      [class.trow--cancelado]="evento.estado === 'CANCELADO'">
+                      [class.trow--activo]="evento.estado === 'ACTIVO' && evento.activo"
+                      [class.trow--inactivo]="!evento.activo"
+                      [class.trow--cancelado]="evento.estado === 'CANCELADO' && evento.activo">
 
                     <!-- Fecha -->
                     <td class="td td--date" aria-hidden="true">
@@ -207,19 +209,35 @@
 
                     <!-- Acciones -->
                     <td class="td td--actions">
-                      <app-button
-                        variant="outline"
-                        size="sm"
-                        icon="pencil"
-                        (clicked)="openEdit(evento)"
-                      >Editar</app-button>
-                      <app-button
-                        variant="ghost"
-                        size="icon"
-                        icon="trash"
-                        ariaLabel="Eliminar evento"
-                        (clicked)="remove(evento)"
-                      />
+                      @if (evento.activo) {
+                        <app-button
+                          variant="outline"
+                          size="sm"
+                          icon="pencil"
+                          (clicked)="openEdit(evento)"
+                        >Editar</app-button>
+                        <app-button
+                          variant="ghost"
+                          size="icon"
+                          icon="trash"
+                          ariaLabel="Desactivar evento"
+                          (clicked)="remove(evento)"
+                        />
+                      } @else {
+                        <app-button
+                          variant="outline"
+                          size="sm"
+                          icon="check"
+                          (clicked)="restore(evento)"
+                        >Restaurar</app-button>
+                        <app-button
+                          variant="ghost"
+                          size="icon"
+                          icon="trash"
+                          ariaLabel="Eliminar definitivamente"
+                          (clicked)="removeFisico(evento)"
+                        />
+                      }
                     </td>
 
                   </tr>
@@ -228,18 +246,21 @@
             </table>
           </div>
 
-          <div class="table-card__footer">
-            <app-pagination
-              [total]="filtrados().length"
-              [pageSize]="pageSize"
-              [page]="page()"
-              ariaLabel="Paginación de eventos"
-              (pageChange)="page.set($event)"
-            />
-          </div>
-
         </div>
       }
+
+      <!-- paginación pegada al fondo -->
+      <div class="pagination-footer">
+        <app-pagination
+          [total]="filtrados().length"
+          [pageSize]="pageSize"
+          [page]="page()"
+          ariaLabel="Paginación de eventos"
+          (pageChange)="page.set($event)"
+        />
+      </div>
+
+      </div><!-- /table-section -->
     }
   }
 </div>

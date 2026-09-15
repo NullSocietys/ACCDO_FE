@@ -1,36 +1,35 @@
 <div class="page">
   @if (cargando()) {
     <div class="page-sk" aria-hidden="true">
-      <app-skeleton variant="card" [height]="120" />
+      <app-skeleton variant="card" [height]="72" />
       <app-skeleton variant="table" [count]="8" />
     </div>
   } @else {
-  <header class="mast">
-    <div class="mast__copy">
-      <p class="mast__eyebrow">Temporada · Podio</p>
-      <h1>Ganadores</h1>
-      <p class="mast__lead">Puestos y puntajes oficiales por inscripción del evento.</p>
+  <header class="topbar">
+    <div class="topbar__left">
+      <span class="topbar__breadcrumb">Temporada · Podio</span>
+      <span class="topbar__sep" aria-hidden="true">/</span>
+      <h1 class="topbar__title">Ganadores</h1>
     </div>
-    <div class="mast__aside">
-      <dl class="mast__pulse" aria-label="Resumen rápido">
-        <div>
-          <dt>Resultados</dt>
-          <dd>{{ mast().total }}</dd>
-        </div>
-        <div>
-          <dt>Puntaje máx.</dt>
-          <dd>{{ mast().maxPuntaje }}</dd>
-        </div>
-        <div class="mast__pulse--gold">
-          <dt>Eventos</dt>
-          <dd>{{ mast().eventos }}</dd>
-        </div>
-      </dl>
-      <div class="mast__actions">
-        <app-button icon="plus" [fullWidth]="true" (clicked)="openCreate()">Registrar resultados</app-button>
-      </div>
+    <div class="topbar__right">
+      <app-button icon="plus" size="sm" (clicked)="openCreate()">Registrar resultados</app-button>
     </div>
   </header>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <span class="kpi__label">Resultados</span>
+      <strong class="kpi__value">{{ mast().total }}</strong>
+    </div>
+    <div class="kpi">
+      <span class="kpi__label">Puntaje máx.</span>
+      <strong class="kpi__value">{{ mast().maxPuntaje }}</strong>
+    </div>
+    <div class="kpi kpi--gold">
+      <span class="kpi__label">Eventos con podio</span>
+      <strong class="kpi__value">{{ mast().eventos }}</strong>
+    </div>
+  </div>
 
   <div class="res-body">
     <app-card>

@@ -9,10 +9,8 @@ import {
   signal,
 } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
-import { firstValueFrom, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import type { Configuracion } from '../../../core/models/configuracion.model';
-import { ConfiguracionApiService } from '../../../core/services/api/configuracion.api.service';
 import { AuthSessionService } from '../../../core/services/auth-session.service';
 
 type DatosCoord = {
@@ -38,7 +36,6 @@ type DatosCoord = {
 })
 export class SiteHeaderComponent implements AfterViewInit, OnDestroy {
   private readonly host = inject(ElementRef<HTMLElement>);
-  private readonly configApi = inject(ConfiguracionApiService);
   private readonly router = inject(Router);
   readonly auth = inject(AuthSessionService);
   /** Delegado con sesión (no admin): muestra Salir y oculta acceso. */
@@ -63,7 +60,6 @@ export class SiteHeaderComponent implements AfterViewInit, OnDestroy {
   modalAbierto = false;
   readonly panelAbierto = signal(false);
 
-  private datosDesdeApi = false;
   private focoPrevio: HTMLElement | null = null;
   private modalEscListener: ((e: KeyboardEvent) => void) | null = null;
   private mainEl: HTMLElement | null = null;
@@ -220,32 +216,8 @@ export class SiteHeaderComponent implements AfterViewInit, OnDestroy {
       close?.focus();
     });
 
-    // Mostrar modal al instante con datos de respaldo; cargar API en segundo plano
-    if (!this.datosDesdeApi) {
-      this.datosCoordinacion = { ...this.FALLBACK };
-      this.datosDesdeApi = true;
-      // Cargar datos reales por detrás sin bloquear
-      void this.cargarDatosConfiguracion();
-    }
-  }
-
-  private async cargarDatosConfiguracion(): Promise<void> {
-    try {
-      const c: Configuracion | null = await firstValueFrom(this.configApi.obtenerActiva());
-      if (c) {
-        this.datosCoordinacion = {
-          nombreAsociacion: c.nombreAsociacion || this.datosCoordinacion.nombreAsociacion,
-          coordinadoraGeneral: c.coordinadoraGeneral || this.datosCoordinacion.coordinadoraGeneral,
-          telefono: c.telefono || this.datosCoordinacion.telefono,
-          correo: c.correo || this.datosCoordinacion.correo,
-          direccion: c.direccion || this.datosCoordinacion.direccion,
-          numeroYape: c.numeroYape || this.datosCoordinacion.numeroYape,
-          numeroPlin: c.numeroPlin || this.datosCoordinacion.numeroPlin,
-        };
-      }
-    } catch {
-      /* errores silenciosos: ya tiene los datos de fallback */
-    }
+    // Mostrar modal al instante con los datos de la asociación.
+    this.datosCoordinacion = { ...this.FALLBACK };
   }
 
   cerrarModal(): void {

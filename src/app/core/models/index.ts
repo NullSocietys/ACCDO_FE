@@ -10,5 +10,4 @@ export * from './inscripcion.model';
 export * from './pago.model';
 export * from './resultado.model';
 export * from './reclamo.model';
-export * from './configuracion.model';
 export * from './uikit.model';

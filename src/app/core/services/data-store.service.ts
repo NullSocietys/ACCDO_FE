@@ -7,7 +7,6 @@ import {
   Categoria,
   CategoriaPayload,
   ChartBar,
-  Configuracion,
   Evento,
   EventoPayload,
   Inscripcion,
@@ -34,27 +33,8 @@ import { InscripcionApiService } from './api/inscripcion.api.service';
 import { PagoApiService } from './api/pago.api.service';
 import { ParticipanteApiService } from './api/participante.api.service';
 import { ResponsableApiService } from './api/responsable.api.service';
-import { ConfiguracionApiService } from './api/configuracion.api.service';
 import { ResultadoApiService } from './api/resultado.api.service';
 import { UsuarioApiService } from './api/usuario.api.service';
-
-/** Configuración vacía: no se muestran datos falsos hasta que el backend los provea. */
-const CONFIGURACION_VACIA: Configuracion = {
-  nombreAsociacion: '',
-  telefono: '',
-  correo: '',
-  direccion: '',
-  cuentaBancaria: '',
-  numeroYape: '',
-  numeroPlin: '',
-  coordinadoraGeneral: '',
-  logoUrl: '',
-  mensajeConfirmacion: '',
-  fechaLimiteInscripcion: '',
-  fechaSorteo: '',
-  horaSorteo: '',
-  horaInicioConcurso: '',
-};
 
 /**
  * Orquestador de datos del frontend.
@@ -71,20 +51,19 @@ export class DataStoreService {
   private readonly responsableApi = inject(ResponsableApiService);
   private readonly pagoApi = inject(PagoApiService);
   private readonly resultadoApi = inject(ResultadoApiService);
-  private readonly configuracionApi = inject(ConfiguracionApiService);
 
   readonly cargando = signal(true);
 
   readonly usuarios = signal<Usuario[]>([]);
   readonly usuariosInactivos = signal<Usuario[]>([]);
   readonly eventos = signal<Evento[]>([]);
+  readonly eventosInactivos = signal<Evento[]>([]);
   readonly categorias = signal<Categoria[]>([]);
   readonly responsables = signal<Responsable[]>([]);
   readonly inscripciones = signal<Inscripcion[]>([]);
   readonly participantes = signal<Participante[]>([]);
   readonly pagos = signal<Pago[]>([]);
   readonly resultados = signal<Resultado[]>([]);
-  readonly configuracion = signal<Configuracion>({ ...CONFIGURACION_VACIA });
   readonly stats = DASHBOARD_STATS;
 
   /** Inscripciones por modalidad, calculado en vivo desde categorías e inscripciones reales. */
@@ -131,11 +110,12 @@ export class DataStoreService {
   async loadAll(): Promise<void> {
     this.cargando.set(true);
     try {
-      const [usuarios, usuariosInactivos, eventos, categorias, responsables, inscripciones] =
+      const [usuarios, usuariosInactivos, eventos, eventosInactivos, categorias, responsables, inscripciones] =
         await Promise.all([
           firstValueFrom(this.usuarioApi.listar()),
           firstValueFrom(this.usuarioApi.listarInactivos()),
           firstValueFrom(this.eventoApi.listar()),
+          firstValueFrom(this.eventoApi.listarInactivos()),
           firstValueFrom(this.categoriaApi.listar()),
           firstValueFrom(this.responsableApi.listar()),
           firstValueFrom(this.inscripcionApi.listar()),
@@ -143,11 +123,11 @@ export class DataStoreService {
       this.usuarios.set(usuarios);
       this.usuariosInactivos.set(usuariosInactivos);
       this.eventos.set(eventos);
+      this.eventosInactivos.set(eventosInactivos);
       this.categorias.set(categorias);
       this.responsables.set(responsables);
       this.inscripciones.set(inscripciones);
       await this.cargarHijos(inscripciones.map((i) => i.id));
-      await this.cargarConfiguracion();
     } catch (err) {
       console.error('No se pudo cargar el catálogo del backend:', err);
       throw err;
@@ -178,17 +158,6 @@ export class DataStoreService {
   ): Promise<T[][]> {
     const resultados = await Promise.all(ids.map((id) => fn(id).catch(() => [] as T[])));
     return resultados;
-  }
-
-  /** Carga la configuración vigente desde el backend (si la tabla existe). */
-  private async cargarConfiguracion(): Promise<void> {
-    const configs = await firstValueFrom(this.configuracionApi.listar()).catch(
-      () => [] as Configuracion[],
-    );
-    const activa = configs.find((c) => c.activo) ?? configs[0];
-    if (activa) {
-      this.configuracion.set({ ...CONFIGURACION_VACIA, ...activa });
-    }
   }
 
   // ============================================================
@@ -288,10 +257,10 @@ export class DataStoreService {
   }
 
   async removeEvento(id: string): Promise<void> {
-    await firstValueFrom(this.eventoApi.eliminarLogico(id));
-    this.eventos.update((list) =>
-      list.map((e) => (e.id === id ? { ...e, activo: false, estado: 'CANCELADO' as const } : e)),
-    );
+    const evento = await firstValueFrom(this.eventoApi.eliminarLogico(id));
+    // Sale de la lista activa y entra al archivo inactivo (patrón usuarios).
+    this.eventos.update((list) => list.filter((e) => e.id !== id));
+    this.eventosInactivos.update((list) => [{ ...evento, activo: false }, ...list]);
   }
 
   async cambiarEstadoEvento(id: string, estado: string): Promise<Evento> {
@@ -302,13 +271,15 @@ export class DataStoreService {
 
   async restaurarEvento(id: string): Promise<Evento> {
     const evento = await firstValueFrom(this.eventoApi.restaurar(id));
-    this.eventos.update((list) => list.map((e) => (e.id === id ? evento : e)));
+    this.eventosInactivos.update((list) => list.filter((e) => e.id !== id));
+    this.eventos.update((list) => [evento, ...list]);
     return evento;
   }
 
   async eliminarFisicoEvento(id: string): Promise<void> {
     await firstValueFrom(this.eventoApi.eliminarFisico(id));
     this.eventos.update((list) => list.filter((e) => e.id !== id));
+    this.eventosInactivos.update((list) => list.filter((e) => e.id !== id));
   }
 
   // ============================================================
@@ -529,19 +500,6 @@ export class DataStoreService {
   async eliminarFisicoResultado(id: string): Promise<void> {
     await firstValueFrom(this.resultadoApi.eliminarFisico(id));
     this.resultados.update((list) => list.filter((r) => r.id !== id));
-  }
-
-  // ============================================================
-  // CONFIGURACION
-  // ============================================================
-
-  /** Crea o actualiza la configuración en el backend y sincroniza la signal. */
-  async saveConfig(config: Configuracion): Promise<Configuracion> {
-    const guardada = config.id
-      ? await firstValueFrom(this.configuracionApi.actualizar(config.id, config))
-      : await firstValueFrom(this.configuracionApi.crear(config));
-    this.configuracion.set({ ...config, ...guardada });
-    return guardada;
   }
 
   // ============================================================

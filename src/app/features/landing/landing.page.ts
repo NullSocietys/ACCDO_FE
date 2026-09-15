@@ -12,6 +12,7 @@ import gsap from 'gsap';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SiteHeaderComponent } from '../../shared/ui/site-header/site-header.component';
+import { CONTENIDO_LANDING } from './landing.contenido';
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -22,6 +23,9 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
   imports: [RouterLink, SiteHeaderComponent],
 })
 export class LandingPage implements OnInit, AfterViewInit, OnDestroy {
+  /** Contenido editable de la página (texto estático, sin backend). */
+  readonly contenido = CONTENIDO_LANDING;
+
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly route = inject(ActivatedRoute);
 

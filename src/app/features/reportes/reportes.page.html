@@ -1,74 +1,66 @@
-<div class="page">
+<div class="pg-rep">
   @if (cargando()) {
-    <div class="page-sk" aria-hidden="true">
-      <app-skeleton variant="card" [height]="120" />
+    <div class="sk-wrap" aria-hidden="true">
+      <app-skeleton variant="card" [height]="72" />
       <app-skeleton variant="table" [count]="8" />
     </div>
   } @else {
-  <header class="mast">
-    <div class="mast__copy">
-      <p class="mast__eyebrow">Temporada · Nómina</p>
-      <h1>Reportes</h1>
-      <p class="mast__lead">Nómina general de todos los integrantes: cada uno con su modalidad y grupo.</p>
-    </div>
-    <div class="mast__aside">
-      <dl class="mast__pulse" aria-label="Resumen rápido">
-        <div>
-          <dt>Integrantes</dt>
-          <dd>{{ integrantes().length }}</dd>
-        </div>
-        <div>
-          <dt>Grupos</dt>
-          <dd>{{ mastGrupos() }}</dd>
-        </div>
-        <div class="mast__pulse--gold">
-          <dt>Modalidades</dt>
-          <dd>{{ mastModalidades() }}</dd>
-        </div>
-      </dl>
-      <div class="mast__cta">
-        <app-button
-          icon="fileText"
-          [fullWidth]="true"
-          [disabled]="filtered().length === 0"
-          (clicked)="exportarPdf()"
-        >
-          PDF general
-        </app-button>
+
+    <!-- ── TOPBAR ── -->
+    <div class="topbar">
+      <div class="topbar__left">
+        <span class="topbar__breadcrumb">Panel</span>
+        <span class="topbar__sep" aria-hidden="true">/</span>
+        <h1 class="topbar__title">Reportes</h1>
       </div>
-      <div class="mast__actions">
-        <select autocomplete="off"
-          class="ui-select ui-select--export"
-          [ngModel]="exportEstado()"
-          (ngModelChange)="exportEstado.set($event)"
-          aria-label="Estado para exportar"
-        >
-          <option value="">Todos los estados</option>
-          <option value="CONFIRMADA">Confirmados</option>
-          <option value="PENDIENTE">Pendientes</option>
-          <option value="RECHAZADA">Rechazadas</option>
-        </select>
-        <div class="view-toggle">
-          <button
-            class="view-toggle__btn"
-            [class.is-active]="vistaActual() === 'general'"
-            (click)="cambiarVista('general')"
-            type="button"
-          >
-            Listado general
-          </button>
-          <button
-            class="view-toggle__btn"
-            [class.is-active]="vistaActual() === 'modalidades'"
-            (click)="cambiarVista('modalidades')"
-            type="button"
-          >
-            Por modalidades
-          </button>
+      <div class="topbar__right">
+        <div class="export-group" role="group" aria-label="Exportar PDF">
+          <span class="export-group__label">PDF de:</span>
+          <select autocomplete="off" class="sel"
+                  [ngModel]="exportEstado()"
+                  (ngModelChange)="exportEstado.set($event)"
+                  aria-label="Estado para exportar">
+            <option value="">Todos los estados</option>
+            <option value="CONFIRMADA">Solo confirmados</option>
+            <option value="PENDIENTE">Solo pendientes</option>
+            <option value="RECHAZADA">Solo rechazadas</option>
+          </select>
+          <app-button icon="fileText" [disabled]="filtered().length === 0" (clicked)="exportarPdf()">
+            Exportar
+          </app-button>
         </div>
       </div>
     </div>
-  </header>
+
+    <!-- ── KPIs ── -->
+    <div class="kpis" aria-label="Resumen">
+      <div class="kpi">
+        <span class="kpi__label">Integrantes</span>
+        <strong class="kpi__value">{{ integrantes().length }}</strong>
+      </div>
+      <div class="kpi kpi--success">
+        <span class="kpi__label">Confirmados</span>
+        <strong class="kpi__value">{{ overview().confirmados }}</strong>
+      </div>
+      <div class="kpi kpi--warn">
+        <span class="kpi__label">Pendientes</span>
+        <strong class="kpi__value">{{ overview().pendientes }}</strong>
+      </div>
+      <div class="kpi kpi--gold">
+        <span class="kpi__label">Grupos · Modalidades</span>
+        <strong class="kpi__value">{{ overview().grupos }} · {{ overview().modalidades }}</strong>
+      </div>
+    </div>
+
+    <!-- ── VIEW TOGGLE ── -->
+    <div class="view-toggle" role="group" aria-label="Cambiar vista">
+      <button type="button" class="view-toggle__btn"
+              [class.is-active]="vistaActual() === 'general'"
+              (click)="cambiarVista('general')">Listado general</button>
+      <button type="button" class="view-toggle__btn"
+              [class.is-active]="vistaActual() === 'modalidades'"
+              (click)="cambiarVista('modalidades')">Por modalidades</button>
+    </div>
 
   @if (integrantes().length === 0) {
     <app-empty-state
@@ -77,76 +69,120 @@
       description="Cuando se registren inscripciones, la nómina general aparecerá aquí."
     />
   } @else {
-    @if (vistaActual() === 'general') {
-      <div class="filters-bar">
-        <div class="search-wrap">
-          <app-input
-            controlId="rep-search"
-            icon="search"
-            placeholder="Buscar integrante, DNI, grupo o modalidad…"
-            [value]="search()"
-            (valueChange)="search.set($event)"
-          />
-        </div>
-        <select autocomplete="off"
-          class="ui-select"
-          [ngModel]="modalidadFilter()"
-          (ngModelChange)="modalidadFilter.set($event)"
-          aria-label="Filtrar por modalidad"
-        >
-          <option value="">Todas las modalidades</option>
-          @for (mod of modalidades(); track mod) {
-            <option [value]="mod">{{ mod }}</option>
-          }
-        </select>
-        <select autocomplete="off"
-          class="ui-select"
-          [ngModel]="estadoFilter()"
-          (ngModelChange)="estadoFilter.set($event)"
-          aria-label="Filtrar por estado"
-        >
-          <option value="">Todos los estados</option>
-          @for (est of estados; track est) {
-            <option [value]="est">{{ statusLabel(est) }}</option>
-          }
-        </select>
-      </div>
 
-      @if (filtered().length === 0) {
-        <app-empty-state
-          icon="search"
-          title="Sin resultados"
-          description="Ningún integrante coincide con los filtros aplicados."
-          actionLabel="Limpiar filtros"
-          actionIcon="x"
-          (actioned)="limpiarFiltros()"
-        />
-      } @else {
-        <div class="roster">
-          <div class="roster__list" role="list">
-            @for (row of paged(); track row.id) {
-              <article class="who" role="listitem">
-                <div class="who__avatar">
-                  {{ row.iniciales }}
-                </div>
-                <div class="who__identity">
-                  <strong>{{ row.nombre }}</strong>
-                  <span class="mono">{{ row.celular }}</span>
-                </div>
-                <div class="who__group">
-                  <strong>{{ row.grupo }}</strong>
-                  <span>{{ row.modalidad }}</span>
-                </div>
-                <div class="who__code mono">{{ row.codigo }}</div>
-                <div class="who__estado">
-                  <app-badge [tone]="statusTone(row.estado)" [dot]="false">
-                    {{ statusLabel(row.estado) }}
-                  </app-badge>
-                </div>
-              </article>
-            }
+    <!-- ════════ VISTA GENERAL ════════ -->
+    @if (vistaActual() === 'general') {
+      <div class="table-section">
+
+        <!-- ── TOOLBAR ── -->
+        <div class="toolbar">
+          <div class="toolbar__filters">
+            <select autocomplete="off" class="sel"
+                    [ngModel]="modalidadFilter()"
+                    (ngModelChange)="modalidadFilter.set($event)"
+                    aria-label="Filtrar por modalidad">
+              <option value="">Modalidad</option>
+              @for (mod of modalidades(); track mod) {
+                <option [value]="mod">{{ mod }}</option>
+              }
+            </select>
+            <select autocomplete="off" class="sel"
+                    [ngModel]="estadoFilter()"
+                    (ngModelChange)="estadoFilter.set($event)"
+                    aria-label="Filtrar por estado">
+              <option value="">Estado</option>
+              @for (est of estados; track est) {
+                <option [value]="est">{{ statusLabel(est) }}</option>
+              }
+            </select>
           </div>
 
+          <div class="toolbar__search">
+            <app-input
+              controlId="rep-search"
+              icon="search"
+              placeholder="Integrante, DNI, grupo o modalidad…"
+              [value]="search()"
+              (valueChange)="search.set($event)"
+            />
+          </div>
+
+          @if (search() || modalidadFilter() || estadoFilter()) {
+            <button class="btn-clear" type="button"
+                    (click)="limpiarFiltros()" aria-label="Limpiar filtros">
+              <app-icon name="x" [size]="13" />
+              Limpiar
+            </button>
+          }
+        </div>
+
+        <!-- ── TABLA ── -->
+        @if (filtered().length === 0) {
+          <app-empty-state
+            icon="search"
+            title="Sin resultados"
+            description="Ningún integrante coincide con los filtros aplicados."
+            actionLabel="Limpiar filtros"
+            actionIcon="x"
+            (actioned)="limpiarFiltros()"
+          />
+        } @else {
+          <div class="table-card" [class.table-card--partial]="!isFullPage()">
+
+            <div class="table-card__header">
+              <p class="table-card__title">Nómina general</p>
+              <span class="table-card__range">{{ rangeLabel() }}</span>
+            </div>
+
+            <div class="table-wrap">
+              <table class="tbl" [class.tbl--full]="isFullPage()">
+                <thead>
+                  <tr>
+                    <th class="th" scope="col">Integrante</th>
+                    <th class="th" scope="col">Grupo / Modalidad</th>
+                    <th class="th" scope="col">Evento</th>
+                    <th class="th th--center" scope="col">Código</th>
+                    <th class="th th--center" scope="col">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of paged(); track row.id) {
+                    <tr class="trow"
+                        [class.trow--pendiente]="row.estado === 'PENDIENTE'"
+                        [class.trow--rechazada]="row.estado === 'RECHAZADA'">
+                      <td class="td td--who">
+                        <span class="rep-avatar" aria-hidden="true">{{ row.iniciales }}</span>
+                        <span class="rep-who">
+                          <span class="rep-nombre">{{ row.nombre }}</span>
+                          <span class="rep-cel mono">{{ row.celular }}</span>
+                        </span>
+                      </td>
+                      <td class="td td--grp">
+                        <span class="rep-grupo">{{ row.grupo }}</span>
+                        <span class="rep-modalidad">{{ row.modalidad }}</span>
+                      </td>
+                      <td class="td td--ev">
+                        <span class="rep-text" [title]="row.evento">{{ row.evento }}</span>
+                      </td>
+                      <td class="td td--center">
+                        <span class="rep-code mono">{{ row.codigo }}</span>
+                      </td>
+                      <td class="td td--center">
+                        <app-badge [tone]="statusTone(row.estado)" [dot]="false">
+                          {{ statusLabel(row.estado) }}
+                        </app-badge>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        }
+
+        <!-- paginación pegada al fondo -->
+        <div class="pagination-footer">
           <app-pagination
             [total]="filtered().length"
             [pageSize]="pageSize"
@@ -155,10 +191,13 @@
             (pageChange)="page.set($event)"
           />
         </div>
-      }
+
+      </div><!-- /table-section -->
     }
 
+    <!-- ════════ VISTA POR MODALIDADES ════════ -->
     @if (vistaActual() === 'modalidades') {
+      <div class="mods-scroll">
       <div class="section-head">
         <h2>Reportes por modalidad</h2>
         <span>{{ reportesModalidad().length }} modalidades en competencia</span>
@@ -335,12 +374,14 @@
       </div>
 
       <app-pagination
+        class="mods-pager"
         [total]="reportesModalidad().length"
         [pageSize]="seccionesPageSize"
         [page]="seccionesPage()"
         ariaLabel="Paginación de modalidades"
         (pageChange)="seccionesPage.set($event)"
       />
+      </div><!-- /mods-scroll -->
     }
   }
   }

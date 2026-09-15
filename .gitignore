@@ -42,3 +42,12 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Entorno local (la plantilla .env.example sí se versiona)
+.env
+.env.*
+!.env.example
+
+# Generado en build-time (lo crea scripts/generate-env.mjs desde API_URL)
+# Se mantiene versionado con el fallback localhost para `ng serve` local.
+# /src/environments/environment.ts

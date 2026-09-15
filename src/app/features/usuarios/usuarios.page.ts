@@ -131,30 +131,11 @@ export class UsuariosPage {
     return this.filtrados().slice(start, start + this.pageSize);
   });
 
-  /** Altura fija de la tabla.
-   *  ROW_HEIGHT ≈ 47px (padding 6+6 + avatar 32 + border 1)
-   *  THEAD_HEIGHT ≈ 31px  |  CARD_HEADER ≈ 33px  |  CARD_FOOTER ≈ 36px
+  /** true cuando la página actual tiene exactamente pageSize filas.
+   *  Página llena → la card usa flex:1 y llena el alto disponible.
+   *  Página parcial → la card mide lo justo (altura natural).
    */
-  private readonly ROW_HEIGHT    = 47;
-  private readonly THEAD_HEIGHT  = 31;
-  private readonly CARD_HEADER_H = 33;
-  private readonly CARD_FOOTER_H = 36;
-
-  /** true cuando la página actual tiene exactamente pageSize filas */
   readonly isFullPage = computed(() => this.paginado().length >= this.pageSize);
-
-  /** Altura total de la .table-card solo en página parcial.
-   *  En página llena la card usa flex:1 y llena el espacio disponible.
-   */
-  readonly tableCardStyle = computed<Record<string, string> | null>(() => {
-    if (this.isFullPage()) return null;
-    const rows = this.paginado().length;
-    const h = this.CARD_HEADER_H + this.THEAD_HEIGHT + rows * this.ROW_HEIGHT + this.CARD_FOOTER_H;
-    return { height: `${h}px`, 'flex-shrink': '0', 'flex-grow': '0' };
-  });
-
-  /** tableWrapStyle ya no se usa para controlar altura — se deja null */
-  readonly tableWrapStyle = computed<Record<string, string> | null>(() => null);
 
   readonly rangeLabel = computed(() => {
     const total = this.filtrados().length;

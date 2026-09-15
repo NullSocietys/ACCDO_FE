@@ -2,6 +2,26 @@
    Clean grid, hairlines, essential type. Single gold accent.
    No shadows, gradients, or decorative chrome. */
 
+/* Tokens dark para componentes compartidos montados desde el shell
+   (app-modal de perfil, app-confirm-dialog): sin esto caen al fallback
+   blanco (#fff) porque las páginas definen estos tokens en su propio :host. */
+:host {
+  --color-background:       #1a1816;
+  --color-foreground:       #e7e5e4;
+  --color-card:             #211f1d;
+  --color-muted:            #1c1917;
+  --color-muted-foreground: #78716c;
+  --color-border:           rgba(255, 255, 255, 0.09);
+  --color-border-strong:    rgba(255, 255, 255, 0.16);
+  --color-accent:           #fbbf24;
+  --color-primary:          #fbbf24;
+  --color-on-primary:       #0c0a09;
+  --color-destructive:      #f87171;
+  --color-destructive-soft: rgba(248, 113, 113, 0.1);
+  --font-mono:              ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', Menlo, monospace;
+  --font-sans:              'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
 .shell {
   height: 100dvh;
   overflow: hidden;
@@ -44,7 +64,7 @@
   grid-template-columns: calc(var(--sb-unit) * 5) minmax(0, 1fr) auto;
   gap: calc(var(--sb-unit) * 1.5);
   align-items: center;
-  padding: calc(var(--sb-unit) * 2.5) calc(var(--sb-unit) * 2.5);
+  padding: var(--sb-unit) calc(var(--sb-unit) * 2.5);
   background: var(--sb-paper);
   border-bottom: 2px solid var(--sb-gold-deep);
   min-height: var(--navbar-height);
@@ -75,22 +95,18 @@
   outline-offset: 2px;
 }
 
-.brand-mark {
-  width: calc(var(--sb-unit) * 5);
-  height: calc(var(--sb-unit) * 5);
-  border: 1px solid rgba(251, 191, 36, 0.5);
-  background: var(--sb-ink);
-  color: var(--sb-gold);
-  display: grid;
-  place-items: center;
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
-.brand-mark span {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1;
+.brand-slogan {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
 .brand-text {
@@ -98,32 +114,6 @@
   flex-direction: column;
   min-width: 0;
   gap: 3px;
-}
-
-.brand-eyebrow {
-  margin: 0;
-  font-size: 9.5px;
-  font-weight: 650;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--sb-gold);
-  line-height: 1;
-}
-
-.brand-text strong {
-  font-size: 13.5px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: #ffffff;
-  line-height: 1.15;
-  white-space: nowrap;
-}
-
-.brand-text > span {
-  font-size: 11px;
-  color: var(--sb-quiet);
-  letter-spacing: 0.01em;
-  white-space: nowrap;
 }
 
 /* Nav — folio indices, generous but functional */
@@ -237,10 +227,41 @@
 }
 
 .admin {
+  appearance: none;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: calc(var(--sb-unit) * 1.5);
   align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm, 4px);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.admin:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--sb-rule);
+}
+
+.admin:focus-visible {
+  outline: 2px solid var(--sb-gold);
+  outline-offset: 2px;
+}
+
+.admin-chev {
+  color: var(--sb-quiet);
+  transition: transform 180ms ease, color 180ms ease;
+}
+
+.admin:hover .admin-chev {
+  color: var(--sb-text);
+  transform: translateX(2px);
 }
 
 .admin-avatar {
@@ -284,33 +305,66 @@
   text-overflow: ellipsis;
 }
 
-.logout {
-  appearance: none;
-  align-self: flex-start;
-  border: none;
-  border-bottom: 1px solid var(--sb-quiet);
-  background: transparent;
-  color: var(--sb-muted);
-  padding: 0 0 3px;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: 12.5px;
-  letter-spacing: -0.01em;
-  cursor: pointer;
-  text-align: left;
-  transition:
-    color 200ms ease,
-    border-color 200ms ease;
+/* —— Modal de perfil —— */
+.perfil-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.09));
+  border-radius: var(--r-md, 6px);
+  background: var(--color-muted, #1c1917);
 }
 
-.logout:hover {
-  color: #fecaca;
-  border-bottom-color: #fecaca;
+.perfil-avatar {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono, monospace);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: 50%;
+  background: #0c0a09;
 }
 
-.logout:focus-visible {
-  outline: 2px solid #fca5a5;
-  outline-offset: 3px;
+.perfil-datos {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.perfil-nombre {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.perfil-correo {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: #a8a29e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.perfil-rol {
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fbbf24;
 }
 
 /* —— Main companion —— */
@@ -471,7 +525,7 @@
 .shell.collapsed .nav-label,
 .shell.collapsed .nav-group__label,
 .shell.collapsed .admin-meta,
-.shell.collapsed .logout-label {
+.shell.collapsed .admin-chev {
   display: none;
 }
 
@@ -507,18 +561,7 @@
 .shell.collapsed .admin {
   grid-template-columns: 1fr;
   justify-items: center;
-}
-
-.shell.collapsed .logout {
-  width: 8px;
-  height: 8px;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: var(--sb-gold);
-  color: transparent;
-  font-size: 0;
-  overflow: hidden;
+  padding: 6px;
 }
 
 @media (max-width: 900px) {
@@ -611,24 +654,22 @@
   }
 
   .shell.collapsed .admin {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     justify-items: stretch;
   }
 
-  .shell.collapsed .logout {
-    width: auto;
-    height: auto;
-    padding: 0 0 3px;
-    border-bottom: 1px solid var(--sb-quiet);
-    background: transparent;
-    color: var(--sb-muted);
-    font-size: 12.5px;
+  .shell.collapsed .admin-meta {
+    display: block;
+  }
+
+  .shell.collapsed .admin-chev {
+    display: initial;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .nav a,
-  .logout,
+  .admin,
   .icon-btn,
   .search,
   .shell,

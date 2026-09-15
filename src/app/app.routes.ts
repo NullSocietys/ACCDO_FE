@@ -112,11 +112,6 @@ export const routes: Routes = [
         path: 'bases',
         loadComponent: () => import('./features/bases/bases.page').then((m) => m.BasesPage),
       },
-      {
-        path: 'configuracion',
-        loadComponent: () =>
-          import('./features/configuracion/configuracion.page').then((m) => m.ConfiguracionPage),
-      },
     ],
   },
   { path: '**', component: NotFoundPage },

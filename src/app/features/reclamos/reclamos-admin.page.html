@@ -1,41 +1,46 @@
-<div class="page reclamos">
+<div class="pg-reclamos">
+
+  <!-- ── SKELETON ── -->
   @if (cargando()) {
-    <div class="page-sk" aria-hidden="true">
-      <app-skeleton variant="card" [height]="88" />
+    <div class="sk-wrap" aria-hidden="true">
+      <app-skeleton variant="card" [height]="72" />
       <app-skeleton variant="table" [count]="8" />
     </div>
   } @else {
-    <header class="mast">
-      <div class="mast__copy">
-        <p class="mast__eyebrow">Gestión · Soporte</p>
-        <h1>Reclamos</h1>
-        <p class="mast__lead">
-          Solicitudes de encargados que reclaman el nombre de su grupo inscrito sin autorización.
-        </p>
-      </div>
-      <div class="mast__aside">
-        <dl class="mast__pulse" aria-label="Resumen rápido">
-          <div>
-            <dt>Total</dt>
-            <dd>{{ overview().total }}</dd>
-          </div>
-          <div class="mast__pulse--gold">
-            <dt>Pendientes</dt>
-            <dd>{{ overview().pendientes }}</dd>
-          </div>
-          <div>
-            <dt>Atendidos</dt>
-            <dd>{{ overview().atendidos }}</dd>
-          </div>
-        </dl>
-        <div class="mast__cta">
-          <app-button icon="rotateCcw" variant="outline" [fullWidth]="true" (clicked)="cargar()">
-            Actualizar
-          </app-button>
-        </div>
-      </div>
-    </header>
 
+    <!-- ── TOPBAR ── -->
+    <div class="topbar">
+      <div class="topbar__left">
+        <span class="topbar__breadcrumb">Panel</span>
+        <span class="topbar__sep" aria-hidden="true">/</span>
+        <h1 class="topbar__title">Reclamos</h1>
+      </div>
+      <div class="topbar__right">
+        <app-button variant="outline" icon="rotateCcw" (clicked)="cargar()">Actualizar</app-button>
+      </div>
+    </div>
+
+    <!-- ── KPIs ── -->
+    <div class="kpis" aria-label="Resumen">
+      <div class="kpi">
+        <span class="kpi__label">Total</span>
+        <strong class="kpi__value">{{ overview().total }}</strong>
+      </div>
+      <div class="kpi kpi--warn">
+        <span class="kpi__label">Pendientes</span>
+        <strong class="kpi__value">{{ overview().pendientes }}</strong>
+      </div>
+      <div class="kpi kpi--success">
+        <span class="kpi__label">Atendidos</span>
+        <strong class="kpi__value">{{ overview().atendidos }}</strong>
+      </div>
+      <div class="kpi kpi--muted">
+        <span class="kpi__label">Mostrando</span>
+        <strong class="kpi__value">{{ filtrados().length }}</strong>
+      </div>
+    </div>
+
+    <!-- ── CONTENIDO ── -->
     @if (overview().total === 0) {
       <app-empty-state
         icon="megaphone"
@@ -43,24 +48,29 @@
         description="Cuando un encargado registre un reclamo desde la portada, aparecerá aquí."
       />
     } @else {
-      <div class="controls">
-        <nav class="tabs" role="group" aria-label="Filtrar por estado">
+
+      <div class="table-section">
+
+      <!-- ── TOOLBAR: tabs + búsqueda ── -->
+      <div class="toolbar">
+        <nav class="toolbar__tabs" role="group" aria-label="Filtrar por estado">
           @for (f of filtros; track f.key) {
             <button
               type="button"
-              class="tabs__btn"
-              [class.is-active]="estadoFiltro() === f.key"
+              class="tab-btn"
+              [class.tab-btn--active]="estadoFiltro() === f.key"
               [attr.aria-pressed]="estadoFiltro() === f.key"
               (click)="estadoFiltro.set(f.key)"
             >
               {{ f.label }}
-              <span class="tabs__n">
+              <span class="tab-btn__count">
                 {{ f.key === 'pendientes' ? overview().pendientes : overview().atendidos }}
               </span>
             </button>
           }
         </nav>
-        <div class="controls__search">
+
+        <div class="toolbar__search">
           <app-input
             controlId="rc-search"
             icon="search"
@@ -69,8 +79,16 @@
             (valueChange)="busqueda.set($event)"
           />
         </div>
+        @if (busqueda()) {
+          <button class="btn-clear" type="button"
+                  (click)="busqueda.set(''); page.set(1)" aria-label="Limpiar filtros">
+            <app-icon name="x" [size]="13" />
+            Limpiar
+          </button>
+        }
       </div>
 
+      <!-- ── TABLA ── -->
       @if (filtrados().length === 0) {
         <app-empty-state
           icon="search"
@@ -81,108 +99,114 @@
           (actioned)="limpiarFiltros()"
         />
       } @else {
-        <section class="folio" aria-label="Listado de reclamos">
-          <div class="folio__head">
-            <h2>{{ estadoFiltro() === 'pendientes' ? 'Cola pendiente' : 'Histórico atendido' }}</h2>
-            <span>{{ rangeLabel() }}</span>
+        <div class="table-card" [class.table-card--partial]="!isFullPage()">
+
+          <div class="table-card__header">
+            <p class="table-card__title">
+              {{ estadoFiltro() === 'pendientes' ? 'Cola pendiente' : 'Histórico atendido' }}
+            </p>
+            <span class="table-card__range">{{ rangeLabel() }}</span>
           </div>
 
-          <div class="folio__cols" aria-hidden="true">
-            <span class="folio__cols-mark">#</span>
-            <span>Grupo</span>
-            <span>Evento</span>
-            <span>Estado</span>
-            <span></span>
+          <div class="table-wrap">
+            <table class="tbl" [class.tbl--full]="isFullPage()">
+              <thead>
+                <tr>
+                  <th class="th th--n" scope="col">#</th>
+                  <th class="th" scope="col">Grupo</th>
+                  <th class="th" scope="col">Evento</th>
+                  <th class="th" scope="col">Registro</th>
+                  <th class="th th--center" scope="col">Estado</th>
+                  <th class="th th--actions" scope="col">
+                    <span class="sr-only">Acciones</span>
+                  </th>
+                  </tr>
+              </thead>
+              <tbody>
+                @for (reclamo of paginado(); track reclamo.id; let i = $index) {
+                  <tr class="trow" [class.trow--atendido]="reclamo.estado !== 'PENDIENTE'">
+
+                    <!-- # -->
+                    <td class="td td--n">{{ rowIndex(i) }}</td>
+
+                    <!-- Grupo -->
+                    <td class="td td--group">
+                      <span class="rc-nombre">{{ reclamo.nombreGrupo }}</span>
+                      <span class="rc-sub">
+                        {{ encargadoNombre(reclamo) }}
+                        <span class="mono">· DNI {{ reclamo.encargadoDni }}</span>
+                      </span>
+                    </td>
+
+                    <!-- Evento -->
+                    <td class="td">
+                      <span class="rc-text" [title]="nombreEvento(reclamo.eventoId)">
+                        {{ nombreEvento(reclamo.eventoId) }}
+                      </span>
+                    </td>
+
+                    <!-- Registro -->
+                    <td class="td td--date">{{ fechaCorta(reclamo.createdAt) }}</td>
+
+                    <!-- Estado -->
+                    <td class="td td--center">
+                      <app-badge
+                        [tone]="statusTone(reclamo.estado)"
+                        [dot]="reclamo.estado === 'PENDIENTE'"
+                      >
+                        {{ statusLabel(reclamo.estado) }}
+                      </app-badge>
+                    </td>
+
+                    <!-- Acciones -->
+                    <td class="td td--actions">
+                      <app-button variant="outline" size="sm" icon="eye"
+                                  (clicked)="openDetail(reclamo)">Ver</app-button>
+                      @if (reclamo.estado === 'PENDIENTE') {
+                        <app-button variant="outline" size="sm" icon="check"
+                                    [disabled]="busyId() === reclamo.id"
+                                    (clicked)="atender(reclamo)">Atender</app-button>
+                      } @else {
+                        <app-button variant="outline" size="sm" icon="rotateCcw"
+                                    [disabled]="busyId() === reclamo.id"
+                                    (clicked)="restaurar(reclamo)">Reabrir</app-button>
+                      }
+                      <app-button variant="ghost" size="icon" icon="trash"
+                                  ariaLabel="Eliminar reclamo"
+                                  [disabled]="busyId() === reclamo.id"
+                                  (clicked)="eliminar(reclamo)" />
+                    </td>
+
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
 
-          <div class="folio__list" role="list">
-            @for (reclamo of paginado(); track reclamo.id; let i = $index) {
-              <article class="row" role="listitem">
-                <div class="row__mark" aria-hidden="true">
-                  <span class="row__index">{{ rowIndex(i) }}</span>
-                </div>
-
-                <div class="row__identity">
-                  <h3 class="row__title">{{ reclamo.nombreGrupo }}</h3>
-                  <p class="row__sub">
-                    {{ encargadoNombre(reclamo) }}
-                    <span class="mono">· DNI {{ reclamo.encargadoDni }}</span>
-                  </p>
-                </div>
-
-                <div class="row__meta">
-                  <span class="row__meta-k">Evento</span>
-                  <span class="row__meta-v">{{ nombreEvento(reclamo.eventoId) }}</span>
-                  <span class="row__meta-k">Registro</span>
-                  <span class="row__meta-v">{{ fechaCorta(reclamo.createdAt) }}</span>
-                </div>
-
-                <div class="row__status">
-                  <app-badge
-                    [tone]="statusTone(reclamo.estado)"
-                    [dot]="reclamo.estado === 'PENDIENTE'"
-                  >
-                    {{ statusLabel(reclamo.estado) }}
-                  </app-badge>
-                </div>
-
-                <div class="row__actions">
-                  <app-button
-                    variant="outline"
-                    size="lg"
-                    icon="eye"
-                    (clicked)="openDetail(reclamo)"
-                  >
-                    Ver
-                  </app-button>
-                  @if (reclamo.estado === 'PENDIENTE') {
-                    <app-button
-                      variant="outline"
-                      size="lg"
-                      icon="check"
-                      [disabled]="busyId() === reclamo.id"
-                      (clicked)="atender(reclamo)"
-                    >
-                      Atender
-                    </app-button>
-                  } @else {
-                    <app-button
-                      variant="outline"
-                      size="lg"
-                      icon="rotateCcw"
-                      [disabled]="busyId() === reclamo.id"
-                      (clicked)="restaurar(reclamo)"
-                    >
-                      Reabrir
-                    </app-button>
-                  }
-                  <app-button
-                    variant="ghost"
-                    size="icon"
-                    icon="trash"
-                    ariaLabel="Eliminar reclamo"
-                    [disabled]="busyId() === reclamo.id"
-                    (clicked)="eliminar(reclamo)"
-                  />
-                </div>
-              </article>
-            }
-          </div>
-
-          <app-pagination
-            [total]="filtrados().length"
-            [pageSize]="pageSize"
-            [page]="page()"
-            ariaLabel="Paginación de reclamos"
-            (pageChange)="onPageChange($event)"
-          />
-        </section>
+        </div>
       }
+
+      <!-- paginación pegada al fondo -->
+      <div class="pagination-footer">
+        <app-pagination
+          [total]="filtrados().length"
+          [pageSize]="pageSize"
+          [page]="page()"
+          ariaLabel="Paginación de reclamos"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+
+      </div><!-- /table-section -->
     }
   }
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     MODAL — Detalle del reclamo
+══════════════════════════════════════════════════════ -->
 <app-modal
+  class="reclamo-modal"
   [open]="!!selected()"
   label="Reclamo"
   [title]="selected()?.nombreGrupo ?? 'Detalle'"
@@ -191,39 +215,39 @@
   (closed)="closeDetail()"
 >
   @if (selected(); as r) {
-    <div class="sheet">
-      <div class="sheet__hero">
+    <div class="msheet">
+      <div class="msheet__hero">
         <div>
-          <span class="k">Estado</span>
-          <p class="sheet__figure">{{ statusLabel(r.estado) }}</p>
+          <span class="msheet__hero-k">Estado</span>
+          <p class="msheet__hero-val">{{ statusLabel(r.estado) }}</p>
         </div>
         <app-badge [tone]="statusTone(r.estado)" [dot]="false">
           {{ statusLabel(r.estado) }}
         </app-badge>
       </div>
 
-      <dl class="sheet__grid">
-        <div>
+      <dl class="msheet__grid">
+        <div class="msheet__cell">
           <dt>Evento</dt>
           <dd>{{ nombreEvento(r.eventoId) }}</dd>
         </div>
-        <div>
+        <div class="msheet__cell">
           <dt>Registrado</dt>
           <dd>{{ fechaCorta(r.createdAt) }}</dd>
         </div>
-        <div>
+        <div class="msheet__cell">
           <dt>Encargado</dt>
           <dd>{{ encargadoNombre(r) }}</dd>
         </div>
-        <div>
+        <div class="msheet__cell">
           <dt>DNI</dt>
           <dd class="mono">{{ r.encargadoDni }}</dd>
         </div>
-        <div>
+        <div class="msheet__cell">
           <dt>Teléfono</dt>
           <dd>{{ r.telefono || '—' }}</dd>
         </div>
-        <div>
+        <div class="msheet__cell">
           <dt>Correo</dt>
           <dd>
             @if (r.correo) {
@@ -233,16 +257,15 @@
             }
           </dd>
         </div>
+        @if (r.mensaje) {
+          <div class="msheet__cell msheet__cell--wide">
+            <dt>Mensaje</dt>
+            <dd>{{ r.mensaje }}</dd>
+          </div>
+        }
       </dl>
 
-      @if (r.mensaje) {
-        <div class="sheet__msg">
-          <span class="k">Mensaje</span>
-          <p>{{ r.mensaje }}</p>
-        </div>
-      }
-
-      <div class="sheet__actions">
+      <div class="msheet-actions">
         @if (r.estado === 'PENDIENTE') {
           <app-button icon="check" (clicked)="atender(r)">Marcar atendido</app-button>
         } @else {

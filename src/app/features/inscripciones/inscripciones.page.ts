@@ -9,6 +9,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
+import { IconComponent } from '../../shared/icons/icon.component';
 import { InputComponent } from '../../shared/ui/input.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
@@ -43,6 +44,7 @@ const PAGE_SIZE = 10;
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
+    IconComponent,
     InputComponent,
     ModalComponent,
     PaginationComponent,
@@ -120,6 +122,12 @@ export class InscripcionesPage {
     const to = Math.min(this.page() * this.pageSize, total);
     return `${from}–${to} de ${total}`;
   });
+
+  /** true cuando la página actual tiene exactamente pageSize filas.
+   *  Página llena → la card usa flex:1 y llena el alto disponible.
+   *  Página parcial → la card mide lo justo (altura natural).
+   */
+  readonly isFullPage = computed(() => this.paged().length >= this.pageSize);
 
   readonly modalDescription = computed(() => {
     const ins = this.selected();

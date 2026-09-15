@@ -10,4 +10,3 @@ export * from './responsable.api.service';
 export * from './pago.api.service';
 export * from './resultado.api.service';
 export * from './reclamo.api.service';
-export * from './configuracion.api.service';

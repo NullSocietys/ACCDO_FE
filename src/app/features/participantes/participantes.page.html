@@ -51,6 +51,8 @@
       />
     } @else {
 
+      <div class="table-section">
+
       <!-- ── TOOLBAR ── -->
       <div class="toolbar">
         <div class="toolbar__search">
@@ -90,7 +92,7 @@
       </div>
 
       <!-- ── TABLA ── -->
-      <div class="table-card">
+      <div class="table-card" [class.table-card--partial]="!isFullPage()">
 
         <div class="table-card__header">
           <p class="table-card__title">Nómina de bailarines</p>
@@ -100,7 +102,7 @@
         </div>
 
         <div class="table-wrap">
-          <table class="tbl">
+          <table class="tbl" [class.tbl--full]="isFullPage()">
             <thead>
               <tr>
                 <th class="th" scope="col">Participante</th>
@@ -154,17 +156,19 @@
           </table>
         </div>
 
-        <div class="table-card__footer">
-          <app-pagination
-            [total]="filtered().length"
-            [pageSize]="pageSize"
-            [page]="page()"
-            ariaLabel="Paginación de participantes"
-            (pageChange)="page.set($event)"
-          />
-        </div>
-
       </div>
+
+      <!-- paginación pegada al fondo -->
+      <div class="pagination-footer">
+        <app-pagination
+          [total]="filtered().length"
+          [pageSize]="pageSize"
+          [page]="page()"
+          ariaLabel="Paginación de participantes"
+          (pageChange)="page.set($event)"
+        />
+      </div>
+      </div><!-- /table-section -->
     }
   }
 </div>

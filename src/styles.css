@@ -154,6 +154,19 @@ html:has(app-landing)::-webkit-scrollbar {
   display: none;
 }
 
+/* Scrollbars invisibles en TODA la app: se puede seguir haciendo scroll
+   (rueda, trackpad, teclado, touch) pero la barra no se ve. */
+* {
+  scrollbar-width: none;              /* Firefox */
+  -ms-overflow-style: none;           /* IE/Edge legacy */
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;                          /* Chrome/Edge/Safari */
+  display: none;
+}
+
 html,
 body {
   margin: 0;

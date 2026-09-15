@@ -97,6 +97,12 @@ export class ParticipantesPage {
     return this.filtered().slice(start, start + this.pageSize);
   });
 
+  /** true cuando la página actual tiene exactamente pageSize filas.
+   *  Página llena → la card usa flex:1 y llena el alto disponible.
+   *  Página parcial → la card mide lo justo (altura natural).
+   */
+  readonly isFullPage = computed(() => this.paged().length >= this.pageSize);
+
   readonly totalBailarines = computed(() => this.bailarines().length);
 
   readonly totalGrupos = computed(

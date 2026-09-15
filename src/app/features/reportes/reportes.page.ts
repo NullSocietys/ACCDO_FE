@@ -7,6 +7,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
+import { IconComponent } from '../../shared/icons/icon.component';
 import { InputComponent } from '../../shared/ui/input.component';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
@@ -39,6 +40,7 @@ interface ReporteModalidad {
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
+    IconComponent,
     InputComponent,
     PaginationComponent,
     SkeletonComponent,
@@ -65,8 +67,16 @@ export class ReportesPage {
   readonly seccionesPageSize = 4;
   readonly seccionesPage = signal(1);
 
-  readonly mastGrupos = computed(() => new Set(this.integrantes().map((r) => r.codigo)).size);
-  readonly mastModalidades = computed(() => new Set(this.integrantes().map((r) => r.modalidad)).size);
+  /** KPIs del resumen (patrón usuarios). */
+  readonly overview = computed(() => {
+    const list = this.integrantes();
+    return {
+      confirmados: list.filter((r) => r.estado === 'CONFIRMADA').length,
+      pendientes: list.filter((r) => r.estado === 'PENDIENTE').length,
+      grupos: new Set(list.map((r) => r.codigo)).size,
+      modalidades: new Set(list.map((r) => r.modalidad)).size,
+    };
+  });
 
   readonly modalidades = computed(() => this.store.categorias().map((c) => c.nombre));
   readonly estados = ['PENDIENTE', 'CONFIRMADA', 'RECHAZADA'];
@@ -122,6 +132,20 @@ export class ReportesPage {
   readonly paged = computed(() => {
     const start = (this.page() - 1) * this.pageSize;
     return this.filtered().slice(start, start + this.pageSize);
+  });
+
+  /** true cuando la página actual tiene exactamente pageSize filas.
+   *  Página llena → la card usa flex:1 y llena el alto disponible.
+   *  Página parcial → la card mide lo justo (altura natural).
+   */
+  readonly isFullPage = computed(() => this.paged().length >= this.pageSize);
+
+  readonly rangeLabel = computed(() => {
+    const total = this.filtered().length;
+    if (total === 0) return '0 resultados';
+    const from = (this.page() - 1) * this.pageSize + 1;
+    const to = Math.min(this.page() * this.pageSize, total);
+    return `${from}–${to} de ${total}`;
   });
 
   readonly seccionesPaged = computed(() => {
@@ -195,8 +219,16 @@ export class ReportesPage {
   }
 
   toggleModalidad(modalidad: string): void {
-    this.modalidadExpandida.set(this.modalidadExpandida() === modalidad ? null : modalidad);
+    const yaAbierta = this.modalidadExpandida() === modalidad;
+    this.modalidadExpandida.set(yaAbierta ? null : modalidad);
     this.modalidadPage.set(1);
+    if (yaAbierta) return;
+    // Lleva la sección expandida a la vista para que la lista sea visible de inmediato.
+    window.setTimeout(() => {
+      document
+        .querySelector('.modalidad-section:not(.is-compacted)')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   }
 
   exportarPdfPorModalidad(reporte: ReporteModalidad): void {

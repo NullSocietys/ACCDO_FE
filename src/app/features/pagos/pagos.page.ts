@@ -20,8 +20,8 @@ import { firstValueFrom } from 'rxjs';
 type EstadoFiltro = 'todos' | PagoEstado;
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-/** Filas por página: caben con mast + filtros sin scroll excesivo. */
-const PAGE_SIZE = 6;
+/** Filas por página (patrón usuarios): filas compactas de tabla. */
+const PAGE_SIZE = 10;
 
 function toPagoEntity(pago: PagoView, estado: PagoEstado): Pago {
   return {
@@ -126,6 +126,12 @@ export class PagosPage implements OnDestroy {
     const start = (this.page() - 1) * this.pageSize;
     return this.filtered().slice(start, start + this.pageSize);
   });
+
+  /** true cuando la página actual tiene exactamente pageSize filas.
+   *  Página llena → la card usa flex:1 y llena el alto disponible.
+   *  Página parcial → la card mide lo justo (altura natural).
+   */
+  readonly isFullPage = computed(() => this.paged().length >= this.pageSize);
 
   readonly rangeLabel = computed(() => {
     const total = this.filtered().length;
