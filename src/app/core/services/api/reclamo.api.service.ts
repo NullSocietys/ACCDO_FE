@@ -19,6 +19,8 @@ export class ReclamoApiService extends ApiBaseService {
     mensaje: (r['mensaje'] as string) ?? '',
     estado: (r['estado'] as Reclamo['estado']) ?? 'PENDIENTE',
     activo: (r['activo'] as boolean) ?? true,
+    inscripcionId: (r['inscripcionId'] as string) ?? undefined,
+    agrupacionId: (r['agrupacionId'] as string) ?? undefined,
     createdAt: (r['createdAt'] as string) ?? '',
   });
 

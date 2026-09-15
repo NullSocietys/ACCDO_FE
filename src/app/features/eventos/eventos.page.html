@@ -1,304 +1,306 @@
-<div class="page eventos">
+<div class="pg-eventos">
+
+  <!-- ── SKELETON ── -->
   @if (cargando()) {
-    <div class="page-sk" aria-hidden="true">
-      <app-skeleton variant="card" [height]="120" />
+    <div class="sk-wrap" aria-hidden="true">
+      <app-skeleton variant="card" [height]="72" />
       <app-skeleton variant="table" [count]="8" />
     </div>
   } @else {
-  <header class="mast">
-    <div class="mast__copy">
-      <p class="mast__eyebrow">Temporada · Agenda</p>
-      <h1>Eventos</h1>
-      <p class="mast__lead">
-        Calendario de concursos Caporales: sedes, horarios y estado de la temporada.
-      </p>
-    </div>
-    <div class="mast__aside">
-      <dl class="mast__pulse" aria-label="Resumen rápido">
-        <div>
-          <dt>Total</dt>
-          <dd>{{ overview().total }}</dd>
-        </div>
-        <div>
-          <dt>Vivos</dt>
-          <dd>{{ overview().activos }}</dd>
-        </div>
-        <div class="mast__pulse--gold">
-          <dt>Grupos</dt>
-          <dd>{{ overview().grupos }}</dd>
-        </div>
-      </dl>
-      <div class="mast__cta">
-        <app-button icon="plus" [fullWidth]="true" (clicked)="openCreate()">Nuevo evento</app-button>
+
+    <!-- ── TOPBAR ── -->
+    <div class="topbar">
+      <div class="topbar__left">
+        <span class="topbar__breadcrumb">Panel</span>
+        <span class="topbar__sep" aria-hidden="true">/</span>
+        <h1 class="topbar__title">Eventos</h1>
+      </div>
+      <div class="topbar__right">
+        <app-button icon="plus" (clicked)="openCreate()">Nuevo evento</app-button>
       </div>
     </div>
-  </header>
 
-  @if (store.eventos().length === 0) {
-    <app-empty-state
-      icon="calendar"
-      title="No hay eventos"
-      description="Cree el primer concurso para comenzar a recibir inscripciones."
-    />
-  } @else {
+    <!-- ── KPIs ── -->
+    <div class="kpis" aria-label="Resumen">
+      <div class="kpi">
+        <span class="kpi__label">Total</span>
+        <strong class="kpi__value">{{ overview().total }}</strong>
+      </div>
+      <div class="kpi kpi--active">
+        <span class="kpi__label">Activos</span>
+        <strong class="kpi__value">{{ overview().activos }}</strong>
+      </div>
+      <div class="kpi kpi--muted">
+        <span class="kpi__label">Cerrados</span>
+        <strong class="kpi__value">{{ overview().cerrados }}</strong>
+      </div>
+      <div class="kpi kpi--gold">
+        <span class="kpi__label">Grupos inscritos</span>
+        <strong class="kpi__value">{{ overview().grupos }}</strong>
+      </div>
+    </div>
+
+    <!-- ── FEATURED: evento activo próximo ── -->
     @if (featured(); as ev) {
-      <section class="live" aria-label="Evento activo">
-        <div class="live__date" aria-hidden="true">
-          <span class="live__day">{{ dayOf(ev.fecha) }}</span>
-          <span class="live__mon">{{ monthOf(ev.fecha) }}</span>
-          <span class="live__yr">{{ yearOf(ev.fecha) }}</span>
+      <div class="featured" aria-label="Evento activo próximo">
+        <div class="featured__date" aria-hidden="true">
+          <span class="featured__day">{{ dayOf(ev.fecha) }}</span>
+          <span class="featured__mon">{{ monthOf(ev.fecha) }}</span>
+          <span class="featured__yr">{{ yearOf(ev.fecha) }}</span>
         </div>
-        <div class="live__body">
-          <p class="live__kicker">
+        <div class="featured__body">
+          <p class="featured__kicker">
             En curso
             @if (countdownLabel(ev); as cd) {
-              <span>· {{ cd }}</span>
+              <span class="featured__countdown">· {{ cd }}</span>
             }
           </p>
-          <h2>{{ ev.nombre }}</h2>
-          <p class="live__desc">{{ ev.descripcion }}</p>
-          <ul class="live__facts">
-            <li>
-              <span class="k">Horario</span>
-              <span class="v">{{ weekdayOf(ev.fecha) }} · {{ ev.hora }} h</span>
-            </li>
-            <li>
-              <span class="k">Sede</span>
-              <span class="v">{{ ev.lugar }}</span>
-            </li>
-            <li>
-              <span class="k">Grupos</span>
-              <span class="v">{{ gruposDe(ev.id) }}</span>
-            </li>
-            <li>
-              <span class="k">Integrantes</span>
-              <span class="v">{{ integrantesDe(ev.id) }}</span>
-            </li>
-          </ul>
+          <h2 class="featured__title">{{ ev.nombre }}</h2>
+          @if (ev.descripcion) {
+            <p class="featured__desc">{{ ev.descripcion }}</p>
+          }
+          <div class="featured__facts">
+            <div class="featured__fact">
+              <span class="featured__fact-k">Horario</span>
+              <span class="featured__fact-v">{{ weekdayOf(ev.fecha) }} · {{ ev.hora }} h</span>
+            </div>
+            <div class="featured__fact">
+              <span class="featured__fact-k">Sede</span>
+              <span class="featured__fact-v">{{ ev.lugar }}</span>
+            </div>
+            <div class="featured__fact">
+              <span class="featured__fact-k">Grupos</span>
+              <span class="featured__fact-v">{{ gruposDe(ev.id) }}</span>
+            </div>
+            <div class="featured__fact">
+              <span class="featured__fact-k">Integrantes</span>
+              <span class="featured__fact-v">{{ integrantesDe(ev.id) }}</span>
+            </div>
+          </div>
         </div>
-        <div class="live__cta">
+        <div class="featured__cta">
           <a routerLink="/admin/inscripciones">
             <app-button icon="chevronRight">Inscripciones</app-button>
           </a>
         </div>
-      </section>
+      </div>
     }
 
-    <div class="controls">
-      <nav class="tabs" role="group" aria-label="Filtrar por estado">
-        @for (f of filtros; track f.key) {
-          <button
-            type="button"
-            class="tabs__btn"
-            [class.is-active]="estadoFiltro() === f.key"
-            [attr.aria-pressed]="estadoFiltro() === f.key"
-            (click)="estadoFiltro.set(f.key); page.set(1)"
-          >
-            {{ f.label }}
-            <span class="tabs__n">{{ cuentaEstado(f.key) }}</span>
-          </button>
-        }
-      </nav>
-      <div class="controls__search">
-        <app-input
-          controlId="ev-search"
-          icon="search"
-          [value]="busqueda()"
-          placeholder="Nombre o sede…"
-          (valueChange)="busqueda.set($event); page.set(1)"
-        />
-      </div>
-    </div>
-
-    @if (filtrados().length === 0) {
+    <!-- ── CONTENIDO ── -->
+    @if (store.eventos().length === 0) {
       <app-empty-state
-        icon="search"
-        title="Sin resultados"
-        description="Ningún evento coincide con los filtros aplicados."
-        actionLabel="Limpiar filtros"
-        actionIcon="x"
-        (actioned)="limpiarFiltros()"
+        icon="calendar"
+        title="Sin eventos"
+        description="Crea el primer concurso para comenzar a recibir inscripciones."
       />
     } @else {
-      <section class="folio" aria-label="Agenda de temporada">
-        <div class="folio__head">
-          <h2>Agenda</h2>
-          <span>{{ rangeLabel() }}</span>
-        </div>
 
-        <div class="folio__cols" aria-hidden="true">
-          <span>Fecha</span>
-          <span>Nombre</span>
-          <span>Sede</span>
-          <span>Hora</span>
-          <span>Grupos</span>
-          <span>Estado</span>
-          <span></span>
-        </div>
-
-        <div class="folio__list" role="list">
-          @for (evento of paged(); track evento.id; let i = $index) {
-            <article
-              class="row"
-              role="listitem"
-              [class.is-activo]="evento.estado === 'ACTIVO'"
-              [class.is-cancelado]="evento.estado === 'CANCELADO'"
-              [class.is-cerrado]="evento.estado === 'CERRADO'"
+      <!-- ── TOOLBAR ── -->
+      <div class="toolbar">
+        <nav class="toolbar__tabs" role="group" aria-label="Filtrar por estado">
+          @for (f of filtros; track f.key) {
+            <button
+              type="button"
+              class="tab-btn"
+              [class.tab-btn--active]="estadoFiltro() === f.key"
+              [attr.aria-pressed]="estadoFiltro() === f.key"
+              (click)="estadoFiltro.set(f.key); page.set(1)"
             >
-              <!-- Fecha -->
-              <div class="row__date" aria-hidden="true">
-                <span class="row__day">{{ dayOf(evento.fecha) }}</span>
-                <span class="row__mon">{{ monthOf(evento.fecha) }}</span>
-                <span class="row__yr">{{ yearOf(evento.fecha) }}</span>
-              </div>
-
-              <!-- Nombre -->
-              <div class="row__cell">
-                <h3>{{ evento.nombre }}</h3>
-                <span class="row__sub">{{ evento.descripcion }}</span>
-              </div>
-
-              <!-- Sede -->
-              <div class="row__cell">
-                <span class="row__text" [attr.title]="evento.lugar">{{ evento.lugar }}</span>
-              </div>
-
-              <!-- Hora -->
-              <div class="row__cell">
-                <span class="row__text">{{ evento.hora }} h</span>
-              </div>
-
-              <!-- Grupos -->
-              <div class="row__cell">
-                <span class="row__text">{{ gruposDe(evento.id) }}</span>
-              </div>
-
-              <!-- Estado -->
-              <div class="row__cell">
-                <app-badge [tone]="statusTone(evento.estado)" [dot]="false">
-                  {{ statusLabel(evento.estado) }}
-                </app-badge>
-              </div>
-
-              <div class="row__actions">
-                <app-button
-                  variant="outline"
-                  size="sm"
-                  icon="pencil"
-                  (clicked)="openEdit(evento)"
-                >
-                  Editar
-                </app-button>
-                <app-button
-                  variant="ghost"
-                  size="icon"
-                  icon="trash"
-                  ariaLabel="Eliminar evento"
-                  (clicked)="remove(evento)"
-                />
-              </div>
-            </article>
+              {{ f.label }}
+              <span class="tab-btn__count">{{ cuentaEstado(f.key) }}</span>
+            </button>
           }
+        </nav>
+        <div class="toolbar__search">
+          <app-input
+            controlId="ev-search"
+            icon="search"
+            [value]="busqueda()"
+            placeholder="Nombre, sede o descripción…"
+            (valueChange)="busqueda.set($event); page.set(1)"
+          />
         </div>
+        @if (busqueda() || estadoFiltro() !== 'todos') {
+          <button class="btn-clear" type="button"
+                  (click)="limpiarFiltros()" aria-label="Limpiar filtros">
+            <app-icon name="x" [size]="13" />
+            Limpiar
+          </button>
+        }
+      </div>
 
-        <app-pagination
-          [total]="filtrados().length"
-          [pageSize]="pageSize"
-          [page]="page()"
-          ariaLabel="Paginación de eventos"
-          (pageChange)="page.set($event)"
+      <!-- ── TABLA ── -->
+      @if (filtrados().length === 0) {
+        <app-empty-state
+          icon="search"
+          title="Sin resultados"
+          description="Ningún evento coincide con los filtros aplicados."
+          actionLabel="Limpiar filtros"
+          actionIcon="x"
+          (actioned)="limpiarFiltros()"
         />
-      </section>
+      } @else {
+        <div class="table-card">
+
+          <div class="table-card__header">
+            <p class="table-card__title">Agenda de temporada</p>
+            <span class="table-card__range">{{ rangeLabel() }}</span>
+          </div>
+
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th class="th th--date" scope="col">Fecha</th>
+                  <th class="th" scope="col">Evento</th>
+                  <th class="th" scope="col">Sede</th>
+                  <th class="th th--center" scope="col">Hora</th>
+                  <th class="th th--center" scope="col">Grupos</th>
+                  <th class="th th--center" scope="col">Estado</th>
+                  <th class="th th--actions" scope="col">
+                    <span class="sr-only">Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (evento of paged(); track evento.id; let i = $index) {
+                  <tr class="trow"
+                      [class.trow--activo]="evento.estado === 'ACTIVO'"
+                      [class.trow--cancelado]="evento.estado === 'CANCELADO'">
+
+                    <!-- Fecha -->
+                    <td class="td td--date" aria-hidden="true">
+                      <span class="ev-day">{{ dayOf(evento.fecha) }}</span>
+                      <span class="ev-mon">{{ monthOf(evento.fecha) }}</span>
+                      <span class="ev-yr">{{ yearOf(evento.fecha) }}</span>
+                    </td>
+
+                    <!-- Evento -->
+                    <td class="td td--name">
+                      <span class="ev-name">{{ evento.nombre }}</span>
+                      @if (evento.descripcion) {
+                        <span class="ev-desc">{{ evento.descripcion }}</span>
+                      }
+                    </td>
+
+                    <!-- Sede -->
+                    <td class="td td--sede">
+                      <span class="ev-sede" [title]="evento.lugar">{{ evento.lugar }}</span>
+                    </td>
+
+                    <!-- Hora -->
+                    <td class="td td--center">
+                      <span class="ev-time">{{ evento.hora }}</span>
+                    </td>
+
+                    <!-- Grupos -->
+                    <td class="td td--center">
+                      <span class="ev-grupos">{{ gruposDe(evento.id) }}</span>
+                    </td>
+
+                    <!-- Estado -->
+                    <td class="td td--center">
+                      <app-badge [tone]="statusTone(evento.estado)" [dot]="false">
+                        {{ statusLabel(evento.estado) }}
+                      </app-badge>
+                    </td>
+
+                    <!-- Acciones -->
+                    <td class="td td--actions">
+                      <app-button
+                        variant="outline"
+                        size="sm"
+                        icon="pencil"
+                        (clicked)="openEdit(evento)"
+                      >Editar</app-button>
+                      <app-button
+                        variant="ghost"
+                        size="icon"
+                        icon="trash"
+                        ariaLabel="Eliminar evento"
+                        (clicked)="remove(evento)"
+                      />
+                    </td>
+
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-card__footer">
+            <app-pagination
+              [total]="filtrados().length"
+              [pageSize]="pageSize"
+              [page]="page()"
+              ariaLabel="Paginación de eventos"
+              (pageChange)="page.set($event)"
+            />
+          </div>
+
+        </div>
+      }
     }
-  }
   }
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     MODAL — Crear / Editar evento
+══════════════════════════════════════════════════════ -->
 <app-modal
+  class="evento-modal"
   [open]="modalOpen()"
   label="Evento"
   [title]="editingId() ? 'Editar evento' : 'Nuevo evento'"
   description="Datos del concurso en el calendario de temporada."
+  size="lg"
   (closed)="modalOpen.set(false)"
 >
-  <div class="sheet">
-    <div class="sheet__grid sheet__grid--form">
-      <div class="sheet__wide">
-        <label class="k" for="ev-nombre">Nombre</label>
-        <app-input
-          controlId="ev-nombre"
-          [value]="form().nombre"
-          [invalid]="!!errores()['nombre']"
-          placeholder="Nombre del evento"
-          (valueChange)="patch({ nombre: $event })"
-        />
-        <span class="field-error">{{ errores()['nombre'] }}</span>
-      </div>
-      <div class="sheet__wide">
-        <label class="k" for="ev-desc">Descripción</label>
-        <app-input
-          controlId="ev-desc"
-          [multiline]="true"
-          [value]="form().descripcion"
-          placeholder="Descripción breve"
-          (valueChange)="patch({ descripcion: $event })"
-        />
-      </div>
-      <div>
-        <label class="k" for="ev-fecha">Fecha</label>
-        <app-input
-          controlId="ev-fecha"
-          type="date"
-          [value]="form().fecha"
-          [invalid]="!!errores()['fecha']"
-          (valueChange)="patch({ fecha: $event })"
-        />
-        <span class="field-error">{{ errores()['fecha'] }}</span>
-      </div>
-      <div>
-        <label class="k" for="ev-hora">Hora</label>
-        <app-input
-          controlId="ev-hora"
-          type="time"
-          [value]="form().hora"
-          [invalid]="!!errores()['hora']"
-          (valueChange)="patch({ hora: $event })"
-        />
-        <span class="field-error">{{ errores()['hora'] }}</span>
-      </div>
-      <div class="sheet__wide">
-        <label class="k" for="ev-lugar">Lugar</label>
-        <app-input
-          controlId="ev-lugar"
-          icon="mapPin"
-          [value]="form().lugar"
-          [invalid]="!!errores()['lugar']"
-          placeholder="Sede o escenario"
-          (valueChange)="patch({ lugar: $event })"
-        />
-        <span class="field-error">{{ errores()['lugar'] }}</span>
-      </div>
-      @if (editingId()) {
-        <div class="sheet__wide">
-          <label class="k" for="ev-estado">Estado</label>
-          <select autocomplete="off"
-            id="ev-estado"
-            class="ui-select"
-            [ngModel]="form().estado"
-            (ngModelChange)="patch({ estado: $event })"
-          >
-            <option value="ACTIVO">Activo</option>
-            <option value="CERRADO">Cerrado</option>
-            <option value="CANCELADO">Cancelado</option>
-          </select>
-          <span class="field-hint">Un evento nuevo se crea Activo automáticamente.</span>
+  <div class="mform">
+    <div class="mfs">
+      <p class="mfs__title">Datos del evento</p>
+      <div class="mfs__grid">
+        <div class="mf mf--full">
+          <label class="mf__label" for="ev-nombre">Nombre <span class="mf__req">*</span></label>
+          <app-input controlId="ev-nombre" [value]="form().nombre" [invalid]="!!errores()['nombre']" placeholder="VII Concurso Nacional de Caporales" (valueChange)="patch({ nombre: $event })" />
+          @if (errores()['nombre']) { <span class="mf__error">{{ errores()['nombre'] }}</span> }
         </div>
-      }
+        <div class="mf mf--full">
+          <label class="mf__label" for="ev-desc">Descripción</label>
+          <app-input controlId="ev-desc" [multiline]="true" [value]="form().descripcion" placeholder="Organizador, premios, categorías…" (valueChange)="patch({ descripcion: $event })" />
+        </div>
+        <div class="mf">
+          <label class="mf__label" for="ev-fecha">Fecha <span class="mf__req">*</span></label>
+          <app-input controlId="ev-fecha" type="date" [value]="form().fecha" [invalid]="!!errores()['fecha']" (valueChange)="patch({ fecha: $event })" />
+          @if (errores()['fecha']) { <span class="mf__error">{{ errores()['fecha'] }}</span> }
+        </div>
+        <div class="mf">
+          <label class="mf__label" for="ev-hora">Hora <span class="mf__req">*</span></label>
+          <app-input controlId="ev-hora" type="time" [value]="form().hora" [invalid]="!!errores()['hora']" (valueChange)="patch({ hora: $event })" />
+          @if (errores()['hora']) { <span class="mf__error">{{ errores()['hora'] }}</span> }
+        </div>
+        <div class="mf mf--full">
+          <label class="mf__label" for="ev-lugar">Sede <span class="mf__req">*</span></label>
+          <app-input controlId="ev-lugar" icon="mapPin" [value]="form().lugar" [invalid]="!!errores()['lugar']" placeholder="Coliseo Cerrado de Lima" (valueChange)="patch({ lugar: $event })" />
+          @if (errores()['lugar']) { <span class="mf__error">{{ errores()['lugar'] }}</span> }
+        </div>
+        @if (editingId()) {
+          <div class="mf mf--full">
+            <label class="mf__label" for="ev-estado">Estado</label>
+            <select autocomplete="off" id="ev-estado" class="msel" [ngModel]="form().estado" (ngModelChange)="patch({ estado: $event })">
+              <option value="ACTIVO">Activo — acepta inscripciones</option>
+              <option value="CERRADO">Cerrado — no acepta nuevas inscripciones</option>
+              <option value="CANCELADO">Cancelado — evento anulado</option>
+            </select>
+          </div>
+        }
+      </div>
     </div>
   </div>
 
-  <div modal-footer>
+  <div modal-footer class="mform-actions">
     <app-button variant="outline" (clicked)="modalOpen.set(false)">Cancelar</app-button>
     <app-button icon="save" (clicked)="save()">Guardar</app-button>
   </div>
+
 </app-modal>

@@ -15,7 +15,9 @@
   border-radius: 0;
   box-shadow: none;
   width: min(560px, 100%);
-  max-height: min(90vh, 900px);
+  max-height: min(92vh, 920px);
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -34,8 +36,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  padding: 20px 22px 16px;
+  gap: 12px;
+  padding: 14px 16px 12px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -46,7 +48,7 @@
 
 .header__k {
   display: block;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 10px;
   font-weight: 550;
@@ -57,7 +59,7 @@
 
 .header h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.0625rem;
   font-weight: 650;
   letter-spacing: -0.03em;
   line-height: 1.2;
@@ -65,9 +67,9 @@
 }
 
 .header p {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   color: var(--color-muted-foreground);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -77,8 +79,11 @@
 }
 
 .body {
-  padding: 20px 22px;
-  overflow: auto;
+  padding: 14px 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-width: 0;
 }
 
 .footer {
@@ -86,8 +91,8 @@
   justify-content: flex-end;
   align-items: center;
   flex-wrap: wrap;
-  gap: 28px;
-  padding: 14px 22px 18px;
+  gap: 10px;
+  padding: 10px 16px 12px;
   border-top: 1px solid var(--color-border);
   background: var(--color-muted, #fafaf9);
 }

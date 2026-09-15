@@ -11,6 +11,8 @@ export interface Usuario {
   activo: boolean;
   createdAt: string;
   roles?: RolNombre[];
+  /** Nombre de la única agrupación del usuario (solo clientes). */
+  agrupacionNombre?: string | null;
   /** Datos de contacto del responsable (el backend los usa en sus inscripciones). */
   dni?: string | null;
   telefono?: string | null;

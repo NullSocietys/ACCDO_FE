@@ -1,134 +1,170 @@
-<div class="page">
+<div class="pg-part">
+
+  <!-- ── SKELETON ── -->
   @if (cargando()) {
-    <div class="page-sk" aria-hidden="true">
-      <app-skeleton variant="card" [height]="120" />
+    <div class="sk-wrap" aria-hidden="true">
+      <app-skeleton variant="card" [height]="72" />
       <app-skeleton variant="table" [count]="8" />
     </div>
   } @else {
-  <header class="mast">
-    <div class="mast__copy">
-      <p class="mast__eyebrow">Temporada · Elenco</p>
-      <h1>Participantes</h1>
-      <p class="mast__lead">Nómina de bailarines: participante, responsable, agrupación y modalidad.</p>
-    </div>
-    <div class="mast__aside">
-      <dl class="mast__pulse" aria-label="Resumen rápido">
-        <div>
-          <dt>Bailarines</dt>
-          <dd>{{ totalBailarines() }}</dd>
-        </div>
-        <div>
-          <dt>Inscripciones</dt>
-          <dd>{{ totalGrupos() }}</dd>
-        </div>
-        <div class="mast__pulse--gold">
-          <dt>Modalidades</dt>
-          <dd>{{ uniqueModalidades() }}</dd>
-        </div>
-      </dl>
-      <a routerLink="/admin/inscripciones/nueva" class="mast__cta">
-        <app-button icon="plus" [fullWidth]="true">Nueva inscripción</app-button>
-      </a>
-    </div>
-  </header>
 
-  @if (bailarines().length === 0) {
-    <app-empty-state
-      icon="users"
-      title="Sin participantes"
-      description="Cuando se registren inscripciones, la nómina aparecerá aquí."
-    />
-  } @else {
-    <div class="filters-bar">
-      <div class="search-wrap">
-        <app-input
-          controlId="part-search"
-          icon="search"
-          placeholder="Buscar participante, responsable, agrupación o código…"
-          [value]="search()"
-          (valueChange)="search.set($event)"
-        />
+    <!-- ── TOPBAR ── -->
+    <div class="topbar">
+      <div class="topbar__left">
+        <span class="topbar__breadcrumb">Panel</span>
+        <span class="topbar__sep" aria-hidden="true">/</span>
+        <h1 class="topbar__title">Participantes</h1>
       </div>
-      <select autocomplete="off"
-        class="ui-select"
-        [ngModel]="modalidadFilter()"
-        (ngModelChange)="modalidadFilter.set($event)"
-        aria-label="Filtrar por modalidad"
-      >
-        <option value="">Todas las modalidades</option>
-        @for (mod of modalidades; track mod) {
-          <option [value]="mod">{{ mod }}</option>
-        }
-      </select>
-      <select autocomplete="off"
-        class="ui-select"
-        [ngModel]="grupoFilter()"
-        (ngModelChange)="grupoFilter.set($event)"
-        aria-label="Filtrar por agrupación"
-      >
-        <option value="">Todas las agrupaciones</option>
-        @for (g of grupos(); track g) {
-          <option [value]="g">{{ g }}</option>
-        }
-      </select>
+      <div class="topbar__right">
+        <a routerLink="/admin/inscripciones/nueva">
+          <app-button icon="plus">Nueva inscripción</app-button>
+        </a>
+      </div>
     </div>
 
-      <section class="folio" aria-label="Nómina de participantes">
-        <div class="folio__head">
-          <h2>Bailarines</h2>
-          <span>{{ filtered().length }} de {{ bailarines().length }} participantes</span>
+    <!-- ── KPIs ── -->
+    <div class="kpis" aria-label="Resumen">
+      <div class="kpi">
+        <span class="kpi__label">Bailarines</span>
+        <strong class="kpi__value">{{ totalBailarines() }}</strong>
+      </div>
+      <div class="kpi kpi--gold">
+        <span class="kpi__label">Inscripciones</span>
+        <strong class="kpi__value">{{ totalGrupos() }}</strong>
+      </div>
+      <div class="kpi kpi--success">
+        <span class="kpi__label">Modalidades</span>
+        <strong class="kpi__value">{{ uniqueModalidades() }}</strong>
+      </div>
+      <div class="kpi kpi--muted">
+        <span class="kpi__label">Mostrando</span>
+        <strong class="kpi__value">{{ filtered().length }}</strong>
+      </div>
+    </div>
+
+    <!-- ── CONTENIDO ── -->
+    @if (bailarines().length === 0) {
+      <app-empty-state
+        icon="users"
+        title="Sin participantes"
+        description="Cuando se registren inscripciones, la nómina aparecerá aquí."
+      />
+    } @else {
+
+      <!-- ── TOOLBAR ── -->
+      <div class="toolbar">
+        <div class="toolbar__search">
+          <app-input
+            controlId="part-search"
+            icon="search"
+            placeholder="Nombre, responsable, agrupación o código…"
+            [value]="search()"
+            (valueChange)="search.set($event)"
+          />
         </div>
-
-        <div class="folio__cols" aria-hidden="true">
-          <span>Participante</span>
-          <span>Celular</span>
-          <span>Responsable</span>
-          <span>Agrupación</span>
-          <span>Modalidad</span>
-          <span>Estado</span>
-        </div>
-
-        <div class="folio__list" role="list">
-          @for (b of paged(); track b.id) {
-            <article class="row" role="listitem" [class.is-rechazada]="b.estado === 'RECHAZADA'">
-              <div class="row__cell">
-                <h3>{{ b.nombre }}</h3>
-                <span class="row__code">{{ b.codigo }}</span>
-              </div>
-
-              <div class="row__cell">
-                <span class="row__text mono">{{ b.celular }}</span>
-              </div>
-
-              <div class="row__cell">
-                <span class="row__text">{{ b.responsable }}</span>
-              </div>
-
-              <div class="row__cell">
-                <span class="row__text">{{ b.agrupacion }}</span>
-              </div>
-
-              <div class="row__cell">
-                <span class="row__text row__text--gold">{{ b.modalidad }}</span>
-              </div>
-
-              <div class="row__cell">
-                <app-badge [tone]="statusTone(b.estado)" [dot]="false">
-                  {{ statusLabel(b.estado) }}
-                </app-badge>
-              </div>
-            </article>
+        <select autocomplete="off" class="sel"
+                [ngModel]="modalidadFilter()"
+                (ngModelChange)="modalidadFilter.set($event)"
+                aria-label="Filtrar por modalidad">
+          <option value="">Todas las modalidades</option>
+          @for (mod of modalidades; track mod) {
+            <option [value]="mod">{{ mod }}</option>
           }
+        </select>
+        <select autocomplete="off" class="sel"
+                [ngModel]="grupoFilter()"
+                (ngModelChange)="grupoFilter.set($event)"
+                aria-label="Filtrar por agrupación">
+          <option value="">Todas las agrupaciones</option>
+          @for (g of grupos(); track g) {
+            <option [value]="g">{{ g }}</option>
+          }
+        </select>
+        @if (search() || modalidadFilter() || grupoFilter()) {
+          <button class="btn-clear" type="button"
+                  (click)="limpiarFiltros()" aria-label="Limpiar filtros">
+            <app-icon name="x" [size]="13" />
+            Limpiar
+          </button>
+        }
+      </div>
+
+      <!-- ── TABLA ── -->
+      <div class="table-card">
+
+        <div class="table-card__header">
+          <p class="table-card__title">Nómina de bailarines</p>
+          <span class="table-card__range">
+            {{ filtered().length }} de {{ bailarines().length }} participantes
+          </span>
         </div>
 
-        <app-pagination
-          [total]="filtered().length"
-          [pageSize]="pageSize"
-          [page]="page()"
-          ariaLabel="Paginación de participantes"
-          (pageChange)="page.set($event)"
-        />
-      </section>
-  }
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th class="th" scope="col">Participante</th>
+                <th class="th" scope="col">Celular</th>
+                <th class="th" scope="col">Responsable</th>
+                <th class="th" scope="col">Agrupación</th>
+                <th class="th" scope="col">Modalidad</th>
+                <th class="th th--center" scope="col">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of paged(); track b.id) {
+                <tr class="trow" [class.trow--rechazada]="b.estado === 'RECHAZADA'">
+
+                  <!-- Participante -->
+                  <td class="td td--name">
+                    <span class="pt-nombre">{{ b.nombre }}</span>
+                    <span class="pt-code">{{ b.codigo }}</span>
+                  </td>
+
+                  <!-- Celular -->
+                  <td class="td td--celular">
+                    <span class="pt-cel">{{ b.celular }}</span>
+                  </td>
+
+                  <!-- Responsable -->
+                  <td class="td">
+                    <span class="pt-text">{{ b.responsable }}</span>
+                  </td>
+
+                  <!-- Agrupación -->
+                  <td class="td">
+                    <span class="pt-text">{{ b.agrupacion }}</span>
+                  </td>
+
+                  <!-- Modalidad -->
+                  <td class="td">
+                    <span class="pt-mod">{{ b.modalidad }}</span>
+                  </td>
+
+                  <!-- Estado -->
+                  <td class="td td--center">
+                    <app-badge [tone]="statusTone(b.estado)" [dot]="false">
+                      {{ statusLabel(b.estado) }}
+                    </app-badge>
+                  </td>
+
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-card__footer">
+          <app-pagination
+            [total]="filtered().length"
+            [pageSize]="pageSize"
+            [page]="page()"
+            ariaLabel="Paginación de participantes"
+            (pageChange)="page.set($event)"
+          />
+        </div>
+
+      </div>
+    }
   }
 </div>

@@ -4,7 +4,17 @@ import { FormsModule } from '@angular/forms';
 
 import { InscripcionApiService } from '../../core/services/api/inscripcion.api.service';
 import { PagoApiService } from '../../core/services/api/pago.api.service';
+import { ParticipanteApiService } from '../../core/services/api/participante.api.service';
 import { SiteHeaderComponent } from '../../shared/ui/site-header/site-header.component';
+
+interface SeguimientoPago {
+  monto: number;
+  metodoPago: string;
+  numeroOperacion: string;
+  estado: string;
+  observaciones?: string | null;
+  createdAt: string;
+}
 
 interface SeguimientoData {
   codigo: string;
@@ -12,7 +22,9 @@ interface SeguimientoData {
   estado: string;
   total: number;
   fecha: string;
-  pagos: Array<{ monto: number; metodoPago: string; numeroOperacion: string; estado: string; createdAt: string }>;
+  observaciones?: string | null;
+  participantes: Array<{ nombres: string; celular: string }>;
+  pagos: SeguimientoPago[];
 }
 
 @Component({
@@ -26,6 +38,7 @@ export class SeguimientoPage implements OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly inscripcionApi = inject(InscripcionApiService);
   private readonly pagoApi = inject(PagoApiService);
+  private readonly participanteApi = inject(ParticipanteApiService);
 
   readonly codigoInput = signal('');
   readonly buscaCodigo = signal('');
@@ -92,15 +105,19 @@ export class SeguimientoPage implements OnDestroy {
               estado: inscripcion.estado,
               total: inscripcion.total,
               fecha: inscripcion.createdAt,
+              observaciones: inscripcion.observaciones,
+              participantes: [],
               pagos: pagos.map((p) => ({
                 monto: p.monto,
                 metodoPago: p.metodoPago,
                 numeroOperacion: p.numeroOperacion,
                 estado: p.estado,
+                observaciones: p.observaciones,
                 createdAt: p.createdAt,
               })),
             });
             this.loading.set(false);
+            this.cargarParticipantes(valor);
             this.iniciarPollingSiPendiente();
           },
           error: () => {
@@ -114,6 +131,28 @@ export class SeguimientoPage implements OnDestroy {
         this.loading.set(false);
         this.data.set(null);
         this.notFound.set(true);
+      },
+    });
+  }
+
+  /** La nómina viaja por el endpoint público de participantes por código. */
+  private cargarParticipantes(codigo: string): void {
+    this.participanteApi.listarPorCodigo(codigo).subscribe({
+      next: (participantes) => {
+        this.data.update((d) =>
+          d
+            ? {
+                ...d,
+                participantes: participantes.map((p) => ({
+                  nombres: p.nombres,
+                  celular: p.celular ?? '—',
+                })),
+              }
+            : d,
+        );
+      },
+      error: () => {
+        /* la nómina es complementaria: si falla no rompe el seguimiento */
       },
     });
   }
@@ -147,5 +186,16 @@ export class SeguimientoPage implements OnDestroy {
 
   buscar(): void {
     this.consultar();
+  }
+
+  /** Motivo humano del rechazo (observaciones de pagos o de la inscripción). */
+  motivoRechazo(): string {
+    const d = this.data();
+    if (!d) return '';
+    const dePago = d.pagos.find(
+      (p) => p.estado === 'RECHAZADO' && (p.observaciones ?? '').trim(),
+    );
+    if (dePago) return dePago.observaciones!.trim();
+    return (d.observaciones ?? '').trim();
   }
 }

@@ -12,7 +12,7 @@ import { UsuarioApiService } from '../../core/services/api/usuario.api.service';
 import { ComboBuscadorComponent } from '../../shared/ui/combo-buscador/combo-buscador.component';
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { descargarComprobantePdf } from '../../shared/pdf/comprobante.pdf';
-import type { Agrupacion, Responsable } from '../../core/models';
+import type { Agrupacion, Responsable, SimilarityResult } from '../../core/models';
 import departamentoData from '../../core/ubigeo-json/1_ubigeo_departamentos.json';
 import provinciaData from '../../core/ubigeo-json/2_ubigeo_provincias.json';
 import distritoData from '../../core/ubigeo-json/3_ubigeo_distritos.json';
@@ -189,6 +189,13 @@ export class InscripcionPublicaPage implements OnInit {
   readonly voucherFallido = signal(false);
   readonly reintentandoVoucher = signal(false);
 
+  /** Resultado de la verificación difusa de nombre de agrupación. */
+  readonly similitud = signal<SimilarityResult | null>(null);
+  /** Modal de confirmación de nombre similar abierto. */
+  readonly modalSimilitudAbierto = signal(false);
+  /** Flag: el usuario confirmó que su grupo es diferente al detectado. */
+  readonly nombreConfirmado = signal(false);
+
   private usuarioId = '';
   readonly nombreUsuario = signal('');
   /** Inscripción recién creada (para reintentar la subida del voucher). */
@@ -359,6 +366,13 @@ export class InscripcionPublicaPage implements OnInit {
         return `Esta modalidad requiere exactamente ${min} ${min === 1 ? 'integrante' : 'integrantes'} (tienes ${n}).`;
       }
       return `Esta modalidad requiere entre ${min} y ${max} integrantes (tienes ${n}).`;
+    }
+    // La nómina es obligatoria: cada fila debe estar completa.
+    const incompleta = this.participantes().some(
+      (p) => p.nombres.trim().length < 2 || !this.telRe.test(p.celular.trim()),
+    );
+    if (incompleta) {
+      return 'Completa el nombre y celular de cada participante para continuar.';
     }
     return '';
   });
@@ -802,13 +816,6 @@ export class InscripcionPublicaPage implements OnInit {
      MODAL: confirmar salto de la nómina de participantes
      ============================================================ */
 
-  /** Salta la nómina directamente: avanza al pago sin nómina (la org la completa). */
-  saltarPaso(): void {
-    this.errorMsg.set('');
-    this.intento.set(0);
-    this.step.set(4);
-  }
-
   updateParticipante(index: number, partial: Partial<FormParticipante>): void {
     this.participantes.update((list) =>
       list.map((p, i) => (i === index ? { ...p, ...partial } : p)),
@@ -880,13 +887,14 @@ export class InscripcionPublicaPage implements OnInit {
       if (!(await this.asegurarAgrupacion())) return;
     } else if (n === 2) {
       if (Object.keys(this.grupoErrores()).length > 0) return;
-      // Prevalidación temprana: duplicados de grupo/DNI ANTES del pago.
-      if (!(await this.prevalidarAntesDePago())) return;
     } else if (n === 3) {
       const tieneErrores = this.participanteErrores().some(
         (er) => Object.keys(er).length > 0,
       );
       if (this.participantesCountError() || tieneErrores) return;
+      // Prevalidación ANTES del pago: duplicados de grupo/DNI y tope de
+      // modalidad se detectan con la nómina ya completa (paso 3→4).
+      if (!(await this.prevalidarAntesDePago())) return;
     }
 
     this.intento.set(0);
@@ -955,13 +963,12 @@ export class InscripcionPublicaPage implements OnInit {
   /**
    * Llama al endpoint de prevalidación del backend con los datos actuales.
    * Se ejecuta al pasar del paso 2 al 3: detecta duplicados de grupo/DNI
-   * ANTES del pago. La nómina se envía solo si está completa; si no, se
-   * omite (participantes opcionales en el backend).
+   * ANTES del pago. La nómina es obligatoria para poder avanzar.
    */
   private async prevalidarAntesDePago(): Promise<boolean> {
     const g = this.grupo();
     const cat = this.categoriaSeleccionada();
-    if (!cat) return true;
+    if (!cat || !this.nominaCompleta()) return true;
     this.saving.set(true);
     try {
       await firstValueFrom(
@@ -969,12 +976,10 @@ export class InscripcionPublicaPage implements OnInit {
           eventoId: g.eventoId,
           categoriaId: cat.id,
           observaciones: '',
-          participantes: this.nominaCompleta()
-            ? this.participantes().map((p) => ({
-                nombres: p.nombres.trim(),
-                celular: p.celular.trim(),
-              }))
-            : undefined,
+          participantes: this.participantes().map((p) => ({
+            nombres: p.nombres.trim(),
+            celular: p.celular.trim(),
+          })),
         }),
       );
       return true;
@@ -1101,13 +1106,12 @@ export class InscripcionPublicaPage implements OnInit {
             .crear({
             eventoId: g.eventoId,
             categoriaId: categoria.id,
+            cantidadParticipantes: this.participantes().length,
             observaciones: '',
-            participantes: this.nominaCompleta()
-              ? this.participantes().map((p) => ({
-                  nombres: p.nombres.trim(),
-                  celular: p.celular.trim(),
-                }))
-              : undefined,
+            participantes: this.participantes().map((p) => ({
+              nombres: p.nombres.trim(),
+              celular: p.celular.trim(),
+            })),
           })
           .subscribe({ next: resolve, error: reject }),
       );
@@ -1288,6 +1292,54 @@ export class InscripcionPublicaPage implements OnInit {
         this.intento.set(0);
       },
     });
+  }
+
+  /* ============================================================
+     VERIFICACIÓN DIFUSA DE NOMBRE DE AGRUPACIÓN
+     ============================================================ */
+
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * Llamado desde el template cuando el usuario escribe el nombre de agrupación.
+   * Usa debounce para no saturar el backend.
+   */
+  onNombreAgrupacionChange(nombre: string): void {
+    this.nombreAgrupacion.set(nombre);
+    this.similitud.set(null);
+    this.nombreConfirmado.set(false);
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    if (nombre.trim().length < 3) return;
+    this.debounceTimer = setTimeout(() => this.verificarSimilitud(nombre.trim()), 500);
+  }
+
+  private verificarSimilitud(nombre: string): void {
+    this.agrupacionApi.verificarNombre(nombre).subscribe({
+      next: (resultado) => {
+        this.similitud.set(resultado);
+        if (resultado.hayCoincidencia && !this.nombreConfirmado()) {
+          this.modalSimilitudAbierto.set(true);
+        }
+      },
+      error: () => { /* silenciar: la validación server-side es la barrera definitiva */ },
+    });
+  }
+
+  /** El usuario confirma que su grupo es diferente → cerrar modal y permitir continuar. */
+  confirmarNombreDiferente(): void {
+    this.nombreConfirmado.set(true);
+    this.modalSimilitudAbierto.set(false);
+  }
+
+  /** El usuario reconoce que es el mismo grupo → ir a reclamar. */
+  irAReclamarDesdeModal(): void {
+    this.modalSimilitudAbierto.set(false);
+    this.irAReclamo();
+  }
+
+  /** Cerrar modal de similitud (cancelar). */
+  cerrarModalSimilitud(): void {
+    this.modalSimilitudAbierto.set(false);
   }
 
   irSeguimiento(): void {

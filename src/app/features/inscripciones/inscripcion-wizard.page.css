@@ -1,144 +1,779 @@
-.steps {
+/* ================================================================
+   Wizard de inscripción — paleta sidebar dark + gold
+   Todas las clases llevan prefijo wiz- para evitar colisiones
+   con los estilos globales de styles.css (.page, .field, etc.)
+   ================================================================ */
+
+:host {
+  --ink-0:   #0c0a09;
+  --ink-1:   #141312;
+  --ink-2:   #1c1917;
+  --ink-3:   #292524;
+  --stone-text:   #e7e5e4;
+  --stone-muted:  #a8a29e;
+  --stone-quiet:  #78716c;
+  --border:       rgba(255,255,255,.09);
+  --border-strong:rgba(255,255,255,.16);
+  --gold:         #fbbf24;
+  --gold-deep:    #a16207;
+  --gold-glow:    rgba(161,98,7,.16);
+  --gold-border:  rgba(251,191,36,.35);
+  --surface-page: #1a1816;
+  --surface-card: #211f1d;
+  --success:      #4ade80;
+  --danger:       #f87171;
+  --danger-soft:  rgba(248,113,113,.1);
+  --shadow-sm:    0 2px 4px rgba(0,0,0,.5);
+  --shadow-md:    0 6px 20px rgba(0,0,0,.65);
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-5:20px; --sp-6:24px; --sp-8:32px;
+  --r-sm:2px; --r-md:4px;
+  --t-fast:150ms ease;
+
+  /* tokens para shared components (heredan en cascade) */
+  --color-accent:          var(--gold);
+  --color-accent-hover:    #f59e0b;
+  --color-accent-soft:     var(--gold-glow);
+  --color-accent-border:   var(--gold-border);
+  --color-primary:         var(--gold);
+  --color-on-primary:      var(--ink-0);
+  --color-background:      var(--surface-page);
+  --color-foreground:      var(--stone-text);
+  --color-card:            var(--ink-0);       /* app-card hereda esto */
+  --color-border:          var(--border);
+  --color-border-strong:   var(--border-strong);
+  --color-muted:           var(--ink-2);
+  --color-muted-foreground:var(--stone-quiet);
+  --color-destructive:     var(--danger);
+  --color-destructive-soft:var(--danger-soft);
+  --color-success:         var(--success);
+  --color-success-soft:    rgba(74,222,128,.08);
+  --color-success-border:  rgba(74,222,128,.25);
+  --color-ring:            var(--gold);
+  /* aliases usados por app-card internamente */
+  --radius-lg: 4px;
+  --radius-md: 2px;
+  --stone-300: var(--stone-quiet);
+  --gold-600:  var(--gold);
+  --gold-800:  var(--gold);
+  --transition: 150ms ease;
+
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  /* Fondo oscuro cubre todo el host incluyendo el margen negativo */
+  background: var(--surface-page);
+  /* Cancela el padding del shell */
+  margin-top:    calc(-1 * clamp(1rem, 1.5vw, 1.25rem));
+  margin-bottom: calc(-1 * clamp(1rem, 1.5vw, 1.25rem));
+  margin-left:   calc(-1 * clamp(0.875rem, 1.4vw, 1.25rem));
+  margin-right:  calc(-1 * clamp(0.875rem, 1.4vw, 1.25rem));
+  /* Se extiende para llenar todo el alto del .content del shell */
+  flex: 1;
+  align-self: stretch;
 }
-.step {
+
+/* ── Reset global de inputs/selects nativos ── */
+:host select,
+:host input:not([type="file"]):not([type="checkbox"]):not([type="radio"]) {
+  background-color: var(--ink-0) !important;
+  color: var(--stone-text) !important;
+}
+:host input::placeholder { color: var(--stone-quiet) !important; }
+
+
+/* ================================================================
+   PÁGINA
+   ================================================================ */
+
+.wiz-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-6);
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* sin max-width aquí — el host ya tiene fondo oscuro completo */
+  width: 100%;
+  animation: wiz-enter 180ms ease both;
+}
+
+/* Limita el ancho del contenido interno al centro */
+.wiz-page > * {
+  max-width: 780px;
+  width: 100%;
+}
+
+@keyframes wiz-enter {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+@media (prefers-reduced-motion:reduce) { .wiz-page { animation:none; } }
+
+
+/* ================================================================
+   HEADER
+   ================================================================ */
+
+.wiz-header {
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+.wiz-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  color: var(--stone-text);
+}
+.wiz-header p {
+  margin: var(--sp-1) 0 0;
+  font-size: .8125rem;
+  color: var(--stone-quiet);
+}
+
+
+/* ================================================================
+   STEPS
+   ================================================================ */
+
+.wiz-steps {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.wiz-step {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 11px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-card);
-  color: var(--color-muted-foreground);
-  font-size: 12px;
-  font-weight: 550;
+  gap: var(--sp-2);
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-card);
+  color: var(--stone-quiet);
+  font-size: .75rem;
+  font-weight: 500;
+  border-radius: var(--r-sm);
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
 }
-.step.active {
-  background: var(--color-accent-soft);
-  border-color: var(--color-accent-border);
-  color: var(--gold-800);
+
+.wiz-step__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
-.step.done {
-  background: var(--color-success-soft);
-  border-color: var(--color-success-border);
-  color: var(--color-success);
+
+.wiz-step__label { white-space: nowrap; font-size: .75rem; font-weight: 600; }
+
+.wiz-step__desc {
+  display: none; /* hidden on compact steps, shown on active */
+  font-size: .625rem;
+  color: var(--stone-quiet);
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
-.step-num {
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
+
+.wiz-step--active .wiz-step__desc {
+  display: block;
+  color: var(--gold);
+  opacity: .7;
+}
+
+
+/* ================================================================
+   SECTION HEADERS (icono + título + descripción)
+   ================================================================ */
+
+.wiz-section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  background: var(--ink-1);
+  border-radius: var(--r-sm);
+  margin-bottom: var(--sp-3);
+}
+
+.wiz-section-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
   display: grid;
   place-items: center;
-  background: var(--stone-300);
-  color: white;
-  font-size: 10.5px;
-  font-weight: 650;
+  background: var(--gold-glow);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--r-sm);
+  color: var(--gold);
 }
-.step.active .step-num {
-  background: var(--gold-600);
-  color: white;
+
+.wiz-section-title {
+  margin: 0;
+  font-size: .8125rem;
+  font-weight: 700;
+  color: var(--stone-text);
+  letter-spacing: -.01em;
 }
-.step.done .step-num {
-  background: var(--color-success);
-  color: white;
+
+.wiz-section-desc {
+  margin: 1px 0 0;
+  font-size: .6875rem;
+  color: var(--stone-quiet);
+  line-height: 1.4;
 }
-.wizard-nav {
+
+.wiz-step--active {
+  background: var(--gold-glow);
+  border-color: var(--gold-border);
+  color: var(--gold);
+}
+
+.wiz-step--done {
+  background: rgba(74,222,128,.07);
+  border-color: rgba(74,222,128,.22);
+  color: var(--success);
+}
+
+.wiz-step__num {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-sm);
+  display: grid;
+  place-items: center;
+  background: var(--ink-3);
+  color: var(--stone-quiet);
+  font-size: .625rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.wiz-step--active .wiz-step__num { background: var(--gold); color: var(--ink-0); }
+.wiz-step--done   .wiz-step__num { background: var(--success); color: var(--ink-0); }
+
+
+/* ================================================================
+   APP-CARD overrides
+   (--color-card en el host ya propaga el fondo oscuro;
+   estos ::ng-deep refinan detalles internos de la card)
+   ================================================================ */
+
+::ng-deep app-card {
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--r-md) !important;
+  background: var(--surface-card) !important;
+  box-shadow: none !important;
+}
+
+::ng-deep app-card .card-header,
+::ng-deep app-card .card__header {
+  padding: var(--sp-2) var(--sp-4) !important;
+  border-bottom: 1px solid var(--border) !important;
+  background: var(--ink-2) !important;
+}
+
+::ng-deep app-card .card-title,
+::ng-deep app-card .card__title {
+  font-size: .625rem !important;
+  font-weight: 700 !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase !important;
+  color: var(--stone-muted) !important;
+}
+
+::ng-deep app-card .card-desc,
+::ng-deep app-card .card__description {
+  font-size: .6875rem !important;
+  color: var(--stone-quiet) !important;
+  margin-top: 1px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+::ng-deep app-card .card-inner,
+::ng-deep app-card .card__body {
+  padding: var(--sp-3) var(--sp-4) !important;
+  background: var(--surface-card) !important;
+}
+
+
+/* ================================================================
+   FORMULARIO
+   ================================================================ */
+
+.wiz-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.wiz-field {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
-.success {
-  text-align: center;
-  padding: 28px 12px 8px;
+
+.wiz-field--full { grid-column: 1 / -1; }
+
+.wiz-label {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: .625rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--stone-quiet);
+}
+
+.wiz-req { color: var(--danger); margin-left: 1px; }
+
+.wiz-hint {
+  font-size: .6875rem;
+  color: var(--stone-quiet);
+  line-height: 1.4;
+}
+
+.wiz-err {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: .625rem;
+  font-weight: 700;
+  color: var(--danger);
+  line-height: 1.3;
+  display: block;
+}
+
+
+/* ── app-input dentro del wizard ── */
+::ng-deep app-input input,
+::ng-deep app-input textarea {
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--r-sm) !important;
+  background: var(--ink-0) !important;
+  background-color: var(--ink-0) !important;
+  color: var(--stone-text) !important;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast) !important;
+}
+::ng-deep app-input input:focus,
+::ng-deep app-input input:focus-visible {
+  outline: none !important;
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 2px var(--gold-glow) !important;
+}
+::ng-deep app-input input::placeholder { color: var(--stone-quiet) !important; }
+::ng-deep app-input .invalid input,
+::ng-deep app-input input.invalid {
+  border-color: var(--danger) !important;
+}
+::ng-deep app-input input:disabled {
+  opacity: .45 !important;
+  cursor: not-allowed !important;
+}
+
+
+/* ── Select nativo ── */
+.wiz-sel {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 var(--sp-8) 0 var(--sp-3);
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--r-sm);
+  background: var(--ink-0) !important;
+  background-color: var(--ink-0) !important;
+  color: var(--stone-text) !important;
+  font-family: inherit;
+  font-size: .75rem;
+  cursor: pointer;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 5L10 1' stroke='%23a8a29e' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  box-sizing: border-box;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.wiz-sel:focus {
+  outline: none;
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 2px var(--gold-glow);
+}
+.wiz-sel--invalid { border-color: var(--danger) !important; }
+.wiz-sel option { background: var(--ink-1) !important; color: var(--stone-text) !important; }
+
+
+/* ================================================================
+   TABLA DE PARTICIPANTES
+   ================================================================ */
+
+.wiz-participants-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-3);
+}
+
+.wiz-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+
+.wiz-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 380px;
+}
+
+.wiz-table th {
+  padding: var(--sp-2) var(--sp-3);
+  text-align: left;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: .625rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--stone-quiet);
+  background: var(--ink-2);
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+
+.wiz-table td {
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  background: var(--surface-card);
+}
+
+.wiz-table tbody tr:last-child td { border-bottom: none; }
+.wiz-table tbody tr:hover td { background: rgba(255,255,255,.025); }
+
+.wiz-table__del { width: 44px; text-align: center; }
+
+/* Inputs dentro de la tabla */
+.wiz-input-cell {
+  width: 100%;
+  height: 30px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--r-sm);
+  background: var(--ink-0) !important;
+  background-color: var(--ink-0) !important;
+  color: var(--stone-text) !important;
+  font-family: inherit;
+  font-size: .75rem;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  box-sizing: border-box;
+}
+.wiz-input-cell:focus {
+  outline: none;
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 2px var(--gold-glow);
+}
+.wiz-input-cell--invalid { border-color: var(--danger) !important; }
+.wiz-input-cell::placeholder { color: var(--stone-quiet) !important; }
+
+
+/* ================================================================
+   UPLOAD DE COMPROBANTE
+   ================================================================ */
+
+.wiz-upload {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-}
-.check {
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #fbbf24, #a16207);
-  color: white;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 12px 30px rgba(161, 98, 7, 0.28);
-  animation: fade-up 0.45s ease;
-}
-.success h1 {
-  font-size: 2rem;
-}
-.success-msg {
-  color: var(--color-muted-foreground);
-  max-width: 42ch;
-}
-.summary {
-  width: min(420px, 100%);
-  text-align: left;
-  background: var(--color-muted);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  display: grid;
-  gap: 10px;
-  margin: 8px 0 4px;
-}
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 13px;
-}
-.summary-row span {
-  color: var(--color-muted-foreground);
-}
-.summary-row strong {
-  color: var(--color-primary);
-}
-.upload {
-  border: 1.5px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
+  gap: var(--sp-2);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  padding: var(--sp-5);
   text-align: center;
-  background: #fcfcfb;
-  color: var(--color-muted-foreground);
+  background: var(--ink-1);
+  color: var(--stone-quiet);
   cursor: pointer;
-  transition:
-    border-color var(--transition),
-    background var(--transition);
+  transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast);
 }
-.upload:hover {
-  border-color: var(--color-accent);
-  background: var(--color-accent-soft);
+.wiz-upload:hover {
+  border-color: var(--gold);
+  background: var(--gold-glow);
+  color: var(--gold);
 }
-.upload.has-file {
+.wiz-upload--has-file {
   border-style: solid;
-  border-color: #fde68a;
-  background: var(--color-accent-soft);
-  color: var(--color-accent-hover);
+  border-color: var(--gold-border);
+  background: var(--gold-glow);
+  color: var(--gold);
 }
-.upload.is-invalid {
-  border-color: var(--color-danger, #ef4444);
-}
-.upload-preview {
+.wiz-upload--invalid { border-color: var(--danger) !important; }
+
+.wiz-upload strong { font-size: .875rem; font-weight: 600; }
+.wiz-upload span   { font-size: .75rem; opacity: .7; }
+
+.wiz-upload__preview {
   display: block;
   width: 100%;
-  max-height: 240px;
+  max-height: 200px;
   object-fit: contain;
-  border-radius: var(--radius-md);
-  margin-top: 10px;
-  background: white;
+  border-radius: var(--r-sm);
+  margin-top: var(--sp-2);
+  background: var(--ink-0);
+  border: 1px solid var(--border);
 }
-select.ui-select {
+
+
+/* ================================================================
+    LISTA DE CLIENTES (paso 1)
+    ================================================================ */
+
+.wiz-client-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2);
+  background: var(--ink-1);
+}
+
+.wiz-client-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
   width: 100%;
-  min-height: 40px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 10px 12px;
-  background: white;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--stone-text);
+  font-family: inherit;
+  font-size: .8125rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+}
+.wiz-client-item:hover {
+  background: var(--gold-glow);
+  border-color: var(--gold-border);
+}
+.wiz-client-item--selected {
+  background: var(--gold-glow);
+  border-color: var(--gold-border);
+  color: var(--gold);
+}
+
+.wiz-client-item__avatar {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ink-3);
+  color: var(--stone-muted);
+  font-weight: 700;
+  font-size: .6875rem;
+}
+.wiz-client-item--selected .wiz-client-item__avatar {
+  background: var(--gold);
+  color: var(--ink-0);
+}
+
+.wiz-client-item__data {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.wiz-client-item__data strong { font-size: .8125rem; font-weight: 600; }
+.wiz-client-item__data small  { font-size: .6875rem; color: var(--stone-quiet); }
+
+
+/* ================================================================
+    SUMMARY (paso 4 y éxito)
+    ================================================================ */
+
+.wiz-summary {
+  background: var(--ink-1);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  padding: var(--sp-3);
+  display: grid;
+  gap: var(--sp-2);
+  width: 100%;
+}
+
+.wiz-summary__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: .75rem;
+}
+.wiz-summary__row span    { color: var(--stone-quiet); }
+.wiz-summary__row strong  { color: var(--gold); font-weight: 700; }
+
+
+/* ================================================================
+   BOTONES
+   ================================================================ */
+
+::ng-deep app-button button {
+  font-family: inherit;
+  font-weight: 600;
+  transition: background var(--t-fast), color var(--t-fast),
+              border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+/* primary */
+::ng-deep app-button:not(.outline):not(.ghost) button {
+  height: 32px;
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--gold);
+  border-radius: var(--r-sm);
+  background: var(--gold);
+  color: var(--ink-0);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  cursor: pointer;
+  font-size: .8125rem;
+}
+::ng-deep app-button:not(.outline):not(.ghost) button:hover {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px var(--gold-glow), var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+/* outline */
+::ng-deep app-button.outline button {
+  height: 32px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--stone-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  cursor: pointer;
+  font-size: .8125rem;
+}
+::ng-deep app-button.outline button:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-glow);
+}
+
+/* ghost */
+::ng-deep app-button.ghost button {
+  width: 28px; height: 28px; min-width: 28px; padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--stone-quiet);
+  display: grid; place-items: center; cursor: pointer;
+}
+::ng-deep app-button.ghost button:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+::ng-deep app-button:disabled button,
+::ng-deep app-button button:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+::ng-deep app-button:focus-visible button {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ── Nav del wizard ── */
+.wiz-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--border);
+}
+
+/* ── Acciones éxito ── */
+.wiz-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.wiz-actions a { text-decoration: none; }
+
+
+/* ================================================================
+   ÉXITO
+   ================================================================ */
+
+.wiz-success {
+  text-align: center;
+  padding: var(--sp-7) var(--sp-4) var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.wiz-check {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--gold), var(--gold-deep));
+  color: var(--ink-0);
+  display: grid; place-items: center;
+  box-shadow: 0 8px 24px rgba(161,98,7,.35);
+  animation: wiz-pop 400ms ease both;
+}
+
+@keyframes wiz-pop {
+  from { opacity:0; transform:scale(.7); }
+  to   { opacity:1; transform:scale(1); }
+}
+
+.wiz-success h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  color: var(--stone-text);
+}
+
+.wiz-success__msg {
+  margin: 0;
+  font-size: .875rem;
+  color: var(--stone-quiet);
+  line-height: 1.6;
+  max-width: 42ch;
+}
+
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 640px) {
+  .wiz-page { padding: var(--sp-4); gap: var(--sp-4); }
+  .wiz-grid { grid-template-columns: 1fr; }
+  .wiz-field--full { grid-column: 1; }
+  .wiz-nav { flex-direction: column-reverse; }
+  .wiz-nav ::ng-deep app-button button { width: 100%; justify-content: center; }
 }

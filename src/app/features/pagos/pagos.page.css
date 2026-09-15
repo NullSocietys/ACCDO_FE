@@ -502,21 +502,21 @@
 .sheet {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 .sheet__hero {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  padding-bottom: 16px;
+  gap: 12px;
+  padding-bottom: 12px;
   border-bottom: 2px solid var(--ink);
 }
 
 .sheet__figure {
-  margin: 4px 0 0;
-  font-size: clamp(1.8rem, 3vw, 2.25rem);
+  margin: 2px 0 0;
+  font-size: clamp(1.5rem, 2.5vw, 1.9rem);
   font-weight: 700;
   letter-spacing: -0.05em;
   color: var(--ink);
@@ -533,7 +533,7 @@
 }
 
 .sheet__grid > div {
-  padding: 14px 16px;
+  padding: 8px 12px;
   border-right: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
 }
@@ -548,8 +548,8 @@
 }
 
 .sheet__grid dt {
-  margin: 0 0 5px;
-  font-size: 10px;
+  margin: 0 0 3px;
+  font-size: 9px;
   font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -558,7 +558,7 @@
 
 .sheet__grid dd {
   margin: 0;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 550;
   color: var(--ink);
   line-height: 1.35;
@@ -569,12 +569,51 @@
   font-weight: 650;
 }
 
+.sheet__sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 450;
+  color: var(--stone-400);
+}
+
+.sheet__cast {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--stone-300);
+  background: var(--field);
+}
+
+.sheet__cast h4 {
+  margin: 0 0 6px;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--stone-400);
+}
+
+.sheet__cast-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.sheet__cast-list .mono {
+  color: var(--stone-400);
+}
+
 .sheet__preview {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 12px;
-  padding: 16px;
+  gap: 10px;
+  padding: 10px 12px;
   border: 1px dashed var(--stone-300);
   background: var(--field);
   color: var(--quiet);
@@ -630,13 +669,13 @@
 .sheet__upload-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
+  gap: 6px;
+  padding: 6px 12px;
   border: 1px solid var(--rule);
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
   color: var(--ink);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;

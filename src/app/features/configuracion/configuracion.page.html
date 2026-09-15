@@ -33,6 +33,7 @@
         <app-input
           controlId="cfg-nombre"
           icon="building"
+          placeholder="Ej. Asociación Cultural de Caporales Chicote de Oro"
           [value]="form().nombreAsociacion"
           [invalid]="!!errores()['nombreAsociacion']"
           (valueChange)="patch({ nombreAsociacion: $event })"
@@ -40,11 +41,12 @@
         <span class="field-error">{{ errores()['nombreAsociacion'] }}</span>
       </div>
       <div class="field">
-        <label for="cfg-tel">Teléfono</label>
+        <label for="cfg-tel">Teléfono de contacto</label>
         <app-input
           controlId="cfg-tel"
           type="tel"
           icon="phone"
+          placeholder="Ej. 987654321"
           [value]="form().telefono"
           [invalid]="!!errores()['telefono']"
           (valueChange)="patch({ telefono: $event })"
@@ -52,11 +54,12 @@
         <span class="field-error">{{ errores()['telefono'] }}</span>
       </div>
       <div class="field">
-        <label for="cfg-mail">Correo</label>
+        <label for="cfg-mail">Correo de contacto</label>
         <app-input
           controlId="cfg-mail"
           type="email"
           icon="mail"
+          placeholder="Ej. info@chicotedeoro.com"
           [value]="form().correo"
           [invalid]="!!errores()['correo']"
           (valueChange)="patch({ correo: $event })"
@@ -68,6 +71,7 @@
         <app-input
           controlId="cfg-dir"
           icon="mapPin"
+          placeholder="Ej. Av. Principal 123, Cercado de Lima"
           [value]="form().direccion"
           [invalid]="!!errores()['direccion']"
           (valueChange)="patch({ direccion: $event })"
@@ -77,13 +81,14 @@
     </div>
   </app-card>
 
-  <app-card title="Medios de pago" description="Yape oficial para inscripciones (Art. 01)">
+  <app-card title="Medios de pago" description="Datos bancarios y billeteras digitales para inscripciones">
     <div class="form-grid">
       <div class="field">
         <label for="cfg-coord">Coordinadora general</label>
         <app-input
           controlId="cfg-coord"
           icon="user"
+          placeholder="Ej. María García"
           [value]="form().coordinadoraGeneral"
           [invalid]="!!errores()['coordinadoraGeneral']"
           (valueChange)="patch({ coordinadoraGeneral: $event })"
@@ -91,10 +96,11 @@
         <span class="field-error">{{ errores()['coordinadoraGeneral'] }}</span>
       </div>
       <div class="field form-span-2">
-        <label for="cfg-banco">Cuenta / medio bancario</label>
+        <label for="cfg-banco">Cuenta bancaria</label>
         <app-input
           controlId="cfg-banco"
           icon="wallet"
+          placeholder="Ej. BCP Cuenta Ahorro 123-456-789"
           [value]="form().cuentaBancaria"
           [invalid]="!!errores()['cuentaBancaria']"
           (valueChange)="patch({ cuentaBancaria: $event })"
@@ -105,6 +111,7 @@
         <label for="cfg-yape">Número Yape / WhatsApp</label>
         <app-input
           controlId="cfg-yape"
+          placeholder="Ej. 987654321"
           [value]="form().numeroYape"
           [invalid]="!!errores()['numeroYape']"
           (valueChange)="patch({ numeroYape: $event })"
@@ -115,6 +122,7 @@
         <label for="cfg-plin">Número Plin</label>
         <app-input
           controlId="cfg-plin"
+          placeholder="Ej. 987654321"
           [value]="form().numeroPlin"
           [invalid]="!!errores()['numeroPlin']"
           (valueChange)="patch({ numeroPlin: $event })"
@@ -133,7 +141,7 @@
         <span class="field-error">{{ errores()['fechaLimiteInscripcion'] }}</span>
       </div>
       <div class="field">
-        <label for="cfg-sorteo">Fecha de sorteo</label>
+        <label for="cfg-sorteo">Fecha de sorteo de posición</label>
         <app-input
           controlId="cfg-sorteo"
           type="date"
@@ -144,9 +152,10 @@
         <span class="field-error">{{ errores()['fechaSorteo'] }}</span>
       </div>
       <div class="field">
-        <label for="cfg-hora-sorteo">Hora de sorteo</label>
+        <label for="cfg-hora-sorteo">Hora del sorteo</label>
         <app-input
           controlId="cfg-hora-sorteo"
+          placeholder="Ej. 18:00"
           [value]="form().horaSorteo"
           [invalid]="!!errores()['horaSorteo']"
           (valueChange)="patch({ horaSorteo: $event })"
@@ -157,6 +166,7 @@
         <label for="cfg-hora-inicio">Hora de inicio del concurso</label>
         <app-input
           controlId="cfg-hora-inicio"
+          placeholder="Ej. 19:00"
           [value]="form().horaInicioConcurso"
           [invalid]="!!errores()['horaInicioConcurso']"
           (valueChange)="patch({ horaInicioConcurso: $event })"
@@ -166,10 +176,10 @@
     </div>
   </app-card>
 
-  <app-card title="Marca y mensajes" description="Logo y confirmación automática">
+  <app-card title="Marca y mensajes" description="Logo oficial y mensaje automático de confirmación">
     <div class="form-grid">
       <div class="field form-span-2">
-        <label>Logo</label>
+        <label>Logo de la asociación</label>
         <label class="logo-box" [style.cursor]="subiendoLogo() ? 'wait' : 'pointer'">
           <input autocomplete="off" type="file" accept="image/*" class="sr-only" (change)="onLogo($event)" [disabled]="subiendoLogo()" />
           <div class="logo-preview" aria-hidden="true">{{ subiendoLogo() ? '…' : 'C' }}</div>
@@ -178,7 +188,7 @@
               @if (subiendoLogo()) {
                 Subiendo logo…
               } @else if (form().logoUrl) {
-                Logo cargado ✓
+                Logo cargado correctamente
               } @else {
                 Subir logo de la asociación
               }
@@ -202,6 +212,7 @@
           controlId="cfg-msg"
           [multiline]="true"
           [rows]="5"
+          placeholder="Ej. ¡Gracias por inscribirte! Tu inscripción ha sido registrada exitosamente. Pronto nos comunicaremos contigo."
           [value]="form().mensajeConfirmacion"
           [invalid]="!!errores()['mensajeConfirmacion']"
           (valueChange)="patch({ mensajeConfirmacion: $event })"

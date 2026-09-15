@@ -14,6 +14,8 @@ export interface Reclamo {
   mensaje: string;
   estado: ReclamoEstado;
   activo: boolean;
+  inscripcionId?: string;
+  agrupacionId?: string;
   createdAt: string;
 }
 
@@ -27,4 +29,6 @@ export interface ReclamoRequest {
   telefono?: string;
   correo?: string;
   mensaje?: string;
+  inscripcionId?: string;
+  agrupacionId?: string;
 }

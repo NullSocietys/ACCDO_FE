@@ -233,11 +233,49 @@
           <dt>Operación</dt>
           <dd class="mono">{{ pago.numeroOperacion || 'Sin número' }}</dd>
         </div>
+        <div>
+          <dt>Modalidad</dt>
+          <dd>{{ pago.modalidad }}</dd>
+        </div>
         <div class="sheet__wide">
-          <dt>Encargado</dt>
-          <dd>{{ pago.responsableNombre }}</dd>
+          <dt>Grupo</dt>
+          <dd class="gold">{{ pago.nombreGrupo }}</dd>
+        </div>
+        <div class="sheet__wide">
+          <dt>Responsable</dt>
+          <dd>
+            {{ pago.responsableNombre }}
+            @if (inscripcionSeleccionada(); as ins) {
+              <span class="sheet__sub">
+                @if (ins.responsableDni) { <span class="mono">DNI {{ ins.responsableDni }}</span> }
+                @if (ins.responsableTelefono) { <span>{{ ins.responsableTelefono }}</span> }
+                <span>{{ ubicacionDe(ins) }}</span>
+              </span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Evento</dt>
+          <dd>{{ inscripcionSeleccionada()?.eventoNombre ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt>Participantes</dt>
+          <dd>{{ participantesSeleccionados().length || inscripcionSeleccionada()?.cantidadIntegrantes || 0 }}</dd>
         </div>
       </dl>
+
+      @if (participantesSeleccionados().length > 0) {
+        <section class="sheet__cast" aria-label="Nómina de participantes">
+          <h4>Nómina</h4>
+          <ul class="sheet__cast-list">
+            @for (p of participantesSeleccionados(); track p.id) {
+              <li>
+                <span class="mono">{{ p.celular }}</span> · {{ p.nombres }}
+              </li>
+            }
+          </ul>
+        </section>
+      }
 
       <div class="sheet__preview" aria-label="Vista previa del comprobante">
         @if (comprobanteSrc(); as src) {

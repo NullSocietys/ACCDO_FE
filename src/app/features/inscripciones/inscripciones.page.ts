@@ -2,7 +2,6 @@ import { CurrencyPipe } from '@angular/common';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { CATEGORIAS } from '../../core/data/mock-data';
 import { InscripcionEstado, InscripcionView } from '../../core/models';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { DataStoreService } from '../../core/services/data-store.service';
@@ -33,7 +32,7 @@ function inicialesDe(nombre: string): string {
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 /** Filas por página: caben en viewport con mast + filtros sin scroll excesivo. */
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-inscripciones-page',
@@ -60,7 +59,6 @@ export class InscripcionesPage {
 
   readonly statusTone = statusTone;
   readonly statusLabel = statusLabel;
-  readonly categorias = CATEGORIAS;
   readonly pageSize = PAGE_SIZE;
 
   readonly busqueda = signal('');
@@ -229,7 +227,7 @@ export class InscripcionesPage {
   }
 
   goNew(): void {
-    void this.router.navigateByUrl('/inscripciones/nueva');
+    void this.router.navigateByUrl('/admin/inscripciones/nueva');
   }
 
   async remove(ins: InscripcionView): Promise<void> {

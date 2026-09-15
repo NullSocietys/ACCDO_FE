@@ -7,8 +7,8 @@
   } @else {
   <header class="mast">
     <div class="mast__copy">
-      <p class="mast__eyebrow">Temporada · Puntajes</p>
-      <h1>Resultados</h1>
+      <p class="mast__eyebrow">Temporada · Podio</p>
+      <h1>Ganadores</h1>
       <p class="mast__lead">Puestos y puntajes oficiales por inscripción del evento.</p>
     </div>
     <div class="mast__aside">
@@ -159,11 +159,16 @@
 
 <app-modal
   [open]="modalOpen()"
-  label="Resultado"
-  title="Registrar resultado"
-  description="Seleccione la inscripción y asigne puesto, puntaje y observaciones."
+  label="Ganador"
+  title="Registrar ganador"
+  description="Solo se listan inscripciones confirmadas. Asigne puesto, puntaje y observaciones."
   (closed)="modalOpen.set(false)"
 >
+  @if (inscripcionLabels().length === 0) {
+    <p class="field-error" style="margin: 0 0 12px">
+      Este evento todavía no tiene inscripciones confirmadas: confírmalas en Pagos antes de registrar ganadores.
+    </p>
+  }
   <div class="form-grid">
     <div class="field form-span-2">
       <label for="r-ins">Inscripción</label>
@@ -210,6 +215,6 @@
   </div>
   <div modal-footer>
     <app-button variant="outline" (clicked)="modalOpen.set(false)">Cancelar</app-button>
-    <app-button icon="save" (clicked)="save()">Guardar</app-button>
+    <app-button icon="save" [disabled]="inscripcionLabels().length === 0" (clicked)="save()">Guardar</app-button>
   </div>
 </app-modal>

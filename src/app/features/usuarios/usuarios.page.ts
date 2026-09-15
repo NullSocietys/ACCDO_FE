@@ -10,10 +10,12 @@ import { ToastService } from '../../core/services/toast.service';
 import { BadgeComponent } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
+import { IconComponent } from '../../shared/icons/icon.component';
 import { InputComponent } from '../../shared/ui/input.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
+import { UbigeoComboComponent } from './ubigeo-combo.component';
 import departamentoData from '../../core/ubigeo-json/1_ubigeo_departamentos.json';
 import provinciaData from '../../core/ubigeo-json/2_ubigeo_provincias.json';
 import distritoData from '../../core/ubigeo-json/3_ubigeo_distritos.json';
@@ -50,6 +52,7 @@ const emptyForm = () => ({
   correo: '',
   password: '',
   rol: 'CLIENTE',
+  agrupacionNombre: '',
   dni: '',
   telefono: '',
   departamento: '',
@@ -59,9 +62,9 @@ const emptyForm = () => ({
 
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
-type EstadoFiltro = 'activos' | 'inactivos';
+type EstadoFiltro = 'todos' | 'activos' | 'inactivos';
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-usuarios-page',
@@ -70,10 +73,12 @@ const PAGE_SIZE = 6;
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
+    IconComponent,
     InputComponent,
     ModalComponent,
     PaginationComponent,
     SkeletonComponent,
+    UbigeoComboComponent,
   ],
   styleUrl: './usuarios.page.css',
   templateUrl: './usuarios.page.html',
@@ -85,14 +90,13 @@ export class UsuariosPage {
   private readonly http = inject(HttpClient);
 
   readonly busqueda = signal('');
-  readonly estadoFiltro = signal<EstadoFiltro>('activos');
+  readonly estadoFiltro = signal<EstadoFiltro>('todos');
   readonly modalOpen = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly form = signal(emptyForm());
   readonly errores = signal<Record<string, string>>({});
   readonly pageSize = PAGE_SIZE;
   readonly page = signal(1);
-  /** Esqueleto de carga inicial (igual que el dashboard). */
   readonly cargando = signal(true);
 
   constructor() {
@@ -100,15 +104,17 @@ export class UsuariosPage {
   }
 
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
+    { key: 'todos', label: 'Todos' },
     { key: 'activos', label: 'Activos' },
     { key: 'inactivos', label: 'Inactivos' },
   ];
 
-  readonly lista = computed(() =>
-    this.estadoFiltro() === 'activos'
-      ? this.store.usuarios()
-      : this.store.usuariosInactivos(),
-  );
+  readonly lista = computed(() => {
+    const filtro = this.estadoFiltro();
+    if (filtro === 'activos') return this.store.usuarios();
+    if (filtro === 'inactivos') return this.store.usuariosInactivos();
+    return [...this.store.usuarios(), ...this.store.usuariosInactivos()];
+  });
 
   readonly filtrados = computed(() => {
     const q = this.busqueda().trim().toLowerCase();
@@ -125,6 +131,31 @@ export class UsuariosPage {
     return this.filtrados().slice(start, start + this.pageSize);
   });
 
+  /** Altura fija de la tabla.
+   *  ROW_HEIGHT ≈ 47px (padding 6+6 + avatar 32 + border 1)
+   *  THEAD_HEIGHT ≈ 31px  |  CARD_HEADER ≈ 33px  |  CARD_FOOTER ≈ 36px
+   */
+  private readonly ROW_HEIGHT    = 47;
+  private readonly THEAD_HEIGHT  = 31;
+  private readonly CARD_HEADER_H = 33;
+  private readonly CARD_FOOTER_H = 36;
+
+  /** true cuando la página actual tiene exactamente pageSize filas */
+  readonly isFullPage = computed(() => this.paginado().length >= this.pageSize);
+
+  /** Altura total de la .table-card solo en página parcial.
+   *  En página llena la card usa flex:1 y llena el espacio disponible.
+   */
+  readonly tableCardStyle = computed<Record<string, string> | null>(() => {
+    if (this.isFullPage()) return null;
+    const rows = this.paginado().length;
+    const h = this.CARD_HEADER_H + this.THEAD_HEIGHT + rows * this.ROW_HEIGHT + this.CARD_FOOTER_H;
+    return { height: `${h}px`, 'flex-shrink': '0', 'flex-grow': '0' };
+  });
+
+  /** tableWrapStyle ya no se usa para controlar altura — se deja null */
+  readonly tableWrapStyle = computed<Record<string, string> | null>(() => null);
+
   readonly rangeLabel = computed(() => {
     const total = this.filtrados().length;
     if (total === 0) return '0 resultados';
@@ -133,20 +164,25 @@ export class UsuariosPage {
     return `${from}–${to} de ${total}`;
   });
 
-  readonly overview = computed(() => ({
-    total: this.store.usuarios().length + this.store.usuariosInactivos().length,
-    activos: this.store.usuarios().length,
-    inactivos: this.store.usuariosInactivos().length,
-  }));
+  readonly overview = computed(() => {
+    const activos = this.store.usuarios();
+    const inactivos = this.store.usuariosInactivos();
+    const admins = [...activos, ...inactivos].filter((u) =>
+      u.roles?.includes('ADMIN'),
+    ).length;
+    return {
+      total: activos.length + inactivos.length,
+      activos: activos.length,
+      inactivos: inactivos.length,
+      admins,
+    };
+  });
 
   limpiarFiltros(): void {
     this.busqueda.set('');
+    this.estadoFiltro.set('todos');
     this.page.set(1);
   }
-
-  /* ============================================================
-     UBIGEO EN CASCADA (departamento -> provincia -> distrito)
-     ============================================================ */
 
   readonly departamentos: string[] = ubigeoDepartamentos.map((d) => d.departamento);
 
@@ -177,17 +213,18 @@ export class UsuariosPage {
     this.patch({ provincia: prov, distrito: '' });
   }
 
-  /** Solo dígitos para DNI/celular. */
+  onEstadoFiltroChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value as EstadoFiltro;
+    this.estadoFiltro.set(value);
+    this.page.set(1);
+  }
+
   soloDigitos(v: string, max = 9): string {
     return v.replace(/\D/g, '').slice(0, max);
   }
 
   onPageChange(next: number): void {
     this.page.set(next);
-    const folio = document.querySelector('.folio');
-    if (!folio) return;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    folio.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
   }
 
   rowIndex(localIndex: number): string {
@@ -235,6 +272,7 @@ export class UsuariosPage {
         correo: fresco.correo,
         password: '',
         rol: fresco.roles?.includes('ADMIN') ? 'ADMIN' : rolActual,
+        agrupacionNombre: (fresco.agrupacionNombre ?? '').trim(),
         dni: (fresco.dni ?? '').trim(),
         telefono: (fresco.telefono ?? '').trim(),
         departamento: (fresco.departamento ?? '').trim(),
@@ -247,6 +285,7 @@ export class UsuariosPage {
         correo: usuario.correo,
         password: '',
         rol: rolActual,
+        agrupacionNombre: (usuario.agrupacionNombre ?? '').trim(),
         dni: (usuario.dni ?? '').trim(),
         telefono: (usuario.telefono ?? '').trim(),
         departamento: (usuario.departamento ?? '').trim(),
@@ -263,6 +302,7 @@ export class UsuariosPage {
       correo: string;
       password: string;
       rol: string;
+      agrupacionNombre: string;
       dni: string;
       telefono: string;
       departamento: string;
@@ -280,7 +320,6 @@ export class UsuariosPage {
     });
   }
 
-  /** Solo letras (incl. tildes, ñ), espacios y apóstrofo — nada de números ni símbolos. */
   soloLetras(v: string): string {
     return v.replace(/[^\p{L}\s']/gu, '');
   }
@@ -334,6 +373,16 @@ export class UsuariosPage {
     }
 
     if (!this.editingId()) {
+      if (d.rol !== 'ADMIN') {
+        if (!d.agrupacionNombre.trim()) {
+          e['agrupacionNombre'] = 'El nombre del grupo es obligatorio.';
+        } else if (d.agrupacionNombre.trim().length < 2) {
+          e['agrupacionNombre'] = 'El nombre del grupo debe tener al menos 2 caracteres.';
+        } else if (d.agrupacionNombre.trim().length > 150) {
+          e['agrupacionNombre'] = 'El nombre del grupo no debe superar los 150 caracteres.';
+        }
+      }
+
       if (!d.password) {
         e['password'] = 'La contraseña es obligatoria.';
       } else if (d.password.length < 8) {
@@ -364,7 +413,6 @@ export class UsuariosPage {
     }
     const data = this.form();
     const id = this.editingId();
-    /** Contacto: el backend lo usa como responsable de sus inscripciones. */
     const contacto = {
       dni: data.dni.trim() || undefined,
       telefono: data.telefono.trim() || undefined,
@@ -387,9 +435,10 @@ export class UsuariosPage {
           nombre: data.nombre.trim(),
           correo: data.correo.trim(),
           password: data.password,
-          // Alta administrativa: conserva el flujo existente y crea la
-          // agrupación inicial; el responsable podrá verla al ingresar.
-          agrupacionNombre: data.nombre.trim(),
+          agrupacionNombre:
+            data.rol !== 'ADMIN'
+              ? data.agrupacionNombre.trim()
+              : data.nombre.trim(),
           ...contacto,
         });
         await this.cambiarRolSiNecesario(creado.id, data.rol);
@@ -401,7 +450,6 @@ export class UsuariosPage {
     }
   }
 
-  /** Aplica el rol elegido solo si difiere del actual (los clientes nacen con CLIENTE). */
   private async cambiarRolSiNecesario(id: string, rol: string): Promise<void> {
     if (!rol || rol === 'CLIENTE') return;
     await firstValueFrom(

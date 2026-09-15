@@ -65,8 +65,8 @@
               <div class="ipo-panel__head">
                 <span class="ipo-panel__num">01</span>
                 <div>
-                  <h2>Tu cuenta, datos y agrupación</h2>
-                  <p>Se registran una sola vez y se reutilizan en todas tus modalidades.</p>
+                  <h2>Crea tu cuenta y regístra tu agrupación</h2>
+                  <p>Solo lo haces una vez. Después inscribes tus modalidades sin repetir datos.</p>
                 </div>
               </div>
 
@@ -86,6 +86,8 @@
                   }
                 </div>
               } @else {
+
+                <!-- ── Pestañas ── -->
                 <div class="ipo-tabs">
                   <button type="button" class="ipo-tab" [class.is-active]="cuenta().metodo === 'registro'"
                     (click)="patchCuenta({ metodo: 'registro' }); errorMsg.set(''); intento.set(0)">
@@ -97,194 +99,231 @@
                   </button>
                 </div>
 
-                <div class="ipo-grid ipo-grid--2">
-                  <div class="ipo-field ipo-field--full" [class.is-invalid]="credencialesErrores()['correo']">
-                    <span>Correo electrónico</span>
-                    <input type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email"
-                      [ngModel]="cuenta().correo" (ngModelChange)="patchCuenta({ correo: $event })">
-                    @if (credencialesErrores()['correo']) {
-                      <span class="ipo-error-text">{{ credencialesErrores()['correo'] }}</span>
-                    }
+                <!-- ── Sección: Tu cuenta ── -->
+                <div class="ipo-section">
+                  <div class="ipo-section__header">
+                    <span class="ipo-section__icon">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </span>
+                    <span class="ipo-section__title">Tu cuenta</span>
+                    <span class="ipo-section__badge">{{ cuenta().metodo === 'registro' ? 'Nuevo' : 'Existente' }}</span>
                   </div>
 
-                  <div class="ipo-field" [class.is-invalid]="credencialesErrores()['password']">
-                    <span class="ipo-field__label-row">
-                      <span>Contraseña</span>
-                      @if (cuenta().metodo === 'registro') {
-                        <button type="button" class="ipo-gen" (click)="generarPassword()"
-                          title="Generar una contraseña segura">
-                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3M12 18v3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M3 12h3M18 12h3M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3.2"/></svg>
-                          Generar
-                        </button>
+                  <div class="ipo-grid ipo-grid--2">
+                    <div class="ipo-field ipo-field--full" [class.is-invalid]="credencialesErrores()['correo']">
+                      <span>Correo electrónico</span>
+                      <input type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email"
+                        [ngModel]="cuenta().correo" (ngModelChange)="patchCuenta({ correo: $event })">
+                      <small>Sirve para iniciar sesión y recibir notificaciones.</small>
+                      @if (credencialesErrores()['correo']) {
+                        <span class="ipo-error-text">{{ credencialesErrores()['correo'] }}</span>
                       }
-                    </span>
-                    <div class="ipo-password">
-                      <input [type]="mostrarPassword() ? 'text' : 'password'"
-                        [placeholder]="cuenta().metodo === 'registro' ? 'Mínimo 8 caracteres' : 'Tu contraseña'"
-                        [attr.autocomplete]="cuenta().metodo === 'registro' ? 'new-password' : 'current-password'"
-                        [ngModel]="cuenta().password" (ngModelChange)="patchCuenta({ password: $event })">
-                      <button type="button" class="ipo-eye"
-                        (click)="togglePassword()"
-                        [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-                        title="Mostrar / ocultar contraseña">
-                        @if (mostrarPassword()) {
-                          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c5.52 0 9.93 6.18 9.93 6.18a12.12 12.12 0 0 1-1.66 2.25"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2.07 11.18a1.34 1.34 0 0 0 0 .58 12.07 12.07 0 0 0 4.93 5.3A10.38 10.38 0 0 0 12 18.68"/><path d="M17.48 17.5a10.4 10.4 0 0 1-5.48 1.18c-5.52 0-9.93-6.18-9.93-6.18a12.2 12.2 0 0 1 1.63-2.22"/><path d="m2 2 20 20"/></svg>
-                        } @else {
-                          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0Z"/><circle cx="12" cy="12" r="3"/></svg>
-                        }
-                      </button>
                     </div>
 
-                    @if (cuenta().metodo === 'registro') {
-                      <div class="ipo-fuerza" [class]="'is-' + fuerzaPassword()" [attr.data-vacio]="fuerzaPassword() === ''">
-                        <span class="ipo-fuerza__bar"></span>
-                        <span class="ipo-fuerza__bar"></span>
-                        <span class="ipo-fuerza__bar"></span>
-                        <em>
-                          @switch (fuerzaPassword()) {
-                            @case ('debil') { Débil }
-                            @case ('media') { Media }
-                            @case ('fuerte') { Fuerte }
-                            @default { Sin contraseña }
-                          }
-                        </em>
-                      </div>
-                    }
-
-                    @if (credencialesErrores()['password']) {
-                      <span class="ipo-error-text">{{ credencialesErrores()['password'] }}</span>
-                    }
-                  </div>
-
-                  @if (cuenta().metodo === 'registro') {
-                    <div class="ipo-field" [class.is-invalid]="credencialesErrores()['confirmar']">
-                      <span>Repetir contraseña</span>
+                    <div class="ipo-field" [class.is-invalid]="credencialesErrores()['password']">
+                      <span class="ipo-field__label-row">
+                        <span>Contraseña</span>
+                        @if (cuenta().metodo === 'registro') {
+                          <button type="button" class="ipo-gen" (click)="generarPassword()"
+                            title="Generar una contraseña segura">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3M12 18v3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M3 12h3M18 12h3M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3.2"/></svg>
+                            Generar segura
+                          </button>
+                        }
+                      </span>
                       <div class="ipo-password">
-                        <input [type]="mostrarConfirmar() ? 'text' : 'password'"
-                          placeholder="Repite tu contraseña" autocomplete="new-password"
-                          [ngModel]="cuenta().confirmar" (ngModelChange)="patchCuenta({ confirmar: $event })">
+                        <input [type]="mostrarPassword() ? 'text' : 'password'"
+                          [placeholder]="cuenta().metodo === 'registro' ? 'Mín. 8 caracteres' : 'Tu contraseña'"
+                          [attr.autocomplete]="cuenta().metodo === 'registro' ? 'new-password' : 'current-password'"
+                          [ngModel]="cuenta().password" (ngModelChange)="patchCuenta({ password: $event })">
                         <button type="button" class="ipo-eye"
-                          (click)="toggleConfirmar()"
-                          [attr.aria-label]="mostrarConfirmar() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                          (click)="togglePassword()"
+                          [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
                           title="Mostrar / ocultar contraseña">
-                          @if (mostrarConfirmar()) {
+                          @if (mostrarPassword()) {
                             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c5.52 0 9.93 6.18 9.93 6.18a12.12 12.12 0 0 1-1.66 2.25"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2.07 11.18a1.34 1.34 0 0 0 0 .58 12.07 12.07 0 0 0 4.93 5.3A10.38 10.38 0 0 0 12 18.68"/><path d="M17.48 17.5a10.4 10.4 0 0 1-5.48 1.18c-5.52 0-9.93-6.18-9.93-6.18a12.2 12.2 0 0 1 1.63-2.22"/><path d="m2 2 20 20"/></svg>
                           } @else {
                             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0Z"/><circle cx="12" cy="12" r="3"/></svg>
                           }
                         </button>
                       </div>
-                      @if (credencialesErrores()['confirmar']) {
-                        <span class="ipo-error-text">{{ credencialesErrores()['confirmar'] }}</span>
+
+                      @if (cuenta().metodo === 'registro') {
+                        <div class="ipo-fuerza" [class]="'is-' + fuerzaPassword()" [attr.data-vacio]="fuerzaPassword() === ''">
+                          <span class="ipo-fuerza__bar"></span>
+                          <span class="ipo-fuerza__bar"></span>
+                          <span class="ipo-fuerza__bar"></span>
+                          <em>
+                            @switch (fuerzaPassword()) {
+                              @case ('debil') { Débil }
+                              @case ('media') { Media }
+                              @case ('fuerte') { Fuerte }
+                              @default { Sin contraseña }
+                            }
+                          </em>
+                        </div>
+                      }
+
+                      @if (credencialesErrores()['password']) {
+                        <span class="ipo-error-text">{{ credencialesErrores()['password'] }}</span>
                       }
                     </div>
-                  }
-                </div>
 
-                @if (cuenta().metodo === 'registro') {
-                  <p class="ipo-hint">
-                    Tu cuenta se crea automáticamente al continuar.
-                  </p>
-                }
-              }
-
-              <!-- Datos de contacto: se piden UNA vez y quedan guardados en la cuenta.
-                   Con sesión completa ya no se muestran (nada que repetir). -->
-              @if (mostrarDatosContacto()) {
-                <p class="ipo-subsection">Tus datos de contacto</p>
-
-              <div class="ipo-grid ipo-grid--2">
-                <div class="ipo-field" [class.is-invalid]="datosErrores()['nombres']">
-                  <span>Nombres</span>
-                  <input type="text" name="given-name" autocomplete="given-name" placeholder="Ej: María"
-                    [ngModel]="responsable().nombres"
-                    (ngModelChange)="patchResponsable({ nombres: $event })"
-                    (input)="onLettersInput($event)">
-                  @if (datosErrores()['nombres']) {
-                    <span class="ipo-error-text">{{ datosErrores()['nombres'] }}</span>
-                  }
-                </div>
-                <div class="ipo-field" [class.is-invalid]="datosErrores()['apellidos']">
-                  <span>Apellidos</span>
-                  <input type="text" name="family-name" autocomplete="family-name" placeholder="Ej: Bravo Mendoza"
-                    [ngModel]="responsable().apellidos"
-                    (ngModelChange)="patchResponsable({ apellidos: $event })"
-                    (input)="onLettersInput($event)">
-                  @if (datosErrores()['apellidos']) {
-                    <span class="ipo-error-text">{{ datosErrores()['apellidos'] }}</span>
-                  }
-                </div>
-                <div class="ipo-field" [class.is-invalid]="datosErrores()['dni']">
-                  <span>DNI</span>
-                  <input type="text" name="dni" autocomplete="off" inputmode="numeric" maxlength="8" placeholder="8 dígitos"
-                    [ngModel]="responsable().dni" (ngModelChange)="patchResponsable({ dni: $event })"
-                    (input)="onDniInput($event)">
-                  @if (datosErrores()['dni']) {
-                    <span class="ipo-error-text">{{ datosErrores()['dni'] }}</span>
-                  }
-                </div>
-                <div class="ipo-field" [class.is-invalid]="datosErrores()['telefono']">
-                  <span>Teléfono / WhatsApp</span>
-                  <input type="tel" name="tel" autocomplete="tel-national" inputmode="numeric" maxlength="9" placeholder="9 dígitos"
-                    [ngModel]="responsable().telefono" (ngModelChange)="patchResponsable({ telefono: $event })"
-                    (input)="onCelularInput($event)">
-                  @if (datosErrores()['telefono']) {
-                    <span class="ipo-error-text">{{ datosErrores()['telefono'] }}</span>
-                  }
-                </div>
-
-                <div class="ipo-field" [class.is-invalid]="datosErrores()['departamento']">
-                  <span>Departamento</span>
-                  <app-combo-buscador
-                    [opciones]="departamentos"
-                    [valor]="responsable().departamento"
-                    placeholder="Selecciona…"
-                    (valorSalida)="onDepartamento($event)"
-                  />
-                  @if (datosErrores()['departamento']) {
-                    <span class="ipo-error-text">{{ datosErrores()['departamento'] }}</span>
-                  }
-                </div>
-                <div class="ipo-field" [class.is-invalid]="datosErrores()['provincia']">
-                  <span>Provincia</span>
-                  <app-combo-buscador
-                    [opciones]="provincias()"
-                    [valor]="responsable().provincia"
-                    placeholder="Selecciona…"
-                    [disabled]="!responsable().departamento"
-                    (valorSalida)="onProvincia($event)"
-                  />
-                  @if (datosErrores()['provincia']) {
-                    <span class="ipo-error-text">{{ datosErrores()['provincia'] }}</span>
-                  }
-                </div>
-                <div class="ipo-field ipo-field--full" [class.is-invalid]="datosErrores()['distrito']">
-                  <span>Distrito</span>
-                  <app-combo-buscador
-                    [opciones]="distritos()"
-                    [valor]="responsable().distrito"
-                    placeholder="Selecciona…"
-                    [disabled]="!responsable().provincia"
-                    (valorSalida)="patchResponsable({ distrito: $event })"
-                  />
-                  @if (datosErrores()['distrito']) {
-                    <span class="ipo-error-text">{{ datosErrores()['distrito'] }}</span>
-                  }
-                </div>
-              </div>
-              }
-
-              @if (!agrupacion() && (cuenta().metodo === 'registro' || sesionActiva())) {
-                <p class="ipo-subsection">Tu agrupación</p>
-                <div class="ipo-grid ipo-grid--2">
-                  <div class="ipo-field ipo-field--full" [class.is-invalid]="agrupacionErrores()['nombre']">
-                    <span>Nombre de la agrupación o institución</span>
-                    <input type="text" placeholder="Ej: Ballet Folklórico San Martín de Porres"
-                      [ngModel]="nombreAgrupacion()" (ngModelChange)="nombreAgrupacion.set($event)">
-                    <small>Se registrará una única vez para esta cuenta.</small>
-                    @if (agrupacionErrores()['nombre']) {
-                      <span class="ipo-error-text">{{ agrupacionErrores()['nombre'] }}</span>
+                    @if (cuenta().metodo === 'registro') {
+                      <div class="ipo-field" [class.is-invalid]="credencialesErrores()['confirmar']">
+                        <span>Repite la contraseña</span>
+                        <div class="ipo-password">
+                          <input [type]="mostrarConfirmar() ? 'text' : 'password'"
+                            placeholder="Escribe la misma contraseña" autocomplete="new-password"
+                            [ngModel]="cuenta().confirmar" (ngModelChange)="patchCuenta({ confirmar: $event })">
+                          <button type="button" class="ipo-eye"
+                            (click)="toggleConfirmar()"
+                            [attr.aria-label]="mostrarConfirmar() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                            title="Mostrar / ocultar contraseña">
+                            @if (mostrarConfirmar()) {
+                              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c5.52 0 9.93 6.18 9.93 6.18a12.12 12.12 0 0 1-1.66 2.25"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2.07 11.18a1.34 1.34 0 0 0 0 .58 12.07 12.07 0 0 0 4.93 5.3A10.38 10.38 0 0 0 12 18.68"/><path d="M17.48 17.5a10.4 10.4 0 0 1-5.48 1.18c-5.52 0-9.93-6.18-9.93-6.18a12.2 12.2 0 0 1 1.63-2.22"/><path d="m2 2 20 20"/></svg>
+                            } @else {
+                              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            }
+                          </button>
+                        </div>
+                        @if (credencialesErrores()['confirmar']) {
+                          <span class="ipo-error-text">{{ credencialesErrores()['confirmar'] }}</span>
+                        }
+                      </div>
                     }
+                  </div>
+
+                  @if (cuenta().metodo === 'registro') {
+                    <p class="ipo-hint">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                      La cuenta se crea automáticamente al continuar. Guarda tu contraseña.
+                    </p>
+                  }
+                </div>
+              }
+
+              <!-- ── Sección: Datos de contacto ── -->
+              @if (mostrarDatosContacto()) {
+                <div class="ipo-section">
+                  <div class="ipo-section__header">
+                    <span class="ipo-section__icon">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </span>
+                    <span class="ipo-section__title">Datos personales del responsable</span>
+                    <span class="ipo-section__badge">Una vez</span>
+                  </div>
+                  <p class="ipo-section__desc">Estos datos se guardan en tu cuenta y se usan en cada inscripción. No los vuelves a escribir.</p>
+
+                  <div class="ipo-grid ipo-grid--2">
+                    <div class="ipo-field" [class.is-invalid]="datosErrores()['nombres']">
+                      <span>Nombres</span>
+                      <input type="text" name="given-name" autocomplete="given-name" placeholder="Ej: María Elena"
+                        [ngModel]="responsable().nombres"
+                        (ngModelChange)="patchResponsable({ nombres: $event })"
+                        (input)="onLettersInput($event)">
+                      @if (datosErrores()['nombres']) {
+                        <span class="ipo-error-text">{{ datosErrores()['nombres'] }}</span>
+                      }
+                    </div>
+                    <div class="ipo-field" [class.is-invalid]="datosErrores()['apellidos']">
+                      <span>Apellidos</span>
+                      <input type="text" name="family-name" autocomplete="family-name" placeholder="Ej: Bravo Mendoza"
+                        [ngModel]="responsable().apellidos"
+                        (ngModelChange)="patchResponsable({ apellidos: $event })"
+                        (input)="onLettersInput($event)">
+                      @if (datosErrores()['apellidos']) {
+                        <span class="ipo-error-text">{{ datosErrores()['apellidos'] }}</span>
+                      }
+                    </div>
+                    <div class="ipo-field" [class.is-invalid]="datosErrores()['dni']">
+                      <span>DNI</span>
+                      <input type="text" name="dni" autocomplete="off" inputmode="numeric" maxlength="8" placeholder="Ej: 45123678"
+                        [ngModel]="responsable().dni" (ngModelChange)="patchResponsable({ dni: $event })"
+                        (input)="onDniInput($event)">
+                      <small>8 dígitos, sin espacios ni guiones.</small>
+                      @if (datosErrores()['dni']) {
+                        <span class="ipo-error-text">{{ datosErrores()['dni'] }}</span>
+                      }
+                    </div>
+                    <div class="ipo-field" [class.is-invalid]="datosErrores()['telefono']">
+                      <span>Teléfono / WhatsApp</span>
+                      <input type="tel" name="tel" autocomplete="tel-national" inputmode="numeric" maxlength="9" placeholder="Ej: 912345678"
+                        [ngModel]="responsable().telefono" (ngModelChange)="patchResponsable({ telefono: $event })"
+                        (input)="onCelularInput($event)">
+                      <small>9 dígitos, empieza con 9.</small>
+                      @if (datosErrores()['telefono']) {
+                        <span class="ipo-error-text">{{ datosErrores()['telefono'] }}</span>
+                      }
+                    </div>
+
+                    <div class="ipo-field" [class.is-invalid]="datosErrores()['departamento']">
+                      <span>Departamento</span>
+                      <app-combo-buscador
+                        [opciones]="departamentos"
+                        [valor]="responsable().departamento"
+                        placeholder="Selecciona tu departamento…"
+                        (valorSalida)="onDepartamento($event)"
+                      />
+                      @if (datosErrores()['departamento']) {
+                        <span class="ipo-error-text">{{ datosErrores()['departamento'] }}</span>
+                      }
+                    </div>
+                    <div class="ipo-field" [class.is-invalid]="datosErrores()['provincia']">
+                      <span>Provincia</span>
+                      <app-combo-buscador
+                        [opciones]="provincias()"
+                        [valor]="responsable().provincia"
+                        placeholder="Selecciona tu provincia…"
+                        [disabled]="!responsable().departamento"
+                        (valorSalida)="onProvincia($event)"
+                      />
+                      @if (datosErrores()['provincia']) {
+                        <span class="ipo-error-text">{{ datosErrores()['provincia'] }}</span>
+                      }
+                    </div>
+                    <div class="ipo-field ipo-field--full" [class.is-invalid]="datosErrores()['distrito']">
+                      <span>Distrito</span>
+                      <app-combo-buscador
+                        [opciones]="distritos()"
+                        [valor]="responsable().distrito"
+                        placeholder="Selecciona tu distrito…"
+                        [disabled]="!responsable().provincia"
+                        (valorSalida)="patchResponsable({ distrito: $event })"
+                      />
+                      @if (datosErrores()['distrito']) {
+                        <span class="ipo-error-text">{{ datosErrores()['distrito'] }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- ── Sección: Agrupación ── -->
+              @if (!agrupacion() && (cuenta().metodo === 'registro' || sesionActiva())) {
+                <div class="ipo-section">
+                  <div class="ipo-section__header">
+                    <span class="ipo-section__icon">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </span>
+                    <span class="ipo-section__title">Tu agrupación o institución</span>
+                    <span class="ipo-section__badge">Una vez</span>
+                  </div>
+                  <p class="ipo-section__desc">El nombre identifica a tu grupo en el concurso. Escríbelo tal como quieres que aparezca.</p>
+
+                  <div class="ipo-grid ipo-grid--2">
+                    <div class="ipo-field ipo-field--full" [class.is-invalid]="agrupacionErrores()['nombre']">
+                      <span>Nombre del grupo</span>
+                      <input type="text" placeholder="Ej: Sambos del Socavón"
+                        [ngModel]="nombreAgrupacion()" (ngModelChange)="onNombreAgrupacionChange($event)">
+                      <small>Se guardará permanentemente para esta cuenta.</small>
+                      @if (similitud()?.hayCoincidencia && nombreConfirmado()) {
+                        <span class="ipo-hint ipo-hint--warn">Nombre confirmado como diferente por ti.</span>
+                      }
+                      @if (agrupacionErrores()['nombre']) {
+                        <span class="ipo-error-text">{{ agrupacionErrores()['nombre'] }}</span>
+                      }
+                    </div>
                   </div>
                 </div>
               }
@@ -541,11 +580,6 @@
                 ← Atrás
               </button>
             }
-            @if (step() === 3 && !nominaCompleta()) {
-            <button type="button" class="ipo-saltar" (click)="saltarPaso()" [disabled]="saving()">
-              Saltar este paso
-            </button>
-            }
             @if (step() < 4) {
               <button type="button" class="ipo-btn ipo-btn--gold" (click)="next()" [disabled]="saving() || loadingCatalog()">
                 {{ saving() ? 'Procesando…' : 'Continuar' }}
@@ -722,6 +756,55 @@
         </button>
         <button type="button" class="ipo-btn ipo-btn--gold" (click)="aplicarCantidad()">
           Continuar con {{ cantidadElegida() }} {{ cantidadElegida() === 1 ? 'integrante' : 'integrantes' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============ MODAL: CONFIRMACIÓN DE NOMBRE SIMILAR ============ -->
+@if (modalSimilitudAbierto()) {
+  <div class="ipo-modal" role="dialog" aria-modal="true" aria-label="Nombre de agrupación similar detectado">
+    <div class="ipo-modal__backdrop" (click)="cerrarModalSimilitud()"></div>
+    <div class="ipo-modal__panel">
+      <button class="ipo-modal__close" type="button" (click)="cerrarModalSimilitud()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+
+      <span class="ipo-eyebrow">Posible grupo duplicado</span>
+      <h3 class="ipo-modal__title">¿Este grupo ya está registrado?</h3>
+      <p class="ipo-modal__sub">
+        Encontramos un grupo con un nombre muy similar al que estás ingresando:
+      </p>
+
+      @for (coincidencia of similitud()?.coincidencias; track coincidencia.nombreExistente) {
+        <div class="ipo-similitud-card">
+          <strong>{{ coincidencia.nombreExistente }}</strong>
+          <span class="ipo-similitud-score">
+            @switch (coincidencia.tipo) {
+              @case ('EXACT') { Coincidencia exacta }
+              @case ('NEAR_EXACT') { Casi idéntico }
+              @case ('HIGH_SIMILARITY') { Muy similar }
+              @default { Posiblemente el mismo }
+            }
+          </span>
+        </div>
+      }
+
+      <p class="ipo-modal__hint">
+        Si <strong>este es tu grupo</strong> y otra persona lo registró sin tu autorización, puedes reclamarlo.
+        Si es un <strong>grupo diferente</strong>, puedes confirmar y continuar.
+      </p>
+
+      <div class="ipo-modal__actions">
+        <button type="button" class="ipo-btn ipo-btn--ghost" (click)="cerrarModalSimilitud()">
+          Cancelar
+        </button>
+        <button type="button" class="ipo-btn ipo-btn--gold" (click)="irAReclamarDesdeModal()">
+          Reclamar mi grupo
+        </button>
+        <button type="button" class="ipo-btn ipo-btn--confirm" (click)="confirmarNombreDiferente()">
+          Es un grupo diferente, continuar
         </button>
       </div>
     </div>

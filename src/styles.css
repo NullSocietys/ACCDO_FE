@@ -116,9 +116,9 @@
   --sidebar-collapsed: 72px;
   --navbar-height: 56px;
 
-  /* Layout — full-bleed with generous Swiss gutters */
-  --content-gutter: clamp(1.25rem, 2.4vw, 2.25rem);
-  --content-gutter-y: clamp(1.5rem, 2.6vw, 2.25rem);
+  /* Layout — full-bleed with slim gutters */
+  --content-gutter: clamp(0.875rem, 1.4vw, 1.25rem);
+  --content-gutter-y: clamp(1rem, 1.5vw, 1.25rem);
   --section-gap: clamp(1.5rem, 2.2vw, 2rem);
 
   /* Component tokens */
@@ -427,7 +427,7 @@ img {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-lg);
+  gap: 12px;
 }
 
 .field-error {
@@ -457,14 +457,15 @@ img {
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
 .field label {
-  font-size: 12px;
-  font-weight: 550;
-  color: var(--color-secondary);
-  letter-spacing: var(--tracking-normal);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--stone-muted, var(--color-secondary));
 }
 
 .field-hint {

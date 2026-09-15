@@ -1,179 +1,221 @@
-<div class="page">
+<div class="wiz-page">
+
+  <!-- ══ PANTALLA DE ÉXITO ══ -->
   @if (success()) {
     <app-card>
-      <div class="success">
-        <div class="check" aria-hidden="true">
+      <div class="wiz-success">
+        <div class="wiz-check" aria-hidden="true">
           <app-icon name="check" [size]="42" />
         </div>
-        <h1>¡Gracias por inscribirse!</h1>
-        <p class="success-msg">
-          Su inscripción fue registrada y está en revisión. Por favor espere la
-          confirmación de la coordinadora Martha Bravo (WhatsApp 926 266 295).<br />
-          Si es aprobada, recibirá su confirmación.
+        <h1>¡Inscripción registrada!</h1>
+        <p class="wiz-success__msg">
+          La inscripción quedó en estado pendiente de confirmación de pago.
         </p>
-        <div class="summary">
-          <div class="summary-row"><span>Estado</span><strong>{{ resultEstado() }}</strong></div>
-          <div class="summary-row"><span>Código</span><strong>{{ resultCodigo() }}</strong></div>
-          <div class="summary-row"><span>Grupo</span><strong>{{ step1().grupo }}</strong></div>
-          <div class="summary-row"><span>Modalidad</span><strong>{{ step1().categoria }}</strong></div>
-          <div class="summary-row"><span>Evento</span><strong>{{ eventoNombre() }}</strong></div>
+        <div class="wiz-summary">
+          <div class="wiz-summary__row"><span>Estado</span>    <strong>{{ resultEstado() }}</strong></div>
+          <div class="wiz-summary__row"><span>Código</span>    <strong>{{ resultCodigo() }}</strong></div>
+          <div class="wiz-summary__row"><span>Grupo</span>     <strong>{{ resultGrupo() || '—' }}</strong></div>
+          <div class="wiz-summary__row"><span>Modalidad</span> <strong>{{ resultModalidad() }}</strong></div>
+          <div class="wiz-summary__row"><span>Evento</span>    <strong>{{ eventoNombre() }}</strong></div>
         </div>
-        <div class="page-actions" style="justify-content: center; margin-top: 8px">
+        <div class="wiz-actions">
           <app-button variant="outline" icon="download" (clicked)="downloadComprobante()">
             Descargar comprobante
           </app-button>
-          <a routerLink="/"><app-button icon="home">Volver al inicio</app-button></a>
+          <a routerLink="/admin/inscripciones"><app-button icon="arrowRight">Ir a inscripciones</app-button></a>
         </div>
       </div>
     </app-card>
+
   } @else {
-    <div class="page-header">
-      <div class="page-header__meta">
-        <h1>Nueva inscripción</h1>
-        <p>Complete el wizard en 4 pasos para registrar un grupo.</p>
-      </div>
+
+    <!-- ══ HEADER ══ -->
+    <div class="wiz-header">
+      <h1>Nueva inscripción</h1>
+      <p>Registra una inscripción en 4 pasos: elige al responsable, el evento y la modalidad, agrega participantes y sube el comprobante de pago.</p>
     </div>
 
-    <div class="steps" role="list">
+    <!-- ══ STEPS ══ -->
+    <div class="wiz-steps" role="list">
       @for (s of stepMeta; track s.n) {
-        <div
-          class="step"
-          role="listitem"
-          [class.active]="step() === s.n"
-          [class.done]="step() > s.n"
-        >
-          <div class="step-num"><span>{{ s.n }}</span></div>
-          {{ s.label }}
+        <div class="wiz-step" role="listitem"
+             [class.wiz-step--active]="step() === s.n"
+             [class.wiz-step--done]="step() > s.n">
+          <span class="wiz-step__num">{{ s.n }}</span>
+          <span class="wiz-step__text">
+            <span class="wiz-step__label">{{ s.label }}</span>
+            <span class="wiz-step__desc">{{ s.desc }}</span>
+          </span>
         </div>
       }
     </div>
 
-    <app-card [title]="stepMeta[step() - 1].label" [description]="stepMeta[step() - 1].desc">
+    <!-- ══ CARD DEL PASO ACTIVO ══ -->
+    <app-card [title]="stepMeta[step() - 1].label"
+              [description]="stepMeta[step() - 1].desc">
+
       @switch (step()) {
+
+        <!-- ── PASO 1: Responsable ── -->
         @case (1) {
-          <div class="form-grid">
-            <div class="field">
-              <label for="w-evento">Evento</label>
+          <div class="wiz-section-header">
+            <div class="wiz-section-icon"><app-icon name="user" [size]="18" /></div>
+            <div>
+              <p class="wiz-section-title">Cuenta del responsable</p>
+              <p class="wiz-section-desc">Selecciona la cuenta CLIENTE que será responsable de esta inscripción. El grupo artístico se obtiene automáticamente de su cuenta.</p>
+            </div>
+          </div>
+
+          <div class="wiz-field">
+            <label class="wiz-label" for="w-cliente">Buscar cliente</label>
+            <input autocomplete="off" id="w-cliente" class="wiz-sel"
+                   placeholder="Escribe nombre, correo o DNI para buscar…"
+                   [ngModel]="clienteBusqueda()"
+                   (ngModelChange)="clienteBusqueda.set($event)" />
+            <span class="wiz-hint">Puedes escribir el nombre, correo electrónico o número de DNI del responsable.</span>
+          </div>
+
+          @if (erroresCliente()['cliente']) {
+            <p class="wiz-err">{{ erroresCliente()['cliente'] }}</p>
+          }
+
+          <div class="wiz-client-list" role="listbox" aria-label="Clientes disponibles">
+            @for (c of clientesFiltrados(); track c.id) {
+              <button type="button" class="wiz-client-item"
+                      [class.wiz-client-item--selected]="clienteSeleccionado()?.id === c.id"
+                      (click)="seleccionarCliente(c)">
+                <span class="wiz-client-item__avatar" aria-hidden="true">
+                  {{ c.nombre.charAt(0).toUpperCase() }}
+                </span>
+                <span class="wiz-client-item__data">
+                  <strong>{{ c.nombre }}</strong>
+                  <small>{{ c.correo }} · DNI {{ c.dni || '—' }}</small>
+                </span>
+                @if (clienteSeleccionado()?.id === c.id) {
+                  <app-icon name="check" [size]="18" />
+                }
+              </button>
+            } @empty {
+              <p class="wiz-hint">No hay cuentas CLIENTE registradas todavía.</p>
+            }
+          </div>
+
+          @if (clienteSeleccionado(); as sel) {
+            <div class="wiz-summary" style="margin-top: 16px">
+              <div class="wiz-summary__row"><span>Responsable</span> <strong>{{ sel.nombre }}</strong></div>
+              <div class="wiz-summary__row"><span>Grupo</span>
+                <strong>
+                  @if (cargandoGrupo()) { Cargando grupo… }
+                  @else if (agrupacionNombre()) { {{ agrupacionNombre() }} }
+                  @else { Sin grupo registrado }
+                </strong>
+              </div>
+              <div class="wiz-summary__row"><span>DNI</span>    <strong>{{ sel.dni || '—' }}</strong></div>
+              <div class="wiz-summary__row"><span>Teléfono</span><strong>{{ sel.telefono || '—' }}</strong></div>
+              <div class="wiz-summary__row"><span>Ubicación</span>
+                <strong>{{ [sel.departamento, sel.provincia, sel.distrito].filter(Boolean).join(' / ') || '—' }}</strong>
+              </div>
+            </div>
+            @if (!agrupacionNombre() && !cargandoGrupo()) {
+              <p class="wiz-err">Este cliente no tiene grupo artístico registrado; no puede inscribirse.</p>
+            }
+          }
+        }
+
+        <!-- ── PASO 2: Evento y modalidad ── -->
+        @case (2) {
+          <div class="wiz-section-header">
+            <div class="wiz-section-icon"><app-icon name="calendar" [size]="18" /></div>
+            <div>
+              <p class="wiz-section-title">Evento y modalidad</p>
+              <p class="wiz-section-desc">Selecciona el concurso y la categoría en la que competirá el grupo. La modalidad define el monto a pagar.</p>
+            </div>
+          </div>
+
+          <div class="wiz-grid">
+            <div class="wiz-field">
+              <label class="wiz-label">Evento <span class="wiz-req">*</span></label>
               <app-combo-buscador
                 [opciones]="eventoLabels()"
                 [valor]="eventoLabelSeleccionado()"
                 placeholder="Seleccionar evento…"
                 (valorSalida)="onEventoLabel($event)"
               />
-              <span class="field-error">{{ errores1()['eventoId'] }}</span>
+              @if (errores2()['eventoId']) {
+                <span class="wiz-err">{{ errores2()['eventoId'] }}</span>
+              }
             </div>
-            <div class="field">
-              <label for="w-cat">Modalidad</label>
+
+            <div class="wiz-field">
+              <label class="wiz-label">Modalidad <span class="wiz-req">*</span></label>
               <app-combo-buscador
                 [opciones]="categoriaLabels()"
-                [valor]="step1().categoria"
+                [valor]="categoriaLabelSeleccionado()"
                 placeholder="Seleccionar modalidad…"
                 (valorSalida)="onCategoria($event)"
               />
-              <span class="field-error">{{ errores1()['categoria'] }}</span>
+              @if (errores2()['categoriaId']) {
+                <span class="wiz-err">{{ errores2()['categoriaId'] }}</span>
+              }
             </div>
-            <div class="field">
-              <label for="w-grupo">Nombre del grupo</label>
-              <app-input
-                controlId="w-grupo"
-                [value]="step1().grupo"
-                [invalid]="!!errores1()['grupo']"
-                placeholder="Ej. Reyes del Chicote"
-                (valueChange)="patch1({ grupo: $event })"
-              />
-              <span class="field-error">{{ errores1()['grupo'] }}</span>
-            </div>
-            <div class="field">
-              <label for="w-cant">Cantidad de integrantes</label>
-              <select autocomplete="off"
-                id="w-cant"
-                class="ui-select"
-                [class.is-invalid]="!!errores1()['cantidadIntegrantes']"
-                [ngModel]="step1().cantidadIntegrantes"
-                (ngModelChange)="patch1({ cantidadIntegrantes: Number($event) || 0 })"
-              >
-                <option [ngValue]="0">Seleccionar cantidad</option>
+
+            <div class="wiz-field">
+              <label class="wiz-label" for="w-cant">Cantidad de integrantes prevista</label>
+              <select autocomplete="off" id="w-cant" class="wiz-sel"
+                      [class.wiz-sel--invalid]="!!errores2()['cantidadIntegrantes']"
+                      [ngModel]="step2().cantidadIntegrantes"
+                      (ngModelChange)="onCantidadChange(Number($event) || 0)">
+                <option [ngValue]="0">Sin definir (opcional)</option>
                 @for (n of cantidadesPermitidas(); track n) {
                   <option [ngValue]="n">{{ n }}</option>
                 }
               </select>
-              <span class="field-hint">{{ ayudaIntegrantes() }}</span>
-              <span class="field-error">{{ errores1()['cantidadIntegrantes'] }}</span>
+              <span class="wiz-hint">{{ ayudaIntegrantes() }}</span>
+              @if (errores2()['cantidadIntegrantes']) {
+                <span class="wiz-err">{{ errores2()['cantidadIntegrantes'] }}</span>
+              }
             </div>
           </div>
         }
-        @case (2) {
-          <div class="form-grid">
-            <div class="field">
-              <label for="w-nom">Nombres</label>
-              <app-input controlId="w-nom" icon="user" [value]="step2().nombres" [lettersOnly]="true" [invalid]="!!errores2()['nombres']" (valueChange)="patch2({ nombres: $event })" />
-              <span class="field-error">{{ errores2()['nombres'] }}</span>
-            </div>
-            <div class="field">
-              <label for="w-ape">Apellidos</label>
-              <app-input controlId="w-ape" [value]="step2().apellidos" [lettersOnly]="true" [invalid]="!!errores2()['apellidos']" (valueChange)="patch2({ apellidos: $event })" />
-              <span class="field-error">{{ errores2()['apellidos'] }}</span>
-            </div>
-            <div class="field">
-              <label for="w-dni">DNI</label>
-              <app-input controlId="w-dni" [value]="step2().dni" [digitsOnly]="true" [maxlength]="8" [invalid]="!!errores2()['dni']" (valueChange)="patch2({ dni: $event })" />
-              <span class="field-error">{{ errores2()['dni'] }}</span>
-            </div>
-            <div class="field">
-              <label for="w-tel">Teléfono</label>
-              <app-input controlId="w-tel" type="tel" icon="phone" [value]="step2().telefono" [digitsOnly]="true" [maxlength]="9" [invalid]="!!errores2()['telefono']" (valueChange)="patch2({ telefono: $event })" />
-              <span class="field-error">{{ errores2()['telefono'] }}</span>
-            </div>
-            <div class="field form-span-2">
-              <label for="w-mail">Correo</label>
-              <app-input controlId="w-mail" type="email" icon="mail" [value]="step2().correo" [invalid]="!!errores2()['correo']" (valueChange)="patch2({ correo: $event })" />
-              <span class="field-error">{{ errores2()['correo'] }}</span>
-            </div>
-            <div class="field">
-              <label for="w-dep">Departamento</label>
-              <app-combo-buscador
-                [opciones]="departamentos"
-                [valor]="step2().departamento"
-                placeholder="Seleccionar…"
-                (valorSalida)="onDepartamento($event)"
-              />
-            </div>
-            <div class="field">
-              <label for="w-prov">Provincia</label>
-              <app-combo-buscador
-                [opciones]="provincias()"
-                [valor]="step2().provincia"
-                placeholder="Seleccionar…"
-                [disabled]="!step2().departamento"
-                (valorSalida)="onProvincia($event)"
-              />
-            </div>
-            <div class="field">
-              <label for="w-dist">Distrito</label>
-              <app-combo-buscador
-                [opciones]="distritos()"
-                [valor]="step2().distrito"
-                placeholder="Seleccionar…"
-                [disabled]="!step2().provincia"
-                (valorSalida)="patch2({ distrito: $event })"
-              />
-            </div>
-          </div>
-        }
+
+        <!-- ── PASO 3: Participantes ── -->
         @case (3) {
-          <div class="page-actions" style="margin-bottom: 12px; align-items: center">
-            <app-button variant="outline" icon="plus" [disabled]="participantes().length >= step1().cantidadIntegrantes" (clicked)="addParticipante()">Agregar participante</app-button>
-            <span class="field-hint" style="margin: 0">
-              Agregados {{ participantes().length }} de {{ step1().cantidadIntegrantes }}
+          <div class="wiz-section-header">
+            <div class="wiz-section-icon"><app-icon name="users" [size]="18" /></div>
+            <div>
+              <p class="wiz-section-title">Nómina de participantes</p>
+              <p class="wiz-section-desc">Registra los nombres de los miembros que competirán. Esta lista es opcional y puede completarse después.</p>
+            </div>
+          </div>
+
+          <div class="wiz-participants-bar">
+            <app-button variant="outline" icon="plus"
+                        [disabled]="participantes().length >= (categoriaSeleccionada()?.maxIntegrantes ?? 0)"
+                        (clicked)="addParticipante()">
+              Agregar participante
+            </app-button>
+            <span class="wiz-hint">
+              Agregados {{ participantes().length }}
+              @if (categoriaSeleccionada(); as cat) { · máximo {{ cat.maxIntegrantes }} }
             </span>
           </div>
-                    @if (erroresGlobal()['integrantes']) {
-            <p class="field-error" style="margin: 0 0 12px">{{ erroresGlobal()['integrantes'] }}</p>
+
+          @if (participantes().length === 0) {
+            <p class="wiz-hint" style="margin: 0 0 12px">
+              La nómina es opcional: agrega solo los participantes que desee. También
+              puede dejarla vacía y completarla después desde el detalle de la inscripción.
+            </p>
           }
-          <div class="table-wrap">
-            <table class="data-table">
+
+          @if (erroresGlobal()['integrantes']) {
+            <p class="wiz-err" style="margin: 0 0 12px">{{ erroresGlobal()['integrantes'] }}</p>
+          }
+
+          <div class="wiz-table-wrap">
+            <table class="wiz-table">
               <thead>
                 <tr>
+                  <th>#</th>
                   <th>Nombre</th>
                   <th>Celular</th>
                   <th></th>
@@ -182,96 +224,138 @@
               <tbody>
                 @for (p of participantes(); track $index; let i = $index) {
                   <tr>
+                    <td>{{ i + 1 }}</td>
                     <td>
-                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" [class.is-invalid]="!!erroresParticipantes()[i]" [ngModel]="p.nombre" (ngModelChange)="updateParticipante(i, { nombre: $event })" aria-label="Nombre participante" placeholder="Nombre completo" />
+                      <input autocomplete="off"
+                             [attr.readonly]="true"
+                             (focus)="($any($event.target)).removeAttribute('readonly')"
+                             class="wiz-input-cell"
+                             [class.wiz-input-cell--invalid]="!!erroresParticipantes()[i]"
+                             [ngModel]="p.nombre"
+                             (ngModelChange)="updateParticipante(i, { nombre: $event })"
+                             aria-label="Nombre participante"
+                             placeholder="Nombre completo" />
                     </td>
                     <td>
-                      <input autocomplete="off" [attr.readonly]="true" (focus)="($any($event.target)).removeAttribute('readonly')" class="ui-select" [class.is-invalid]="!!erroresParticipantes()[i]" [value]="p.celular" (input)="celularParticipante($event, i)" maxlength="9" aria-label="Celular participante" placeholder="9 dígitos" />
+                      <input autocomplete="off"
+                             [attr.readonly]="true"
+                             (focus)="($any($event.target)).removeAttribute('readonly')"
+                             class="wiz-input-cell"
+                             [class.wiz-input-cell--invalid]="!!erroresParticipantes()[i]"
+                             [value]="p.celular"
+                             (input)="celularParticipante($event, i)"
+                             maxlength="9"
+                             aria-label="Celular participante"
+                             placeholder="9 dígitos" />
                     </td>
-                    <td>
-                      <app-button variant="ghost" size="icon" icon="trash" ariaLabel="Quitar participante" (clicked)="removeParticipante(i)" />
+                    <td class="wiz-table__del">
+                      <app-button variant="ghost" size="icon" icon="trash"
+                                  ariaLabel="Quitar participante"
+                                  (clicked)="removeParticipante(i)" />
                     </td>
                   </tr>
                 }
               </tbody>
             </table>
           </div>
+
           @if (erroresParticipantes() | keyvalue; as erroresFilas) {
             @for (fila of erroresFilas; track fila.key) {
-              <p class="field-error">
-                Participante #{{ +fila.key + 1 }}: {{ fila.value }}
-              </p>
+              <p class="wiz-err">Participante #{{ +fila.key + 1 }}: {{ fila.value }}</p>
             }
           }
         }
+
+        <!-- ── PASO 4: Resumen y pago ── -->
         @case (4) {
-          <div class="form-grid">
-            <div class="field">
-              <label>Modalidad</label>
-              <app-input [value]="step1().categoria" [disabled]="true" />
+          <div class="wiz-section-header">
+            <div class="wiz-section-icon"><app-icon name="wallet" [size]="18" /></div>
+            <div>
+              <p class="wiz-section-title">Resumen y comprobante</p>
+              <p class="wiz-section-desc">Revisa los datos de la inscripción y sube el comprobante de pago para completar el registro.</p>
             </div>
-            <div class="field">
-              <label>Monto</label>
-              <app-input [value]="(monto() | currency: 'PEN':'symbol-narrow':'1.0-0') ?? ''" [disabled]="true" />
+          </div>
+
+          <div class="wiz-grid">
+            <div class="wiz-field wiz-field--full">
+              <div class="wiz-summary">
+                <div class="wiz-summary__row"><span>Responsable</span> <strong>{{ clienteSeleccionado()?.nombre }}</strong></div>
+                <div class="wiz-summary__row"><span>Grupo</span>       <strong>{{ agrupacionNombre() || '—' }}</strong></div>
+                <div class="wiz-summary__row"><span>Evento</span>      <strong>{{ eventoNombre() }}</strong></div>
+                <div class="wiz-summary__row"><span>Modalidad</span>   <strong>{{ categoriaSeleccionada()?.nombre }}</strong></div>
+                <div class="wiz-summary__row"><span>Participantes</span><strong>{{ participantes().length }}</strong></div>
+                <div class="wiz-summary__row"><span>Total a pagar</span><strong>{{ monto() | currency:'PEN':'symbol-narrow':'1.2-2' }}</strong></div>
+              </div>
             </div>
-            <div class="field">
-              <label for="w-metodo">Método de pago</label>
-              <select autocomplete="off" id="w-metodo" class="ui-select" [ngModel]="pago().metodo" (ngModelChange)="patchPago({ metodo: $event })">
-                <option value="YAPE">Yape (926 266 295)</option>
+
+            <div class="wiz-field">
+              <label class="wiz-label">Monto (según modalidad)</label>
+              <app-input [value]="(monto() | currency:'PEN':'symbol-narrow':'1.2-2') ?? ''"
+                         [disabled]="true" />
+            </div>
+
+            <div class="wiz-field">
+              <label class="wiz-label" for="w-metodo">Método de pago</label>
+              <select autocomplete="off" id="w-metodo" class="wiz-sel"
+                      [ngModel]="pago().metodo"
+                      (ngModelChange)="patchPago({ metodo: $event })">
+                <option value="YAPE">Yape</option>
                 <option value="PLIN">Plin</option>
                 <option value="TRANSFERENCIA">Transferencia</option>
                 <option value="EFECTIVO">Efectivo</option>
               </select>
             </div>
-            <div class="field">
-              <label for="w-op">Número de operación</label>
-              <app-input
-                controlId="w-op"
-                [value]="pago().numeroOperacion"
-                [invalid]="!!erroresPago()['numeroOperacion']"
-                placeholder="Ej. YAP-123456"
-                (valueChange)="patchPago({ numeroOperacion: $event })"
-              />
-              <span class="field-error">{{ erroresPago()['numeroOperacion'] }}</span>
+
+            <div class="wiz-field">
+              <label class="wiz-label" for="w-op">Número de operación</label>
+              <app-input controlId="w-op"
+                         [value]="pago().numeroOperacion"
+                         [invalid]="!!erroresPago()['numeroOperacion']"
+                         placeholder="Ej. YAP-123456"
+                         (valueChange)="patchPago({ numeroOperacion: $event })" />
+              @if (erroresPago()['numeroOperacion']) {
+                <span class="wiz-err">{{ erroresPago()['numeroOperacion'] }}</span>
+              }
             </div>
-            <div class="field form-span-2">
-              <label>Voucher / comprobante (obligatorio)</label>
-              <label class="upload" [class.has-file]="!!pago().comprobanteNombre" [class.is-invalid]="!!erroresPago()['comprobante']">
-                <input autocomplete="off" type="file" accept="image/*,.pdf" class="sr-only" (change)="onFile($event)" />
+
+            <div class="wiz-field wiz-field--full">
+              <label class="wiz-label">Comprobante de pago <span class="wiz-req">*</span></label>
+              <label class="wiz-upload"
+                     [class.wiz-upload--has-file]="!!pago().comprobanteNombre"
+                     [class.wiz-upload--invalid]="!!erroresPago()['comprobante']">
+                <input autocomplete="off" type="file" accept="image/*,.pdf"
+                       class="sr-only" (change)="onFile($event)" />
                 <app-icon name="upload" [size]="20" />
                 @if (comprobantePreview()) {
-                  <img class="upload-preview" [src]="comprobantePreview()!" alt="Vista previa del voucher" />
+                  <img class="wiz-upload__preview"
+                       [src]="comprobantePreview()!"
+                       alt="Vista previa del comprobante" />
                 }
-                <div style="margin-top: 8px; font-weight: 600">
-                  {{ pago().comprobanteNombre || 'Subir foto del voucher (Yape)' }}
-                </div>
-                <div style="font-size: 12px; margin-top: 4px">
-                  Foto legible del Boucher. Enviar también al WhatsApp 926 266 295 (Martha Bravo).
-                </div>
+                <strong>{{ pago().comprobanteNombre || 'Subir foto del voucher o PDF' }}</strong>
+                <span>JPG/PNG o PDF, máximo 8 MB.</span>
               </label>
-              <span class="field-error">{{ erroresPago()['comprobante'] }}</span>
-            </div>
-            <div class="field form-span-2">
-              <div class="summary" style="width: 100%">
-                <div class="summary-row"><span>Grupo</span><strong>{{ step1().grupo }}</strong></div>
-                <div class="summary-row"><span>Responsable</span><strong>{{ step2().nombres }} {{ step2().apellidos }}</strong></div>
-                <div class="summary-row"><span>Integrantes</span><strong>{{ participantes().length }}</strong></div>
-                <div class="summary-row"><span>Total a pagar</span><strong>{{ monto() | currency: 'PEN':'symbol-narrow':'1.0-0' }}</strong></div>
-              </div>
+              @if (erroresPago()['comprobante']) {
+                <span class="wiz-err">{{ erroresPago()['comprobante'] }}</span>
+              }
             </div>
           </div>
         }
+
       }
     </app-card>
 
-    <div class="wizard-nav">
-      <app-button variant="outline" icon="arrowLeft" [disabled]="step() === 1" (clicked)="prev()">
+    <!-- ══ NAVEGACIÓN ══ -->
+    <div class="wiz-nav">
+      <app-button variant="outline" icon="arrowLeft"
+                  [disabled]="step() === 1" (clicked)="prev()">
         Anterior
       </app-button>
       @if (step() < 4) {
         <app-button icon="chevronRight" (clicked)="next()">Siguiente</app-button>
       } @else {
-        <app-button icon="check" [loading]="saving()" (clicked)="submit()">Registrar inscripción</app-button>
+        <app-button icon="check" [loading]="saving()" (clicked)="submit()">
+          Registrar inscripción
+        </app-button>
       }
     </div>
   }

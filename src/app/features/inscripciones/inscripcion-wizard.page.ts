@@ -2,7 +2,9 @@ import { CurrencyPipe, KeyValuePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { PagoMetodo } from '../../core/models';
+import { AgrupacionApiService } from '../../core/services/api/agrupacion.api.service';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { ToastService } from '../../core/services/toast.service';
 import { descargarComprobantePdf } from '../../shared/pdf/comprobante.pdf';
@@ -11,44 +13,21 @@ import { ButtonComponent } from '../../shared/ui/button.component';
 import { CardComponent } from '../../shared/ui/card.component';
 import { InputComponent } from '../../shared/ui/input.component';
 import { ComboBuscadorComponent } from '../../shared/ui/combo-buscador/combo-buscador.component';
-import departamentoData from '../../core/ubigeo-json/1_ubigeo_departamentos.json';
-import provinciaData from '../../core/ubigeo-json/2_ubigeo_provincias.json';
-import distritoData from '../../core/ubigeo-json/3_ubigeo_distritos.json';
-
-interface UbigeoDepartamento {
-  id: number;
-  departamento: string;
-  ubigeo: string;
-}
-
-interface UbigeoProvincia {
-  id: number;
-  provincia: string;
-  ubigeo: string;
-  departamento_id: number;
-}
-
-interface UbigeoDistrito {
-  id: number;
-  distrito: string;
-  ubigeo: string;
-  provincia_id: number;
-  departamento_id: number;
-}
-
-const ubigeoDepartamentos = (
-  departamentoData as { ubigeo_departamentos: UbigeoDepartamento[] }
-).ubigeo_departamentos;
-const ubigeoProvincias = (
-  provinciaData as { ubigeo_provincias: UbigeoProvincia[] }
-).ubigeo_provincias;
-const ubigeoDistritos = (
-  distritoData as { ubigeo_distritos: UbigeoDistrito[] }
-).ubigeo_distritos;
 
 interface WizardParticipante {
   nombre: string;
   celular: string;
+}
+
+interface ClienteItem {
+  id: string;
+  nombre: string;
+  correo: string;
+  dni: string;
+  telefono: string;
+  departamento: string;
+  provincia: string;
+  distrito: string;
 }
 
 @Component({
@@ -69,48 +48,64 @@ interface WizardParticipante {
 })
 export class InscripcionWizardPage {
   private readonly store = inject(DataStoreService);
+  private readonly agrupacionApi = inject(AgrupacionApiService);
   private readonly toast = inject(ToastService);
 
   readonly Number = Number;
-  readonly departamentos: string[] = ubigeoDepartamentos.map((d) => d.departamento);
+  readonly Boolean = Boolean;
 
   /** Modalidades reales de la BD (store), con su precio real. */
   readonly categorias = computed(() => this.store.categorias());
+
+  /** Solo cuentas CLIENTE activas: una inscripción siempre nace de un responsable con grupo. */
+  readonly clientes = computed<ClienteItem[]>(() =>
+    this.store
+      .usuarios()
+      .filter(
+        (u) =>
+          u.activo &&
+          (u.roles ?? []).includes('CLIENTE') &&
+          !(u.roles ?? []).includes('ADMIN'),
+      )
+      .map((u) => ({
+        id: u.id,
+        nombre: u.nombre,
+        correo: u.correo,
+        dni: u.dni ?? '',
+        telefono: u.telefono ?? '',
+        departamento: u.departamento ?? '',
+        provincia: u.provincia ?? '',
+        distrito: u.distrito ?? '',
+      })),
+  );
 
   readonly step = signal(1);
   readonly success = signal(false);
   readonly saving = signal(false);
   readonly resultCodigo = signal('');
   readonly resultEstado = signal('Pendiente de confirmación');
+  readonly resultGrupo = signal('');
+  readonly resultModalidad = signal('');
 
   readonly stepMeta = [
-    { n: 1, label: 'Grupo', desc: 'Seleccione evento, modalidad y datos del grupo.' },
-    { n: 2, label: 'Responsable', desc: 'Datos de contacto del responsable de la inscripción.' },
-    { n: 3, label: 'Participantes', desc: 'Agregue la nómina editable de bailarines.' },
-    { n: 4, label: 'Pago', desc: 'Resumen, Yape 926 266 295 y comprobante (voucher).' },
+    { n: 1, label: 'Responsable', desc: 'Selecciona la cuenta CLIENTE; el grupo sale de su cuenta.' },
+    { n: 2, label: 'Evento y modalidad', desc: 'Elige el evento y la modalidad a inscribir.' },
+    { n: 3, label: 'Participantes', desc: 'Registra la nómina que competirá.' },
+    { n: 4, label: 'Resumen y pago', desc: 'Revisa y registra el comprobante de pago.' },
   ];
 
-  readonly step1 = signal({
+  readonly clienteBusqueda = signal('');
+  readonly clienteSeleccionado = signal<ClienteItem | null>(null);
+  readonly agrupacionNombre = signal('');
+  readonly cargandoGrupo = signal(false);
+
+  readonly step2 = signal({
     eventoId: '',
-    categoria: '',
-    grupo: '',
+    categoriaId: '',
     cantidadIntegrantes: 0,
   });
 
-  readonly step2 = signal({
-    nombres: '',
-    apellidos: '',
-    dni: '',
-    telefono: '',
-    correo: '',
-    departamento: '',
-    provincia: '',
-    distrito: '',
-  });
-
-  readonly participantes = signal<WizardParticipante[]>([
-    { nombre: '', celular: '' },
-  ]);
+  readonly participantes = signal<WizardParticipante[]>([]);
 
   readonly pago = signal({
     metodo: 'YAPE' as PagoMetodo,
@@ -121,7 +116,7 @@ export class InscripcionWizardPage {
   readonly comprobantePreview = signal<string | null>(null);
   readonly comprobanteFile = signal<File | null>(null);
 
-  readonly errores1 = signal<Record<string, string>>({});
+  readonly erroresCliente = signal<Record<string, string>>({});
   readonly errores2 = signal<Record<string, string>>({});
   readonly erroresPago = signal<Record<string, string>>({});
   readonly erroresParticipantes = signal<Record<number, string>>({});
@@ -131,7 +126,7 @@ export class InscripcionWizardPage {
     this.store.eventos().filter((e) => e.estado === 'ACTIVO'),
   );
 
-  /** Label legible de un evento: "Nombre · 25 de setiembre de 2026". */
+  /** Label legible de un evento: "Nombre - 25 de setiembre de 2026". */
   private labelDeEvento(ev: { nombre: string; fecha: string }): string {
     return `${ev.nombre} - ${this.formatearFecha(ev.fecha)}`;
   }
@@ -141,13 +136,13 @@ export class InscripcionWizardPage {
   );
 
   readonly eventoLabelSeleccionado = computed(() => {
-    const ev = this.eventosActivos().find((e) => e.id === this.step1().eventoId);
+    const ev = this.eventosActivos().find((e) => e.id === this.step2().eventoId);
     return ev ? this.labelDeEvento(ev) : '';
   });
 
   onEventoLabel(label: string): void {
     const ev = this.eventosActivos().find((e) => this.labelDeEvento(e) === label);
-    if (ev) this.patch1({ eventoId: ev.id });
+    if (ev) this.patch2({ eventoId: ev.id, categoriaId: '', cantidadIntegrantes: 0 });
   }
 
   /** "2026-09-25" -> "25 de setiembre de 2026". */
@@ -163,7 +158,12 @@ export class InscripcionWizardPage {
   }
 
   /** Label de modalidad con rango y precio. */
-  private labelDeCategoria(cat: { nombre: string; minIntegrantes: number; maxIntegrantes: number; precio: number }): string {
+  private labelDeCategoria(cat: {
+    nombre: string;
+    minIntegrantes: number;
+    maxIntegrantes: number;
+    precio: number;
+  }): string {
     return `${cat.nombre} (${cat.minIntegrantes}-${cat.maxIntegrantes}) - S/ ${cat.precio}`;
   }
 
@@ -171,45 +171,24 @@ export class InscripcionWizardPage {
     this.categorias().map((c) => this.labelDeCategoria(c)),
   );
 
-  readonly monto = computed(() => {
-    const cat = this.step1().categoria;
-    if (!cat) return 0;
-    return this.store.categorias().find((c) => c.nombre === cat)?.precio ?? 0;
-  });
-
-  readonly eventoNombre = computed(() => {
-    const id = this.step1().eventoId;
-    return this.store.eventos().find((e) => e.id === id)?.nombre ?? '—';
-  });
-
-  readonly provincias = computed(() => {
-    const dep = ubigeoDepartamentos.find(
-      (d) => d.departamento === this.step2().departamento,
-    );
-    if (!dep) return [];
-    return ubigeoProvincias
-      .filter((p) => p.departamento_id === dep.id)
-      .map((p) => p.provincia);
-  });
-
-  readonly distritos = computed(() => {
-    const dep = ubigeoDepartamentos.find(
-      (d) => d.departamento === this.step2().departamento,
-    );
-    const prov = ubigeoProvincias.find(
-      (p) => p.provincia === this.step2().provincia && (!dep || p.departamento_id === dep.id),
-    );
-    if (!prov) return [];
-    return ubigeoDistritos
-      .filter((d) => d.provincia_id === prov.id)
-      .map((d) => d.distrito);
+  readonly categoriaLabelSeleccionado = computed(() => {
+    const cat = this.categorias().find((c) => c.id === this.step2().categoriaId);
+    return cat ? this.labelDeCategoria(cat) : '';
   });
 
   readonly categoriaSeleccionada = computed(
-    () => this.store.categorias().find((c) => c.nombre === this.step1().categoria) ?? null,
+    () => this.categorias().find((c) => c.id === this.step2().categoriaId) ?? null,
   );
 
-  /** Valores de integrantes permitidos por la modalidad (según las bases): exacto o rango. */
+  /** El monto SIEMPRE sale de la modalidad: nunca se escribe a mano. */
+  readonly monto = computed(() => this.categoriaSeleccionada()?.precio ?? 0);
+
+  readonly eventoNombre = computed(() => {
+    const id = this.step2().eventoId;
+    return this.store.eventos().find((e) => e.id === id)?.nombre ?? '—';
+  });
+
+  /** Valores de integrantes permitidos por la modalidad (según las bases). */
   readonly cantidadesPermitidas = computed<number[]>(() => {
     const cat = this.categoriaSeleccionada();
     if (!cat) return [];
@@ -220,17 +199,47 @@ export class InscripcionWizardPage {
 
   readonly ayudaIntegrantes = computed(() => {
     const cat = this.categoriaSeleccionada();
-    if (!cat) return 'Elija una modalidad para ver la cantidad permitida según las bases.';
+    if (!cat) return 'Opcional: puedes declarar la cantidad prevista o agregar la nómina en el siguiente paso.';
     if (cat.minIntegrantes === cat.maxIntegrantes) {
       const unidad = cat.minIntegrantes === 1 ? 'integrante' : 'integrantes';
-      return `Esta modalidad permite exactamente ${cat.minIntegrantes} ${unidad} (ni más ni menos).`;
+      return `Esta modalidad permite exactamente ${cat.minIntegrantes} ${unidad}.`;
     }
-    return `Esta modalidad permite entre ${cat.minIntegrantes} y ${cat.maxIntegrantes} integrantes según las bases.`;
+    return `Esta modalidad permite máximo ${cat.maxIntegrantes} (mínimo ${cat.minIntegrantes}) según las bases.`;
   });
 
-  patch1(partial: Partial<ReturnType<typeof this.step1>>): void {
-    this.step1.update((s) => ({ ...s, ...partial }));
-    this.errores1.update((e) => this.clearKey(e, Object.keys(partial)[0]));
+  readonly clientesFiltrados = computed(() => {
+    const q = this.clienteBusqueda().trim().toLowerCase();
+    if (!q) return this.clientes();
+    return this.clientes().filter(
+      (c) =>
+        c.nombre.toLowerCase().includes(q) ||
+        c.correo.toLowerCase().includes(q) ||
+        c.dni.includes(q),
+    );
+  });
+
+  async seleccionarCliente(cliente: ClienteItem): Promise<void> {
+    this.clienteSeleccionado.set(cliente);
+    this.erroresCliente.set({});
+    this.agrupacionNombre.set('');
+    this.cargandoGrupo.set(true);
+    try {
+      const agrupacion = await firstValueFrom(
+        this.agrupacionApi.obtenerDeUsuario(cliente.id),
+      );
+      this.agrupacionNombre.set(agrupacion?.nombre ?? '');
+    } catch {
+      this.agrupacionNombre.set('');
+    } finally {
+      this.cargandoGrupo.set(false);
+    }
+  }
+
+  private clearKey(errores: Record<string, string>, clave?: string): Record<string, string> {
+    if (!clave) return errores;
+    const nuevo = { ...errores };
+    delete nuevo[clave];
+    return nuevo;
   }
 
   patch2(partial: Partial<ReturnType<typeof this.step2>>): void {
@@ -243,55 +252,28 @@ export class InscripcionWizardPage {
     this.erroresPago.update((e) => this.clearKey(e, Object.keys(partial)[0]));
   }
 
-  private clearKey(errores: Record<string, string>, clave?: string): Record<string, string> {
-    if (!clave) return errores;
-    const nuevo = { ...errores };
-    delete nuevo[clave];
-    return nuevo;
+  onCategoria(label: string): void {
+    // El combo emite el label completo ("Pareja Libre (2-2) - S/ 80").
+    // Buscamos la categoría cuyo label coincida para obtener el id real.
+    const c = this.categorias().find((x) => this.labelDeCategoria(x) === label);
+    if (!c) return;
+    this.patch2({ categoriaId: c.id, cantidadIntegrantes: 0 });
+    // La nómina arranca vacía: el admin agrega solo los participantes que desee.
+    this.participantes.set([]);
   }
 
-  onCategoria(cat: string): void {
-    const c = this.store.categorias().find((x) => x.nombre === cat);
-    if (c && c.minIntegrantes === c.maxIntegrantes) {
-      this.patch1({ categoria: cat, cantidadIntegrantes: c.minIntegrantes });
-      return;
-    }
-    this.patch1({ categoria: cat });
-  }
-
-  onDepartamento(dep: string): void {
-    this.patch2({ departamento: dep, provincia: '', distrito: '' });
-  }
-
-  onProvincia(prov: string): void {
-    this.patch2({ provincia: prov, distrito: '' });
+  /** Al cambiar la cantidad declarada, la nómina queda como esté. */
+  onCantidadChange(cantidad: number): void {
+    this.patch2({ cantidadIntegrantes: cantidad });
   }
 
   addParticipante(): void {
-    const max = this.step1().cantidadIntegrantes;
+    const max = this.categoriaSeleccionada()?.maxIntegrantes ?? 0;
     if (max > 0 && this.participantes().length >= max) {
       this.toast.warning('Ya se alcanzó la cantidad permitida por la modalidad');
       return;
     }
-    this.participantes.update((list) => [
-      ...list,
-      { nombre: '', celular: '' },
-    ]);
-  }
-
-  /** Al entrar al paso 3, deja exactamente tantas filas como la cantidad elegida. */
-  private asegurarFilas(): void {
-    const necesario = this.step1().cantidadIntegrantes;
-    if (necesario < 1) return;
-    this.participantes.update((list) => {
-      const faltantes = necesario - list.length;
-      if (faltantes <= 0) return list;
-      const nuevas = Array.from({ length: faltantes }, (): WizardParticipante => ({
-        nombre: '',
-        celular: '',
-      }));
-      return [...list, ...nuevas];
-    });
+    this.participantes.update((list) => [...list, { nombre: '', celular: '' }]);
   }
 
   celularParticipante(event: Event, index: number): void {
@@ -325,25 +307,19 @@ export class InscripcionWizardPage {
     const tipo = file.type;
     const esImagen = tipo.startsWith('image/');
     if (!esImagen && tipo !== 'application/pdf') {
-      this.erroresPago.set({
-        ...this.erroresPago(),
-        comprobante: 'Solo se aceptan fotos (JPG/PNG) o PDF.',
-      });
+      this.erroresPago.set({ ...this.erroresPago(), comprobante: 'Solo se aceptan fotos (JPG/PNG) o PDF.' });
       input.value = '';
       return;
     }
     if (file.size > 8 * 1024 * 1024) {
-      this.erroresPago.set({
-        ...this.erroresPago(),
-        comprobante: 'El archivo supera los 8 MB.',
-      });
+      this.erroresPago.set({ ...this.erroresPago(), comprobante: 'El archivo supera los 8 MB.' });
       input.value = '';
       return;
     }
     this.erroresPago.update((e) => {
-      const nuevo = { ...e };
-      delete nuevo['comprobante'];
-      return nuevo;
+      const n = { ...e };
+      delete n['comprobante'];
+      return n;
     });
     this.comprobanteFile.set(file);
     this.patchPago({ comprobanteNombre: file.name });
@@ -363,43 +339,23 @@ export class InscripcionWizardPage {
 
   next(): void {
     if (!this.validateStep(this.step())) return;
-    const siguiente = Math.min(4, this.step() + 1);
-    if (siguiente === 3) this.asegurarFilas();
-    this.step.set(siguiente);
+    this.step.update((s) => Math.min(4, s + 1));
   }
 
   validateStep(n: number): boolean {
     if (n === 1) {
-      const s = this.step1();
       const e: Record<string, string> = {};
-      if (!s.eventoId) e['eventoId'] = 'Selecciona un evento.';
-      if (!s.categoria) e['categoria'] = 'Selecciona una modalidad.';
-      if (!s.grupo.trim()) e['grupo'] = 'El nombre del grupo es obligatorio.';
-      else if (s.grupo.trim().length < 2) e['grupo'] = 'Mínimo 2 caracteres.';
-      if (!s.cantidadIntegrantes || s.cantidadIntegrantes < 1) {
-        e['cantidadIntegrantes'] = 'Selecciona la cantidad de integrantes.';
-      } else {
-        const cat = this.store.categorias().find((c) => c.nombre === s.categoria);
-        if (cat && s.cantidadIntegrantes < cat.minIntegrantes) {
-          e['cantidadIntegrantes'] = `Esta modalidad requiere entre ${cat.minIntegrantes} y ${cat.maxIntegrantes} integrantes.`;
-        } else if (cat && s.cantidadIntegrantes > cat.maxIntegrantes) {
-          e['cantidadIntegrantes'] = `Esta modalidad requiere entre ${cat.minIntegrantes} y ${cat.maxIntegrantes} integrantes.`;
-        }
+      if (!this.clienteSeleccionado()) {
+        e['cliente'] = 'Selecciona la cuenta CLIENTE responsable.';
       }
-      this.errores1.set(e);
+      this.erroresCliente.set(e);
       return Object.keys(e).length === 0;
     }
     if (n === 2) {
       const s = this.step2();
       const e: Record<string, string> = {};
-      if (!s.nombres.trim()) e['nombres'] = 'Los nombres son obligatorios.';
-      if (!s.apellidos.trim()) e['apellidos'] = 'Los apellidos son obligatorios.';
-      if (!s.dni) e['dni'] = 'El DNI es obligatorio.';
-      else if (!/^\d{8}$/.test(s.dni)) e['dni'] = 'El DNI debe tener 8 dígitos.';
-      if (!s.telefono) e['telefono'] = 'El teléfono es obligatorio.';
-      else if (!/^9\d{8}$/.test(s.telefono)) e['telefono'] = 'Debe tener 9 dígitos y empezar con 9.';
-      if (!s.correo.trim()) e['correo'] = 'El correo es obligatorio.';
-      else if (!/^\S+@\S+\.\S+$/.test(s.correo.trim())) e['correo'] = 'Correo no válido.';
+      if (!s.eventoId) e['eventoId'] = 'Selecciona un evento.';
+      if (!s.categoriaId) e['categoriaId'] = 'Selecciona una modalidad.';
       this.errores2.set(e);
       return Object.keys(e).length === 0;
     }
@@ -407,6 +363,9 @@ export class InscripcionWizardPage {
       const list = this.participantes();
       const porFila: Record<number, string> = {};
       list.forEach((p, i) => {
+        // Fila totalmente vacía = "no añadida": se ignora.
+        const vacia = !p.nombre.trim() && !p.celular.trim();
+        if (vacia) return;
         if (!p.nombre.trim() || p.nombre.trim().length < 2) {
           porFila[i] = 'El nombre es obligatorio (mínimo 2 caracteres).';
         } else if (!/^9\d{8}$/.test(p.celular)) {
@@ -415,17 +374,11 @@ export class InscripcionWizardPage {
       });
       this.erroresParticipantes.set(porFila);
 
-      const global: Record<string, string> = {};
-      const declarado = this.step1().cantidadIntegrantes;
-      if (declarado && list.length !== declarado) {
-        global['integrantes'] =
-          `La cantidad de integrantes (${
-            declarado
-          }) debe coincidir con los participantes agregados (${list.length}).`;
-      }
-      this.erroresGlobal.set(global);
+      // La nómina es opcional: no se exige mínimo. Solo importa que las
+      // filas añadidas estén completas y no superen el máximo de la modalidad.
+      this.erroresGlobal.set({});
 
-      return Object.keys(porFila).length === 0 && Object.keys(global).length === 0;
+      return Object.keys(porFila).length === 0;
     }
     if (n === 4) {
       const e: Record<string, string> = {};
@@ -433,8 +386,7 @@ export class InscripcionWizardPage {
         e['numeroOperacion'] = 'Ingresa el número de operación.';
       }
       if (!this.pago().comprobanteNombre) {
-        e['comprobante'] =
-          'Debes subir la foto del voucher (Yape) para registrar la inscripción.';
+        e['comprobante'] = 'Debes subir el comprobante de pago.';
       }
       this.erroresPago.set(e);
       return Object.keys(e).length === 0;
@@ -447,45 +399,28 @@ export class InscripcionWizardPage {
       this.toast.warning('Revisa los campos marcados antes de registrar');
       return;
     }
-    const pagoForm = this.pago();
+    const cliente = this.clienteSeleccionado();
+    const categoria = this.categoriaSeleccionada();
+    if (!cliente || !categoria) {
+      this.toast.error('Falta seleccionar responsable o modalidad');
+      return;
+    }
     this.saving.set(true);
     try {
-      const s1 = this.step1();
-      const s2 = this.step2();
-      const categoria = this.store.categorias().find((c) => c.nombre === s1.categoria);
-      if (!categoria) {
-        this.toast.error('La modalidad seleccionada no existe en el sistema');
-        this.saving.set(false);
-        return;
-      }
-      const usuarioId = this.store.usuarios()[0]?.id ?? null;
-      if (!usuarioId) {
-        this.toast.error('No hay un usuario delegado registrado');
-        this.saving.set(false);
-        return;
-      }
-
       const inscripcion = await this.store.crearInscripcion(
         {
-          usuarioId,
-          eventoId: s1.eventoId,
+          usuarioId: cliente.id,
+          eventoId: this.step2().eventoId,
           categoriaId: categoria.id,
-          nombreGrupo: s1.grupo,
+          cantidadParticipantes: this.participantes().length,
           observaciones: '',
-          responsable: {
-            nombres: s2.nombres,
-            apellidos: s2.apellidos,
-            dni: s2.dni,
-            telefono: s2.telefono,
-            correo: s2.correo,
-            departamento: s2.departamento,
-            provincia: s2.provincia,
-            distrito: s2.distrito,
-          },
-          participantes: this.participantes().map((p) => ({
-            nombres: p.nombre.trim(),
-            celular: p.celular.trim(),
-          })),
+          // Solo las filas completas se envían; las vacías se descartan.
+          participantes: this.participantes()
+            .filter((p) => p.nombre.trim() || p.celular.trim())
+            .map((p) => ({
+              nombres: p.nombre.trim(),
+              celular: p.celular.trim(),
+            })),
         },
         {
           monto: this.monto(),
@@ -503,6 +438,8 @@ export class InscripcionWizardPage {
             ? 'Rechazada'
             : 'Pendiente de confirmación',
       );
+      this.resultGrupo.set(this.agrupacionNombre());
+      this.resultModalidad.set(categoria.nombre);
       this.saving.set(false);
       this.success.set(true);
       this.toast.success('Inscripción registrada', inscripcion.codigo);
@@ -514,18 +451,17 @@ export class InscripcionWizardPage {
 
   async downloadComprobante(): Promise<void> {
     if (!this.resultCodigo()) return;
-    const s1 = this.step1();
-    const s2 = this.step2();
+    const cliente = this.clienteSeleccionado();
     await descargarComprobantePdf({
       codigo: this.resultCodigo(),
       estado: this.resultEstado(),
-      grupo: s1.grupo,
-      modalidad: s1.categoria,
+      grupo: this.resultGrupo(),
+      modalidad: this.resultModalidad(),
       evento: this.eventoNombre(),
-      responsable: `${s2.nombres} ${s2.apellidos}`,
-      dniResponsable: s2.dni,
-      telefono: s2.telefono,
-      correo: s2.correo || '—',
+      responsable: cliente?.nombre ?? '—',
+      dniResponsable: cliente?.dni ?? '—',
+      telefono: cliente?.telefono ?? '—',
+      correo: cliente?.correo ?? '—',
       metodoPago: this.pago().metodo,
       numeroOperacion: this.pago().numeroOperacion || '—',
       monto: `S/ ${this.monto().toFixed(2)}`,

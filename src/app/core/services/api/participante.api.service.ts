@@ -10,6 +10,11 @@ export class ParticipanteApiService extends ApiBaseService {
     return this.get<Participante[]>(`/inscripciones/${inscripcionId}/participantes`);
   }
 
+  /** Nómina pública vía código de inscripción (seguimiento). */
+  listarPorCodigo(codigo: string): Observable<Participante[]> {
+    return this.get<Participante[]>(`/inscripciones/0/participantes/publico/${encodeURIComponent(codigo)}`);
+  }
+
   listarInactivos(inscripcionId: string): Observable<Participante[]> {
     return this.get<Participante[]>(`/inscripciones/${inscripcionId}/participantes/inactivos`);
   }

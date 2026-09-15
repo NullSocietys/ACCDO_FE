@@ -320,7 +320,8 @@
   flex-direction: column;
   height: 100dvh;
   overflow: hidden;
-  background: var(--color-background);
+  /* Fondo oscuro para que coincida con todas las páginas del panel admin */
+  background: #1a1816;
 }
 
 .navbar-left {
@@ -429,6 +430,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   width: 100%;
   min-width: 0;

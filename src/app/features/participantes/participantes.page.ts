@@ -6,6 +6,7 @@ import { DataStoreService } from '../../core/services/data-store.service';
 import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
+import { IconComponent } from '../../shared/icons/icon.component';
 import { InputComponent } from '../../shared/ui/input.component';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton.component';
@@ -29,6 +30,7 @@ interface BailarinRow {
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
+    IconComponent,
     InputComponent,
     PaginationComponent,
     SkeletonComponent,

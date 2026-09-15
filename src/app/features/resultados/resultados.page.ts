@@ -73,8 +73,11 @@ export class ResultadosPage {
 
   readonly errores = signal<Record<string, string>>({});
 
+  /** Solo inscripciones CONFIRMADAS del evento: solo ellas pueden ganar. */
   readonly inscripcionesDelEvento = computed(() =>
-    this.store.inscripcionesView().filter((i) => i.eventoId === this.eventoId()),
+    this.store
+      .inscripcionesView()
+      .filter((i) => i.eventoId === this.eventoId() && i.estado === 'CONFIRMADA'),
   );
 
   /** Labels legibles para el combo con buscador. */

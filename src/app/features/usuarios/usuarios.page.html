@@ -1,179 +1,230 @@
-<div class="page usuarios">
+<div class="pg-usuarios">
+
+  <!-- ── SKELETON ── -->
   @if (cargando()) {
-    <div class="page-sk" aria-hidden="true">
-      <app-skeleton variant="card" [height]="88" />
+    <div class="sk-wrap" aria-hidden="true">
+      <app-skeleton variant="card" [height]="72" />
       <app-skeleton variant="table" [count]="8" />
     </div>
   } @else {
-  <!-- 1) HEADER: título + acción -->
-  <header class="mast">
-    <div class="mast__copy">
-      <p class="mast__eyebrow">Panel · Cuentas</p>
-      <h1>Usuarios</h1>
-      <p class="mast__lead">
-        Acceso al panel: alta, roles, restauración y depuración de cuentas.
-      </p>
-    </div>
-    <div class="mast__cta">
-      <app-button icon="plus" [fullWidth]="true" (clicked)="openCreate()">Nuevo usuario</app-button>
-    </div>
-  </header>
 
-  <!-- 2) KPIs -->
-  <dl class="kpi-strip" aria-label="Resumen rápido">
-    <div class="kpi-strip__item">
-      <dt>Total de cuentas</dt>
-      <dd>{{ overview().total }}</dd>
-    </div>
-    <div class="kpi-strip__item kpi-strip__item--ok">
-      <dt>Activos</dt>
-      <dd>{{ overview().activos }}</dd>
-    </div>
-    <div class="kpi-strip__item kpi-strip__item--gold">
-      <dt>Inactivos</dt>
-      <dd>{{ overview().inactivos }}</dd>
-    </div>
-  </dl>
-
-  <!-- 3) LISTADO -->
-  @if (store.usuarios().length + store.usuariosInactivos().length === 0) {
-    <app-empty-state
-      icon="user"
-      title="No hay usuarios"
-      description="Registre la primera cuenta para administrar el panel."
-    />
-  } @else {
-    <div class="controls">
-      <nav class="tabs" role="group" aria-label="Filtrar por estado">
-        @for (f of filtros; track f.key) {
-          <button
-            type="button"
-            class="tabs__btn"
-            [class.is-active]="estadoFiltro() === f.key"
-            [attr.aria-pressed]="estadoFiltro() === f.key"
-            (click)="estadoFiltro.set(f.key); page.set(1)"
-          >
-            {{ f.label }}
-            <span class="tabs__n">
-              {{ f.key === 'activos' ? store.usuarios().length : store.usuariosInactivos().length }}
-            </span>
-          </button>
-        }
-      </nav>
-      <div class="controls__search">
-        <app-input
-          controlId="us-search"
-          icon="search"
-          [value]="busqueda()"
-          placeholder="Nombre o correo…"
-          (valueChange)="busqueda.set($event); page.set(1)"
-        />
+    <!-- ── TOPBAR ── -->
+    <div class="topbar">
+      <div class="topbar__left">
+        <span class="topbar__breadcrumb">Panel</span>
+        <span class="topbar__sep" aria-hidden="true">/</span>
+        <h1 class="topbar__title">Usuarios</h1>
+      </div>
+      <div class="topbar__right">
+        <app-button icon="plus" (clicked)="openCreate()">Nuevo usuario</app-button>
       </div>
     </div>
 
-    @if (filtrados().length === 0) {
+    <!-- ── KPIs ── -->
+    <div class="kpis" aria-label="Resumen">
+      <div class="kpi">
+        <span class="kpi__label">Total</span>
+        <strong class="kpi__value">{{ overview().total }}</strong>
+      </div>
+      <div class="kpi kpi--success">
+        <span class="kpi__label">Activos</span>
+        <strong class="kpi__value">{{ overview().activos }}</strong>
+      </div>
+      <div class="kpi kpi--muted">
+        <span class="kpi__label">Inactivos</span>
+        <strong class="kpi__value">{{ overview().inactivos }}</strong>
+      </div>
+      <div class="kpi kpi--admin">
+        <span class="kpi__label">Administradores</span>
+        <strong class="kpi__value">{{ overview().admins }}</strong>
+      </div>
+    </div>
+
+    <!-- ── CONTENIDO ── -->
+    @if (store.usuarios().length + store.usuariosInactivos().length === 0) {
       <app-empty-state
-        icon="search"
-        title="Sin resultados"
-        description="Ningún usuario coincide con los filtros aplicados."
-        actionLabel="Limpiar filtros"
-        actionIcon="x"
-        (actioned)="limpiarFiltros()"
+        icon="user"
+        title="Sin usuarios"
+        description="Registre la primera cuenta para administrar el panel."
       />
     } @else {
-      <section class="folio" aria-label="Listado de usuarios">
-        <div class="folio__head">
-          <h2>{{ estadoFiltro() === 'activos' ? 'Directorio activo' : 'Archivo inactivo' }}</h2>
-          <span>{{ rangeLabel() }}</span>
+
+      <div class="table-section">
+
+      <!-- ── TOOLBAR: filtros + búsqueda ── -->
+      <div class="toolbar">
+        <div class="toolbar__filters">
+          <label class="sr-only" for="filtro-estado">Filtrar por estado</label>
+          <select
+            id="filtro-estado"
+            class="sel"
+            [value]="estadoFiltro()"
+            (change)="onEstadoFiltroChange($event)"
+          >
+            @for (f of filtros; track f.key) {
+              <option [value]="f.key">{{ f.label }}</option>
+            }
+          </select>
         </div>
 
-        <div class="folio__cols" aria-hidden="true">
-          <span class="folio__cols-mark">#</span>
-          <span>Cuenta</span>
-          <span>Rol</span>
-          <span>Registro</span>
-          <span>Estado</span>
-          <span></span>
+        <div class="toolbar__search">
+          <app-input
+            controlId="us-search"
+            icon="search"
+            [value]="busqueda()"
+            placeholder="Buscar por nombre o correo…"
+            (valueChange)="busqueda.set($event); page.set(1)"
+          />
         </div>
 
-        <div class="folio__list" role="list">
-          @for (usuario of paginado(); track usuario.id; let i = $index) {
-            <article class="row" role="listitem" [class.is-inactivo]="!usuario.activo">
-              <div class="row__mark" aria-hidden="true">
-                <span class="row__index">{{ rowIndex(i) }}</span>
-                <span class="row__avatar">{{ iniciales(usuario) }}</span>
-              </div>
+        @if (busqueda() || estadoFiltro() !== 'todos') {
+          <button
+            class="btn-clear"
+            type="button"
+            (click)="limpiarFiltros()"
+            aria-label="Limpiar filtros"
+          >
+            <app-icon name="x" [size]="13" />
+            Limpiar
+          </button>
+        }
+      </div>
 
-              <div class="row__identity">
-                <h3 class="row__title">{{ usuario.nombre }}</h3>
-                <a class="row__mail mono" [href]="'mailto:' + usuario.correo" [attr.title]="usuario.correo">
-                  {{ usuario.correo }}
-                </a>
-              </div>
+      <!-- ── TABLA ── -->
+      @if (filtrados().length === 0) {
+        <app-empty-state
+          icon="search"
+          title="Sin resultados"
+          description="Ningún usuario coincide con los filtros aplicados."
+          actionLabel="Limpiar filtros"
+          actionIcon="x"
+          (actioned)="limpiarFiltros()"
+        />
+      } @else {
+        <div class="table-card" [class.table-card--partial]="!isFullPage()" [style]="tableCardStyle()">
 
-              <div class="row__rol">
-                @if (esAdmin(usuario)) {
-                  <span class="rol-badge rol-badge--admin">Administrador</span>
-                } @else {
-                  <span class="rol-badge">Cliente</span>
+          <!-- cabecera de la tabla-card -->
+          <div class="table-card__header">
+            <p class="table-card__title">
+              {{
+                estadoFiltro() === 'activos'
+                  ? 'Directorio activo'
+                  : estadoFiltro() === 'inactivos'
+                  ? 'Archivo inactivo'
+                  : 'Todos los usuarios'
+              }}
+            </p>
+            <span class="table-card__range">{{ rangeLabel() }}</span>
+          </div>
+
+          <!-- scroll horizontal solo para la tabla -->
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th class="th th--n" scope="col">#</th>
+                  <th class="th" scope="col">Cuenta</th>
+                  <th class="th th--center" scope="col">Rol</th>
+                  <th class="th" scope="col">Registro</th>
+                  <th class="th th--center" scope="col">Estado</th>
+                  <th class="th th--actions" scope="col">
+                    <span class="sr-only">Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (usuario of paginado(); track usuario.id; let i = $index) {
+                  <tr class="trow" [class.trow--inactive]="!usuario.activo">
+
+                    <!-- # -->
+                    <td class="td td--n">{{ rowIndex(i) }}</td>
+
+                    <!-- Cuenta: avatar + nombre + correo -->
+                    <td class="td td--account">
+                      <div class="td--account__inner">
+                      <div class="avatar" aria-hidden="true">{{ iniciales(usuario) }}</div>
+                      <div class="account-info">
+                        <span class="account-name">{{ usuario.nombre }}</span>
+                        <a
+                          class="account-email"
+                          [href]="'mailto:' + usuario.correo"
+                          [title]="usuario.correo"
+                        >{{ usuario.correo }}</a>
+                      </div>
+                      </div>
+                    </td>
+
+                    <!-- Rol -->
+                    <td class="td td--center">
+                      <span class="role-chip" [class.role-chip--admin]="esAdmin(usuario)">
+                        {{ esAdmin(usuario) ? 'Admin' : 'Cliente' }}
+                      </span>
+                    </td>
+
+                    <!-- Fecha -->
+                    <td class="td td--date">{{ fechaCorta(usuario.createdAt) }}</td>
+
+                    <!-- Estado -->
+                    <td class="td td--center">
+                      <app-badge
+                        [tone]="usuario.activo ? 'success' : 'muted'"
+                        [dot]="usuario.activo"
+                      >
+                        {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+                      </app-badge>
+                    </td>
+
+                    <!-- Acciones -->
+                    <td class="td td--actions">
+                      @if (usuario.activo) {
+                        <app-button
+                          variant="outline"
+                          size="sm"
+                          icon="pencil"
+                          (clicked)="openEdit(usuario)"
+                        >Editar</app-button>
+                        <app-button
+                          variant="ghost"
+                          size="icon"
+                          icon="trash"
+                          ariaLabel="Desactivar usuario"
+                          (clicked)="remove(usuario)"
+                        />
+                        <app-button
+                          variant="ghost"
+                          size="icon"
+                          icon="x"
+                          ariaLabel="Eliminar definitivamente"
+                          (clicked)="removeFisico(usuario)"
+                        />
+                      } @else {
+                        <app-button
+                          variant="outline"
+                          size="sm"
+                          icon="check"
+                          (clicked)="restore(usuario)"
+                        >Restaurar</app-button>
+                        <app-button
+                          variant="ghost"
+                          size="icon"
+                          icon="trash"
+                          ariaLabel="Eliminar definitivamente"
+                          (clicked)="removeFisico(usuario)"
+                        />
+                      }
+                    </td>
+
+                  </tr>
                 }
-              </div>
+              </tbody>
+            </table>
+          </div>
 
-              <div class="row__meta">
-                <span class="row__meta-k">Registro</span>
-                <span class="row__meta-v">{{ fechaCorta(usuario.createdAt) }}</span>
-              </div>
-
-              <div class="row__status">
-                <app-badge
-                  [tone]="usuario.activo ? 'success' : 'muted'"
-                  [dot]="usuario.activo"
-                >
-                  {{ usuario.activo ? 'Activo' : 'Inactivo' }}
-                </app-badge>
-              </div>
-
-              <div class="row__actions">
-                @if (usuario.activo) {
-                  <app-button
-                    variant="outline"
-                    size="lg"
-                    icon="pencil"
-                    (clicked)="openEdit(usuario)"
-                  >
-                    Editar
-                  </app-button>
-                  <app-button
-                    variant="ghost"
-                    size="icon"
-                    icon="trash"
-                    ariaLabel="Desactivar usuario"
-                    (clicked)="remove(usuario)"
-                  />
-                  <app-button
-                    variant="ghost"
-                    size="icon"
-                    icon="x"
-                    ariaLabel="Eliminar definitivamente (libera su nombre de agrupación)"
-                    (clicked)="removeFisico(usuario)"
-                  />
-                } @else {
-                  <app-button variant="outline" size="lg" icon="check" (clicked)="restore(usuario)">
-                    Restaurar
-                  </app-button>
-                  <app-button
-                    variant="ghost"
-                    size="icon"
-                    icon="trash"
-                    ariaLabel="Eliminar definitivamente"
-                    (clicked)="removeFisico(usuario)"
-                  />
-                }
-              </div>
-            </article>
-          }
         </div>
+      }
 
+      <!-- paginación pegada al fondo -->
+      <div class="pagination-footer">
         <app-pagination
           [total]="filtrados().length"
           [pageSize]="pageSize"
@@ -181,165 +232,103 @@
           ariaLabel="Paginación de usuarios"
           (pageChange)="onPageChange($event)"
         />
-      </section>
+      </div>
+
+      </div><!-- /table-section -->
     }
-  }
   }
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     MODAL — Crear / Editar usuario
+══════════════════════════════════════════════════════ -->
 <app-modal
+  class="usuario-modal"
   [open]="modalOpen()"
   label="Usuario"
   [title]="editingId() ? 'Editar usuario' : 'Nuevo usuario'"
   description="Cuenta de acceso al panel. El rol define qué puede hacer."
+  size="lg"
   (closed)="modalOpen.set(false)"
 >
-  <div class="sheet">
-    <div class="sheet__grid sheet__grid--form">
-      <div>
-        <label class="k" for="us-nombre">Nombre completo</label>
-        <app-input
-          controlId="us-nombre"
-          [value]="form().nombre"
-          [invalid]="!!errores()['nombre']"
-          [lettersOnly]="true"
-          placeholder="Nombre completo"
-          (valueChange)="patch({ nombre: $event })"
-        />
-        <span class="field-error">{{ errores()['nombre'] }}</span>
-      </div>
-      <div>
-        <label class="k" for="us-correo">Correo electrónico</label>
-        <app-input
-          controlId="us-correo"
-          type="email"
-          icon="mail"
-          [value]="form().correo"
-          [invalid]="!!errores()['correo']"
-          placeholder="usuario@correo.com"
-          (valueChange)="patch({ correo: $event })"
-        />
-        <span class="field-error">{{ errores()['correo'] }}</span>
-      </div>
+  <div class="mform">
 
-      <div class="sheet__wide">
-        <div class="sheet__row">
-          <label class="k" for="us-password">Contraseña</label>
-          @if (!editingId()) {
-            <app-button
-              variant="outline"
-              size="sm"
-              icon="sparkles"
-              (clicked)="generarPassword()"
-            >
-              Generar segura
-            </app-button>
-          }
+    <!-- ═══════ CUENTA DE ACCESO ═══════ -->
+    <div class="mfs">
+      <p class="mfs__title">Cuenta de acceso</p>
+
+      <div class="mfs__grid">
+        <div class="mf">
+          <label class="mf__label" for="us-nombre">Nombre <span class="mf__req">*</span></label>
+          <app-input controlId="us-nombre" [value]="form().nombre" [invalid]="!!errores()['nombre']" [lettersOnly]="true" placeholder="María Quispe López" (valueChange)="patch({ nombre: $event })" />
+          @if (errores()['nombre']) { <span class="mf__error">{{ errores()['nombre'] }}</span> }
         </div>
-        <app-input
-          controlId="us-password"
-          type="password"
-          icon="settings"
-          [toggle]="true"
-          [value]="form().password"
-          [invalid]="!!errores()['password']"
-          [placeholder]="editingId() ? 'Dejar en blanco para no cambiarla' : 'Mínimo 8 caracteres, con mayúscula y número'"
-          (valueChange)="patch({ password: $event })"
-        />
-        <span class="field-error">{{ errores()['password'] }}</span>
-      </div>
-
-      <div class="sheet__wide">
-        <label class="k" for="us-rol">Rol de la cuenta</label>
-        <select autocomplete="off" id="us-rol" class="ui-select"
-          [ngModel]="form().rol" (ngModelChange)="patch({ rol: $event })"
-        >
-          <option value="CLIENTE">Cliente — se inscribe al concurso</option>
-          <option value="ADMIN">Administrador — gestiona el panel</option>
-        </select>
-        <span class="field-hint">
-          @if (form().rol === 'ADMIN') {
-            Podrá gestionar inscripciones, pagos y resultados.
-          } @else {
-            Solo podrá inscribirse y ver sus inscripciones.
-          }
-        </span>
-      </div>
-
-      <!-- Datos de contacto: el backend los usa como responsable de sus inscripciones -->
-      <div class="sheet__wide">
-        <label class="k">Datos de contacto del responsable</label>
-        <div class="sheet__row sheet__row--contacto">
-          <div>
-            <label class="k" for="us-dni">DNI</label>
-            <app-input
-              controlId="us-dni"
-              [value]="form().dni"
-              [invalid]="!!errores()['dni']"
-              placeholder="8 dígitos"
-              (valueChange)="patch({ dni: soloDigitos($event, 8) })"
-            />
-            <span class="field-error">{{ errores()['dni'] }}</span>
+        <div class="mf">
+          <label class="mf__label" for="us-correo">Correo <span class="mf__req">*</span></label>
+          <app-input controlId="us-correo" type="email" icon="mail" [value]="form().correo" [invalid]="!!errores()['correo']" placeholder="maria@correo.com" (valueChange)="patch({ correo: $event })" />
+          @if (errores()['correo']) { <span class="mf__error">{{ errores()['correo'] }}</span> }
+        </div>
+        <div class="mf mf--full">
+          <div class="mf__head">
+            <label class="mf__label" for="us-password">Contraseña @if (!editingId()) { <span class="mf__req">*</span> }</label>
+            @if (!editingId()) { <app-button variant="outline" size="sm" icon="sparkles" (clicked)="generarPassword()">Generar</app-button> }
           </div>
-          <div>
-            <label class="k" for="us-telefono">Teléfono</label>
-            <app-input
-              controlId="us-telefono"
-              [value]="form().telefono"
-              [invalid]="!!errores()['telefono']"
-              placeholder="9 dígitos, empieza con 9"
-              (valueChange)="patch({ telefono: soloDigitos($event, 9) })"
-            />
-            <span class="field-error">{{ errores()['telefono'] }}</span>
+          <app-input controlId="us-password" type="password" icon="settings" [toggle]="true" [value]="form().password" [invalid]="!!errores()['password']" [placeholder]="editingId() ? 'Dejar en blanco para no cambiar' : 'Mín. 8 caracteres'" (valueChange)="patch({ password: $event })" />
+          @if (errores()['password']) { <span class="mf__error">{{ errores()['password'] }}</span> }
+        </div>
+        <div class="mf mf--full">
+          <label class="mf__label">Rol</label>
+          <div class="role-row">
+            <button type="button" class="role-chip" [class.role-chip--active]="form().rol === 'CLIENTE'" (click)="patch({ rol: 'CLIENTE' })">
+              <app-icon name="user" [size]="14" /> Cliente
+            </button>
+            <button type="button" class="role-chip" [class.role-chip--active]="form().rol === 'ADMIN'" (click)="patch({ rol: 'ADMIN' })">
+              <app-icon name="settings" [size]="14" /> Administrador
+            </button>
           </div>
         </div>
+        @if (!editingId() && form().rol !== 'ADMIN') {
+          <div class="mf mf--full">
+            <label class="mf__label" for="us-agrupacion">Grupo artístico <span class="mf__req">*</span></label>
+            <app-input controlId="us-agrupacion" [value]="form().agrupacionNombre" [invalid]="!!errores()['agrupacionNombre']" [maxlength]="150" placeholder="Ballet Folklórico San Martín de Porres" (valueChange)="patch({ agrupacionNombre: $event })" />
+            @if (errores()['agrupacionNombre']) { <span class="mf__error">{{ errores()['agrupacionNombre'] }}</span> }
+          </div>
+        }
       </div>
-
-      <div class="sheet__row sheet__row--contacto ubigeo">
-        <div>
-          <label class="k" for="us-departamento">Departamento</label>
-          <select autocomplete="off" id="us-departamento" class="ui-select"
-            [ngModel]="form().departamento" (ngModelChange)="onDepartamento($event)"
-          >
-            <option value="">Selecciona departamento…</option>
-            @for (dep of departamentos; track dep) {
-              <option [value]="dep">{{ dep }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label class="k" for="us-provincia">Provincia</label>
-          <select autocomplete="off" id="us-provincia" class="ui-select"
-            [ngModel]="form().provincia" (ngModelChange)="onProvincia($event)"
-            [disabled]="!provincias().length"
-          >
-            <option value="">Selecciona provincia…</option>
-            @for (prov of provincias(); track prov) {
-              <option [value]="prov">{{ prov }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label class="k" for="us-distrito">Distrito</label>
-          <select autocomplete="off" id="us-distrito" class="ui-select"
-            [ngModel]="form().distrito" (ngModelChange)="patch({ distrito: $event })"
-            [disabled]="!distritos().length"
-          >
-            <option value="">Selecciona distrito…</option>
-            @for (dis of distritos(); track dis) {
-              <option [value]="dis">{{ dis }}</option>
-            }
-          </select>
-        </div>
-      </div>
-      <span class="field-hint sheet__wide">
-        Estos datos se usan como responsable (encargado) en las inscripciones del usuario.
-      </span>
     </div>
+
+    <!-- ═══════ DATOS PERSONALES ═══════ -->
+    <div class="mfs">
+      <p class="mfs__title">Datos del responsable <span class="mfs__opt">opcional</span></p>
+
+      <div class="mfs__grid">
+        <div class="mf">
+          <label class="mf__label" for="us-dni">DNI</label>
+          <app-input controlId="us-dni" [value]="form().dni" [invalid]="!!errores()['dni']" [maxlength]="8" placeholder="45123678" (valueChange)="patch({ dni: soloDigitos($event, 8) })" />
+          @if (errores()['dni']) { <span class="mf__error">{{ errores()['dni'] }}</span> }
+        </div>
+        <div class="mf">
+          <label class="mf__label" for="us-telefono">Teléfono</label>
+          <app-input controlId="us-telefono" [value]="form().telefono" [invalid]="!!errores()['telefono']" [maxlength]="9" placeholder="987654321" (valueChange)="patch({ telefono: soloDigitos($event, 9) })" />
+          @if (errores()['telefono']) { <span class="mf__error">{{ errores()['telefono'] }}</span> }
+        </div>
+        <div class="mf mf--full">
+          <label class="mf__label">Ubicación</label>
+          <div class="ubigeo-row">
+            <app-ubigeo-combo label="Dpto." placeholder="Depto." [options]="departamentos" [value]="form().departamento" [disabled]="false" (valueChange)="onDepartamento($event)" />
+            <app-ubigeo-combo label="Prov." placeholder="Prov." [options]="provincias()" [value]="form().provincia" [disabled]="!provincias().length" (valueChange)="onProvincia($event)" />
+            <app-ubigeo-combo label="Dist." placeholder="Dist." [options]="distritos()" [value]="form().distrito" [disabled]="!distritos().length" (valueChange)="patch({ distrito: $event })" />
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <div modal-footer class="modal-actions">
+  <!-- Footer del modal -->
+  <div modal-footer class="mform-actions">
     <app-button variant="outline" (clicked)="modalOpen.set(false)">Cancelar</app-button>
     <app-button icon="save" (clicked)="save()">Guardar</app-button>
   </div>
+
 </app-modal>

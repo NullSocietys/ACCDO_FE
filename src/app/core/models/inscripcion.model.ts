@@ -22,18 +22,17 @@ export interface Inscripcion {
   createdAt: string;
 }
 
-/** POST /api/inscripciones — crea además responsable y participantes en el backend.
- *  El backend obtiene agrupación y responsable del JWT para clientes.
- *  nombreGrupo/responsable se conservan opcionales solo para altas administrativas
- *  antiguas; el flujo público ya no los envía.
- *  participantes opcional: el cliente puede saltar la nómina y la organización la completa. */
+/** POST /api/inscripciones — crea la nómina de participantes en el backend.
+ *  La agrupación y el responsable SIEMPRE salen de la cuenta (JWT para clientes,
+ *  usuarioId elegido por el admin). No se envían nombreGrupo ni responsable. */
 export interface InscripcionRequest {
   usuarioId?: string;
   eventoId: string;
   categoriaId: string;
-  nombreGrupo?: string;
+  /** Informativo: el backend valida la cantidad real contra la modalidad. */
+  cantidadParticipantes?: number;
   observaciones?: string;
-  responsable?: ResponsableRequest;
+  /** Obligatorio: la inscripción se crea con su nómina completa. */
   participantes?: ParticipanteRequest[];
 }
 
@@ -46,10 +45,12 @@ export interface InscripcionView extends Inscripcion {
   responsableDni: string;
   responsableTelefono: string;
   responsableCorreo: string;
+  responsableDepartamento?: string;
+  responsableProvincia?: string;
+  responsableDistrito?: string;
 }
 
 /** @deprecated Alias histórico. */
 export type CategoriaNombre = string;
 
-import type { ResponsableRequest } from './responsable.model';
 import type { ParticipanteRequest } from './participante.model';

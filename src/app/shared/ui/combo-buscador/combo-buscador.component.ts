@@ -4,6 +4,7 @@ import {
   EventEmitter,
   HostListener,
   Input,
+  OnDestroy,
   Output,
   inject,
   signal,
@@ -41,6 +42,7 @@ import {
           [style.top.px]="panelTop()"
           [style.left.px]="panelLeft()"
           [style.width.px]="panelAncho()"
+          [style.visibility]="panelListo() ? 'visible' : 'hidden'"
         >
           <div class="cb__search">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
@@ -103,8 +105,8 @@ import {
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: #0c0a09;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: #1c1917;
       color: #f5efe4;
       font: inherit;
       font-size: 14px;
@@ -121,7 +123,7 @@ import {
 
     .cb--disabled .cb__control { cursor: not-allowed; }
 
-    .cb__placeholder { opacity: 0.45; }
+    .cb__placeholder { color: #a8a29e; opacity: 1; }
 
     .cb__panel {
       position: fixed;
@@ -190,7 +192,7 @@ import {
       padding: 8px 10px;
       border: 0;
       background: transparent;
-      color: inherit;
+      color: #e7e5e4;
       font: inherit;
       font-size: 13.5px;
       text-align: left;
@@ -200,6 +202,7 @@ import {
 
     .cb__opcion:hover {
       background: rgba(212, 175, 55, 0.12);
+      color: #f5efe4;
     }
 
     .cb__opcion--activa {
@@ -209,7 +212,7 @@ import {
     }
   `,
 })
-export class ComboBuscadorComponent {
+export class ComboBuscadorComponent implements OnDestroy {
   @Input({ required: true }) opciones: string[] = [];
   @Input() valor = '';
   @Input() placeholder = 'Selecciona…';
@@ -222,8 +225,11 @@ export class ComboBuscadorComponent {
   readonly panelTop = signal(0);
   readonly panelLeft = signal(0);
   readonly panelAncho = signal(0);
+  /** Se pone en true sólo después del primer posicionarPanel(), evita el flash en left:0 */
+  readonly panelListo = signal(false);
 
   private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly onScroll = () => { if (this.abierto()) this.posicionarPanel(); };
 
   filtradas(): string[] {
     const q = this.busqueda().trim().toLowerCase();
@@ -236,13 +242,18 @@ export class ComboBuscadorComponent {
     this.abierto.update((v) => !v);
     this.busqueda.set('');
     if (this.abierto()) {
-      // 1) estimado (el panel aún no está en el DOM), 2) altura real ya renderizado.
-      this.posicionarPanel();
-      setTimeout(() => this.posicionarPanel(), 0);
-      queueMicrotask(() => {
-        const input = this.host.nativeElement.querySelector('.cb__input') as HTMLInputElement | null;
-        input?.focus();
+      this.panelListo.set(false);
+      // Esperamos al siguiente frame de pintura para que el panel esté en el DOM
+      // y el layout esté completo antes de leer getBoundingClientRect().
+      requestAnimationFrame(() => {
+        this.posicionarPanel();
+        queueMicrotask(() => {
+          const input = this.host.nativeElement.querySelector('.cb__input') as HTMLInputElement | null;
+          input?.focus();
+        });
       });
+    } else {
+      this.panelListo.set(false);
     }
   }
 
@@ -269,12 +280,14 @@ export class ComboBuscadorComponent {
     const topCotado = Math.min(Math.max(top, 8), Math.max(8, window.innerHeight - alto - 8));
     this.panelTop.set(Math.round(topCotado));
     this.panelLeft.set(Math.round(r.left));
+    this.panelListo.set(true);
   }
 
   elegir(op: string): void {
     this.valorSalida.emit(op);
     this.abierto.set(false);
     this.busqueda.set('');
+    this.panelListo.set(false);
   }
 
   elegirPrimera(): void {
@@ -286,6 +299,7 @@ export class ComboBuscadorComponent {
   onClickFuera(e: Event): void {
     if (this.abierto() && !this.host.nativeElement.contains(e.target)) {
       this.abierto.set(false);
+      this.panelListo.set(false);
     }
   }
 
@@ -294,6 +308,7 @@ export class ComboBuscadorComponent {
     if (this.abierto()) {
       this.abierto.set(false);
       this.busqueda.set('');
+      this.panelListo.set(false);
     }
   }
 
@@ -305,12 +320,10 @@ export class ComboBuscadorComponent {
   constructor() {
     // Fase captura: detecta scroll de CUALQUIER contenedor interno
     // (los paneles del wizard hacen scroll propio) y reposiciona el panel.
-    document.addEventListener(
-      'scroll',
-      () => {
-        if (this.abierto()) this.posicionarPanel();
-      },
-      { capture: true, passive: true },
-    );
+    document.addEventListener('scroll', this.onScroll, { capture: true, passive: true });
+  }
+
+  ngOnDestroy(): void {
+    document.removeEventListener('scroll', this.onScroll, { capture: true });
   }
 }

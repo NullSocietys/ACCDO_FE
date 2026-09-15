@@ -409,6 +409,25 @@
   margin: 0 0 10px;
 }
 
+.ipo-nomina {
+  margin-top: 14px;
+}
+
+.ipo-nomina__list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+.ipo-nomina__list strong {
+  font-weight: 600;
+  margin-right: 8px;
+}
+.ipo-nomina__list .ipo-mono {
+  font-size: 12px;
+}
+
 .ipo-pagos {
   display: flex;
   flex-direction: column;

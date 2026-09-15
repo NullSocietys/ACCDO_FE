@@ -66,6 +66,9 @@
                   <span class="ipo-status__badge">✕</span>
                   <span class="ipo-status__kicker">Pago rechazado</span>
                   <h2>Tu inscripción fue rechazada.</h2>
+                  @if (motivoRechazo()) {
+                    <p><strong>Motivo:</strong> {{ motivoRechazo() }}</p>
+                  }
                   <p>Contacta a la organización por WhatsApp <strong>926 266 295</strong> para regularizar tu situación.</p>
                 </div>
               }
@@ -102,10 +105,28 @@
                 <strong>{{ data()!.estado }}</strong>
               </div>
               <div class="ipo-resumen__row">
+                <span>Participantes</span>
+                <strong>{{ data()!.participantes.length || '—' }}</strong>
+              </div>
+              <div class="ipo-resumen__row">
                 <span>Total</span>
                 <strong>S/ {{ data()!.total }}</strong>
               </div>
               </div>
+
+              @if (data()!.participantes.length > 0) {
+                <div class="ipo-nomina">
+                  <h3 class="ipo-pagos-title">Nómina de participantes</h3>
+                  <ol class="ipo-nomina__list">
+                    @for (p of data()!.participantes; track $index) {
+                      <li>
+                        <strong>{{ p.nombres }}</strong>
+                        <span class="ipo-mono">{{ p.celular }}</span>
+                      </li>
+                    }
+                  </ol>
+                </div>
+              }
             </div>
 
             @if (data()!.pagos.length > 0) {

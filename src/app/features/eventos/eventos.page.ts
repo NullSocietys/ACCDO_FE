@@ -8,6 +8,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { BadgeComponent, statusLabel, statusTone } from '../../shared/ui/badge.component';
 import { ButtonComponent } from '../../shared/ui/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
+import { IconComponent } from '../../shared/icons/icon.component';
 import { InputComponent } from '../../shared/ui/input.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
@@ -26,7 +27,7 @@ const emptyForm = (): Omit<Evento, 'id'> => ({
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const DIAS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 type EstadoFiltro = 'todos' | EventoEstado;
 
@@ -38,6 +39,7 @@ type EstadoFiltro = 'todos' | EventoEstado;
     BadgeComponent,
     ButtonComponent,
     EmptyStateComponent,
+    IconComponent,
     InputComponent,
     ModalComponent,
     PaginationComponent,

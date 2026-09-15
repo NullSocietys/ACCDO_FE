@@ -1,209 +1,233 @@
-<div class="page insc">
+<div class="pg-insc">
+
+  <!-- ── SKELETON ── -->
   @if (cargando()) {
-    <div class="page-sk" aria-hidden="true">
-      <app-skeleton variant="card" [height]="120" />
+    <div class="sk-wrap" aria-hidden="true">
+      <app-skeleton variant="card" [height]="72" />
       <app-skeleton variant="table" [count]="8" />
     </div>
   } @else {
-  <header class="mast">
-    <div class="mast__copy">
-      <p class="mast__eyebrow">Temporada · Nómina</p>
-      <h1>Inscripciones</h1>
-      <p class="mast__lead">
-        Registro de elencos por modalidad para los concursos Caporales.
-      </p>
-    </div>
-    <div class="mast__aside">
-      <dl class="mast__pulse" aria-label="Resumen rápido">
-        <div>
-          <dt>Total</dt>
-          <dd>{{ overview().total }}</dd>
-        </div>
-        <div>
-          <dt>Cola</dt>
-          <dd>{{ overview().pendientes }}</dd>
-        </div>
-        <div class="mast__pulse--gold">
-          <dt>Monto</dt>
-          <dd>{{ overview().monto | currency: 'PEN':'symbol-narrow':'1.0-0' }}</dd>
-        </div>
-      </dl>
-      <a routerLink="/admin/inscripciones/nueva" class="mast__cta">
-        <app-button icon="plus" [fullWidth]="true">Nueva inscripción</app-button>
-      </a>
-    </div>
-  </header>
 
-  @if (store.inscripcionesView().length === 0) {
-    <app-empty-state
-      icon="clipboardList"
-      title="Sin inscripciones"
-      description="Registre el primer grupo para comenzar la temporada."
-    />
-  } @else {
-    @if (overview().pendientes > 0) {
-      <aside class="strip" role="status">
-        <span class="strip__mark" aria-hidden="true">!</span>
-        <p>
-          <strong>{{ overview().pendientes }} grupos</strong>
-          esperan revisión de pago o documentación.
-        </p>
-        <button type="button" class="strip__link" (click)="estadoFiltro.set('PENDIENTE')">
-          Filtrar cola →
-        </button>
-      </aside>
-    }
+    <!-- ── TOPBAR ── -->
+    <div class="topbar">
+      <div class="topbar__left">
+        <span class="topbar__breadcrumb">Panel</span>
+        <span class="topbar__sep" aria-hidden="true">/</span>
+        <h1 class="topbar__title">Inscripciones</h1>
+      </div>
+      <div class="topbar__right">
+        <a routerLink="/admin/inscripciones/nueva">
+          <app-button icon="plus">Nueva inscripción</app-button>
+        </a>
+      </div>
+    </div>
 
-    <div class="controls">
-      <nav class="tabs" role="group" aria-label="Filtrar por estado">
-        @for (f of filtros; track f.key) {
-          <button
-            type="button"
-            class="tabs__btn"
-            [class.is-active]="estadoFiltro() === f.key"
-            [attr.aria-pressed]="estadoFiltro() === f.key"
-            (click)="estadoFiltro.set(f.key)"
-          >
-            {{ f.label }}
-            <span class="tabs__n">{{ cuentaEstado(f.key) }}</span>
+    <!-- ── KPIs ── -->
+    <div class="kpis" aria-label="Resumen">
+      <div class="kpi">
+        <span class="kpi__label">Total</span>
+        <strong class="kpi__value">{{ overview().total }}</strong>
+      </div>
+      <div class="kpi kpi--success">
+        <span class="kpi__label">Confirmadas</span>
+        <strong class="kpi__value">{{ overview().confirmadas }}</strong>
+      </div>
+      <div class="kpi kpi--warn">
+        <span class="kpi__label">En cola</span>
+        <strong class="kpi__value">{{ overview().pendientes }}</strong>
+      </div>
+      <div class="kpi kpi--gold">
+        <span class="kpi__label">Monto confirmado</span>
+        <strong class="kpi__value">{{ overview().monto | currency:'PEN':'symbol-narrow':'1.0-0' }}</strong>
+      </div>
+    </div>
+
+    <!-- ── CONTENIDO ── -->
+    @if (store.inscripcionesView().length === 0) {
+      <app-empty-state
+        icon="clipboardList"
+        title="Sin inscripciones"
+        description="Registra el primer grupo para comenzar la temporada."
+      />
+    } @else {
+
+      <!-- ── ALERTA DE COLA ── -->
+      @if (overview().pendientes > 0) {
+        <aside class="alert-strip" role="status">
+          <span class="alert-strip__badge" aria-hidden="true">!</span>
+          <p>
+            <strong>{{ overview().pendientes }} grupos</strong>
+            esperan revisión de pago o documentación.
+          </p>
+          <button type="button" class="alert-strip__action"
+                  (click)="estadoFiltro.set('PENDIENTE')">
+            Filtrar cola →
           </button>
-        }
-      </nav>
+        </aside>
+      }
 
-      <div class="controls__filters">
-        <div class="controls__search">
+      <!-- ── TOOLBAR ── -->
+      <div class="toolbar">
+        <nav class="toolbar__tabs" role="group" aria-label="Filtrar por estado">
+          @for (f of filtros; track f.key) {
+            <button
+              type="button"
+              class="tab-btn"
+              [class.tab-btn--active]="estadoFiltro() === f.key"
+              [attr.aria-pressed]="estadoFiltro() === f.key"
+              (click)="estadoFiltro.set(f.key)"
+            >
+              {{ f.label }}
+              <span class="tab-btn__count">{{ cuentaEstado(f.key) }}</span>
+            </button>
+          }
+        </nav>
+
+        <div class="toolbar__filters">
           <app-input
             controlId="ins-search"
             icon="search"
             [value]="busqueda()"
-            placeholder="Grupo, código o encargado…"
+            placeholder="Buscar…"
             (valueChange)="busqueda.set($event)"
           />
+          <select autocomplete="off" class="sel"
+                  [ngModel]="eventoFilter()"
+                  (ngModelChange)="eventoFilter.set($event)"
+                  aria-label="Filtrar por evento">
+            <option value="">Evento</option>
+            @for (ev of store.eventos(); track ev.id) {
+              <option [value]="ev.id">{{ ev.nombre }}</option>
+            }
+          </select>
+          <select autocomplete="off" class="sel"
+                  [ngModel]="categoriaFilter()"
+                  (ngModelChange)="categoriaFilter.set($event)"
+                  aria-label="Filtrar por modalidad">
+            <option value="">Modalidad</option>
+            @for (cat of store.categorias(); track cat.id) {
+              <option [value]="cat.nombre">{{ cat.nombre }}</option>
+            }
+          </select>
         </div>
-        <select autocomplete="off"
-          class="ui-select"
-          [ngModel]="eventoFilter()"
-          (ngModelChange)="eventoFilter.set($event)"
-          aria-label="Filtrar por evento"
-        >
-          <option value="">Todos los eventos</option>
-          @for (ev of store.eventos(); track ev.id) {
-            <option [value]="ev.id">{{ ev.nombre }}</option>
-          }
-        </select>
-        <select autocomplete="off"
-          class="ui-select"
-          [ngModel]="categoriaFilter()"
-          (ngModelChange)="categoriaFilter.set($event)"
-          aria-label="Filtrar por modalidad"
-        >
-          <option value="">Todas las modalidades</option>
-          @for (cat of categorias; track cat) {
-            <option [value]="cat">{{ cat }}</option>
-          }
-        </select>
       </div>
-    </div>
 
-    @if (filtered().length === 0) {
-      <app-empty-state
-        icon="search"
-        title="Sin resultados"
-        description="Ninguna inscripción coincide con los filtros aplicados."
-        actionLabel="Limpiar filtros"
-        actionIcon="x"
-        (actioned)="limpiarFiltros()"
-      />
-    } @else {
-      <section class="folio" aria-label="Registro de grupos">
-        <div class="folio__head">
-          <h2>Registro</h2>
-          <span>{{ rangeLabel() }}</span>
-        </div>
-
-        <div class="folio__list" role="list">
-          @for (ins of paged(); track ins.id) {
-            <article
-              class="row"
-              role="listitem"
-              [class.is-pendiente]="ins.estado === 'PENDIENTE'"
-              [class.is-rechazada]="ins.estado === 'RECHAZADA'"
-              [class.is-confirmada]="ins.estado === 'CONFIRMADA'"
-            >
-              <div class="row__amount">
-                <span class="row__amount-k">Tarifa</span>
-                <b>{{ ins.total | currency: 'PEN':'symbol-narrow':'1.0-0' }}</b>
-              </div>
-
-              <div class="row__body">
-                <div class="row__lead">
-                  <div class="row__identity">
-                    <h3 class="row__title">{{ ins.nombreGrupo }}</h3>
-                    <p class="row__tags">
-                      <span class="row__sub">{{ ins.categoriaNombre }}</span>
-                      <span class="row__sep" aria-hidden="true">·</span>
-                      <span class="row__code mono">{{ ins.codigo }}</span>
-                    </p>
-                  </div>
-                  <app-badge [tone]="statusTone(ins.estado)" [dot]="false">
-                    {{ statusLabel(ins.estado) }}
-                  </app-badge>
-                </div>
-
-                <dl class="row__facts">
-                  <div>
-                    <dt>Evento</dt>
-                    <dd [attr.title]="ins.eventoNombre">{{ ins.eventoNombre }}</dd>
-                  </div>
-                  <div>
-                    <dt>Encargado</dt>
-                    <dd [attr.title]="ins.responsableNombre">{{ ins.responsableNombre }}</dd>
-                  </div>
-                  <div>
-                    <dt>Elenco</dt>
-                    <dd>
-                      {{ ins.cantidadIntegrantes }}
-                      {{ ins.cantidadIntegrantes === 1 ? 'integrante' : 'integrantes' }}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-
-              <div class="row__actions">
-                <app-button
-                  variant="outline"
-                  size="sm"
-                  icon="eye"
-                  (clicked)="openDetail(ins)"
-                >
-                  Ver
-                </app-button>
-                <app-button
-                  variant="ghost"
-                  size="icon"
-                  icon="trash"
-                  ariaLabel="Eliminar inscripción"
-                  (clicked)="remove(ins)"
-                />
-              </div>
-            </article>
-          }
-        </div>
-
-        <app-pagination
-          [total]="filtered().length"
-          [pageSize]="pageSize"
-          [page]="page()"
-          ariaLabel="Paginación de inscripciones"
-          (pageChange)="onPageChange($event)"
+      <!-- ── TABLA ── -->
+      @if (filtered().length === 0) {
+        <app-empty-state
+          icon="search"
+          title="Sin resultados"
+          description="Ninguna inscripción coincide con los filtros aplicados."
+          actionLabel="Limpiar filtros"
+          actionIcon="x"
+          (actioned)="limpiarFiltros()"
         />
-      </section>
+      } @else {
+        <div class="table-card">
+
+          <div class="table-card__header">
+            <p class="table-card__title">Registro de grupos</p>
+            <span class="table-card__range">{{ rangeLabel() }}</span>
+          </div>
+
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th class="th th--amount" scope="col">Tarifa</th>
+                  <th class="th" scope="col">Grupo / Código</th>
+                  <th class="th" scope="col">Evento</th>
+                  <th class="th" scope="col">Encargado</th>
+                  <th class="th th--center" scope="col">Elenco</th>
+                  <th class="th th--center" scope="col">Estado</th>
+                  <th class="th th--actions" scope="col">
+                    <span class="sr-only">Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (ins of paged(); track ins.id) {
+                  <tr class="trow"
+                      [class.trow--pendiente]="ins.estado === 'PENDIENTE'"
+                      [class.trow--rechazada]="ins.estado === 'RECHAZADA'"
+                      [class.trow--confirmada]="ins.estado === 'CONFIRMADA'">
+
+                    <!-- Tarifa -->
+                    <td class="td td--amount">
+                      <span class="ins-tarifa">
+                        {{ ins.total | currency:'PEN':'symbol-narrow':'1.0-0' }}
+                      </span>
+                      <span class="ins-tarifa-k">PEN</span>
+                    </td>
+
+                    <!-- Grupo -->
+                    <td class="td td--group">
+                      <span class="ins-nombre">{{ ins.nombreGrupo }}</span>
+                      <div class="ins-meta">
+                        <span class="ins-cat">{{ ins.categoriaNombre }}</span>
+                        <span class="ins-sep" aria-hidden="true">·</span>
+                        <span class="ins-code">{{ ins.codigo }}</span>
+                      </div>
+                    </td>
+
+                    <!-- Evento -->
+                    <td class="td td--evento">
+                      <span class="ins-text" [title]="ins.eventoNombre">{{ ins.eventoNombre }}</span>
+                    </td>
+
+                    <!-- Encargado -->
+                    <td class="td td--resp">
+                      <span class="ins-text" [title]="ins.responsableNombre">{{ ins.responsableNombre }}</span>
+                    </td>
+
+                    <!-- Elenco -->
+                    <td class="td td--center">
+                      <span class="ins-int">{{ ins.cantidadIntegrantes }}</span>
+                    </td>
+
+                    <!-- Estado -->
+                    <td class="td td--center">
+                      <app-badge [tone]="statusTone(ins.estado)" [dot]="false">
+                        {{ statusLabel(ins.estado) }}
+                      </app-badge>
+                    </td>
+
+                    <!-- Acciones -->
+                    <td class="td td--actions">
+                      <app-button variant="outline" size="sm" icon="eye"
+                                  (clicked)="openDetail(ins)">Ver</app-button>
+                      <app-button variant="ghost" size="icon" icon="trash"
+                                  ariaLabel="Eliminar inscripción"
+                                  (clicked)="remove(ins)" />
+                    </td>
+
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-card__footer">
+            <app-pagination
+              [total]="filtered().length"
+              [pageSize]="pageSize"
+              [page]="page()"
+              ariaLabel="Paginación de inscripciones"
+              (pageChange)="onPageChange($event)"
+            />
+          </div>
+
+        </div>
+      }
     }
-  }
   }
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     MODAL — Detalle de inscripción
+══════════════════════════════════════════════════════ -->
 <app-modal
+  class="insc-modal"
   [open]="!!selected()"
   label="Inscripción"
   [title]="selected()?.nombreGrupo ?? 'Inscripción'"
@@ -212,12 +236,14 @@
   (closed)="closeDetail()"
 >
   @if (selected(); as ins) {
-    <div class="sheet">
-      <div class="sheet__hero">
+    <div class="msheet">
+
+      <!-- Hero: tarifa + estado -->
+      <div class="msheet__hero">
         <div>
-          <span class="k">Tarifa de inscripción</span>
-          <p class="sheet__figure">
-            {{ ins.total | currency: 'PEN':'symbol-narrow':'1.0-0' }}
+          <span class="msheet__hero-k">Tarifa de inscripción</span>
+          <p class="msheet__hero-val">
+            {{ ins.total | currency:'PEN':'symbol-narrow':'1.0-0' }}
           </p>
         </div>
         <app-badge [tone]="statusTone(ins.estado)" [dot]="false">
@@ -225,61 +251,58 @@
         </app-badge>
       </div>
 
-      <dl class="sheet__grid">
-        <div>
+      <!-- Grid de datos -->
+      <dl class="msheet__grid">
+        <div class="msheet__cell">
           <dt>Modalidad</dt>
-          <dd class="gold">{{ ins.categoriaNombre }}</dd>
+          <dd class="msheet__val--gold">{{ ins.categoriaNombre }}</dd>
         </div>
-        <div>
+        <div class="msheet__cell">
           <dt>Registro</dt>
           <dd>{{ formatRegistro(ins) }}</dd>
         </div>
-        <div>
+        <div class="msheet__cell">
           <dt>Código</dt>
           <dd class="mono">{{ ins.codigo }}</dd>
         </div>
-        <div>
+        <div class="msheet__cell">
           <dt>Integrantes</dt>
           <dd>{{ detailMembers().length || ins.cantidadIntegrantes }}</dd>
         </div>
-        <div class="sheet__wide">
+        <div class="msheet__cell msheet__cell--wide">
           <dt>Evento</dt>
           <dd>{{ ins.eventoNombre }}</dd>
         </div>
-        <div class="sheet__wide">
+        <div class="msheet__cell msheet__cell--wide">
           <dt>Encargado</dt>
           <dd>
             {{ ins.responsableNombre }}
             @if (ins.responsableTelefono || ins.responsableCorreo || ins.responsableDni) {
-              <span class="sheet__sub">
-                @if (ins.responsableDni) {
-                  <span class="mono">DNI {{ ins.responsableDni }}</span>
-                }
-                @if (ins.responsableTelefono) {
-                  <span>{{ ins.responsableTelefono }}</span>
-                }
-                @if (ins.responsableCorreo) {
-                  <span>{{ ins.responsableCorreo }}</span>
-                }
+              <span class="msheet__sub">
+                @if (ins.responsableDni) { <span class="mono">DNI {{ ins.responsableDni }}</span> }
+                @if (ins.responsableTelefono) { <span>{{ ins.responsableTelefono }}</span> }
+                @if (ins.responsableCorreo) { <span>{{ ins.responsableCorreo }}</span> }
               </span>
             }
           </dd>
         </div>
       </dl>
 
-      <section class="sheet__cast" aria-labelledby="sheet-cast">
-        <div class="sheet__cast-head">
-          <h3 id="sheet-cast">Elenco</h3>
+      <!-- Elenco -->
+      <section class="msheet__cast" aria-labelledby="msheet-cast">
+        <div class="msheet__cast-head">
+          <h3 id="msheet-cast">Elenco</h3>
           <span>{{ detailMembers().length }}</span>
         </div>
+
         @if (detailMembers().length === 0) {
-          <p class="sheet__empty">Aún no hay bailarines vinculados. Agrégalos aquí abajo.</p>
+          <p class="msheet__empty">Aún no hay bailarines vinculados. Agrégalos aquí abajo.</p>
         } @else {
-          <div class="cast" role="list">
+          <div class="cast-grid" role="list">
             @for (m of detailMembers(); track m.id) {
-              <article class="cast__item" role="listitem">
-                <span class="cast__mark" aria-hidden="true">{{ m.iniciales }}</span>
-                <div class="cast__info">
+              <article class="cast-item" role="listitem">
+                <span class="cast-item__mark" aria-hidden="true">{{ m.iniciales }}</span>
+                <div class="cast-item__info">
                   <strong>{{ m.nombreCompleto }}</strong>
                   <span class="mono">{{ m.celular }}</span>
                 </div>
@@ -288,8 +311,8 @@
           </div>
         }
 
-        <!-- Rellenado de nómina (cliente saltó el paso de participantes) -->
-        <div class="sheet__add">
+        <!-- Agregar participante desde el admin -->
+        <div class="msheet__add">
           <app-input
             controlId="add-nombre"
             icon="users"
@@ -312,10 +335,11 @@
           </app-button>
         </div>
       </section>
+
     </div>
   }
 
-  <div modal-footer>
+  <div modal-footer class="msheet-actions">
     <app-button variant="outline" (clicked)="closeDetail()">Cerrar</app-button>
   </div>
 </app-modal>

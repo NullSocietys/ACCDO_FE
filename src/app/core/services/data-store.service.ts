@@ -577,6 +577,9 @@ export class DataStoreService {
       responsableDni: res?.dni ?? '',
       responsableTelefono: res?.telefono ?? '',
       responsableCorreo: res?.correo ?? '',
+      responsableDepartamento: res?.departamento ?? '',
+      responsableProvincia: res?.provincia ?? '',
+      responsableDistrito: res?.distrito ?? '',
     };
   }
 

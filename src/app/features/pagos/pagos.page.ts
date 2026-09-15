@@ -1,7 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, computed, effect, inject, OnDestroy, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Pago, PagoEstado, PagoView } from '../../core/models';
+import { Pago, PagoEstado, PagoView, InscripcionView } from '../../core/models';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { DataStoreService } from '../../core/services/data-store.service';
 import { PagoApiService } from '../../core/services/api/pago.api.service';
@@ -140,6 +140,31 @@ export class PagosPage implements OnDestroy {
     if (!pago) return null;
     return `${pago.codigo} · ${statusLabel(pago.metodoPago)}`;
   });
+
+  /** Inscripción asociada al pago seleccionado: datos completos para revisión. */
+  readonly inscripcionSeleccionada = computed(() => {
+    const pago = this.selected();
+    if (!pago) return null;
+    return this.store.inscripcionesView().find((i) => i.id === pago.inscripcionId) ?? null;
+  });
+
+  /** Nómina de la inscripción seleccionada (participantes que competirán). */
+  readonly participantesSeleccionados = computed(() => {
+    const ins = this.inscripcionSeleccionada();
+    if (!ins) return [];
+    return this.store
+      .participantesView()
+      .filter((p) => p.inscripcionId === ins.id);
+  });
+
+  ubicacionDe(ins: InscripcionView | null): string {
+    if (!ins) return '—';
+    return (
+      [ins.responsableDepartamento, ins.responsableProvincia, ins.responsableDistrito]
+        .filter(Boolean)
+        .join(' / ') || '—'
+    );
+  }
 
   constructor() {
     window.setTimeout(() => this.cargando.set(false), 500);
@@ -314,15 +339,25 @@ export class PagosPage implements OnDestroy {
   }
 
   async reject(pago: PagoView): Promise<void> {
+    const motivoInput = window.prompt(
+      `Motivo del rechazo del pago de «${pago.nombreGrupo}» (el responsable lo verá en el seguimiento):`,
+      'Comprobante ilegible o incompleto',
+    );
+    if (motivoInput === null) return;
+    const motivo = motivoInput.trim();
+    if (!motivo) {
+      this.toast.error('Debes indicar un motivo para rechazar el pago');
+      return;
+    }
     const ok = await this.confirm.ask({
       title: 'Rechazar pago',
-      description: `¿Rechazar el pago de «${pago.nombreGrupo}»?`,
+      description: `Se rechazará el pago y la inscripción «${pago.nombreGrupo}» (${pago.codigo}).`,
       confirmLabel: 'Rechazar',
       tone: 'danger',
     });
     if (!ok) return;
     try {
-      await this.store.rechazarPago(pago.id, 'Rechazado por el administrador');
+      await this.store.rechazarPago(pago.id, motivo);
       if (this.selected()?.id === pago.id) {
         this.selected.set({ ...pago, estado: 'RECHAZADO' });
       }

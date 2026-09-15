@@ -79,9 +79,10 @@ export const routes: Routes = [
           ),
       },
       {
+        // La nómina vive dentro del flujo de inscripciones (detalle de cada una).
         path: 'participantes',
-        loadComponent: () =>
-          import('./features/participantes/participantes.page').then((m) => m.ParticipantesPage),
+        redirectTo: 'inscripciones',
+        pathMatch: 'full',
       },
       {
         path: 'pagos',
