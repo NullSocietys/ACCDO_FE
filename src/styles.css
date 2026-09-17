@@ -863,6 +863,18 @@ img {
     min-width: 0 !important;
   }
 
+  /* Todo el contenido de la celda como un bloque a la derecha del label:
+     los spans internos (monto + moneda, nombre + código) fluyen en línea
+     alineados a la derecha en lugar de apilarse. */
+  .content .tbl td > * {
+    display: inline !important;
+  }
+
+  .content .tbl td .pg-monto-k,
+  .content .tbl td .pg-monto {
+    display: inline !important;
+  }
+
   /* La tabla nunca empuja más allá del viewport (min-width de módulo) */
   .content .tbl {
     min-width: 0 !important;
@@ -932,6 +944,13 @@ img {
   /* Los td traen fondo propio de la tabla: dentro de la card es transparente */
   .content .tbl .trow td {
     background: transparent !important;
+    border-left: none !important;
+    box-shadow: none !important;
+  }
+
+  .content .tbl .trow td::before {
+    border-left: none !important;
+    padding-left: 0 !important;
   }
 
   /* Inners flex de módulos (td--account__inner) fluyen al ancho completo */
