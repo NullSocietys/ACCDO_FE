@@ -103,3 +103,29 @@ textarea:disabled {
 .invalid textarea {
   border-color: var(--color-destructive);
 }
+/* Desplegable de fecha/hora: botón con ícono a la derecha del campo */
+.picker-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--color-muted-foreground, #78716c);
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.picker-toggle:hover {
+  color: var(--color-primary, #fbbf24);
+}
+
+input.is-picker {
+  cursor: pointer;
+  padding-right: 40px !important;
+}

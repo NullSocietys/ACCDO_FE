@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, ElementRef, input, output, signal, viewChild } from '@angular/core';
 import { IconComponent } from '../icons/icon.component';
 
 @Component({
@@ -25,6 +25,23 @@ export class InputComponent {
   readonly valueChange = output<string>();
 
   readonly mostrado = signal(false);
+
+  private readonly inputEl = viewChild<ElementRef<HTMLInputElement>>('inputRef');
+
+  /** Inputs de fecha/hora: al hacer click en cualquier parte del campo se
+   *  abre el calendario/reloj desplegable nativo del navegador. */
+  abrirPicker(): void {
+    if (this.type() !== 'date' && this.type() !== 'time') return;
+    const el = this.inputEl()?.nativeElement as HTMLInputElement & {
+      showPicker?: () => void;
+    };
+    if (!el) return;
+    try {
+      el.showPicker?.();
+    } catch {
+      el.focus();
+    }
+  }
 
   onInput(el: HTMLInputElement): void {
     if (this.lettersOnly()) {

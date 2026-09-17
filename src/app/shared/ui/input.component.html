@@ -17,20 +17,34 @@
     ></textarea>
   } @else {
     <input
+      #inputRef
       [id]="controlId()"
       [name]="name() ?? undefined"
       [type]="mostrado() ? 'text' : type()"
       [placeholder]="placeholder()"
       [class.has-icon]="!!icon()"
       [class.has-toggle]="toggle() && type() === 'password'"
+      [class.is-picker]="type() === 'date' || type() === 'time'"
       [disabled]="disabled()"
       [attr.autocomplete]="mostrado() || type() !== 'password' ? 'off' : 'new-password'"
       [attr.readonly]="type() === 'date' || type() === 'time' ? null : true"
+      (click)="abrirPicker()"
       (focus)="($any($event.target)).removeAttribute('readonly')"
       [attr.maxlength]="maxlength() ?? null"
       [value]="value()"
       (input)="onInput($any($event.target))"
     />
+    @if (type() === 'date' || type() === 'time') {
+      <button
+        type="button"
+        class="picker-toggle"
+        tabindex="-1"
+        [attr.aria-label]="type() === 'date' ? 'Abrir calendario' : 'Abrir reloj'"
+        (click)="abrirPicker()"
+      >
+        <app-icon [name]="type() === 'date' ? 'calendar' : 'clock'" [size]="16" />
+      </button>
+    }
     @if (toggle() && type() === 'password') {
       <button
         type="button"
