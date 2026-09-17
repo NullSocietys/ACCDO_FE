@@ -64,7 +64,7 @@ const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 type EstadoFiltro = 'todos' | 'activos' | 'inactivos';
 
-const PAGE_SIZE = window.innerWidth <= 700 ? 15 : 10;
+const PAGE_SIZE = window.innerWidth <= 700 ? 5 : 10;
 
 @Component({
   selector: 'app-usuarios-page',

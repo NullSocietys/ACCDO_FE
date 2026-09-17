@@ -29,7 +29,7 @@ const emptyForm = (): Omit<Evento, 'id'> => ({
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const DIAS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
-const PAGE_SIZE = window.innerWidth <= 700 ? 10 : 5;
+const PAGE_SIZE = 5;
 
 type EstadoFiltro = 'todos' | 'inactivos' | EventoEstado;
 

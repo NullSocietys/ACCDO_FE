@@ -21,7 +21,7 @@ type EstadoFiltro = 'todos' | PagoEstado;
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 /** Filas por página (patrón usuarios): filas compactas de tabla. */
-const PAGE_SIZE = window.innerWidth <= 700 ? 15 : 10;
+const PAGE_SIZE = window.innerWidth <= 700 ? 5 : 10;
 
 function toPagoEntity(pago: PagoView, estado: PagoEstado): Pago {
   return {

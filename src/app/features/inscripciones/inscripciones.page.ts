@@ -33,7 +33,7 @@ function inicialesDe(nombre: string): string {
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 /** Filas por página: caben en viewport con mast + filtros sin scroll excesivo. */
-const PAGE_SIZE = window.innerWidth <= 700 ? 15 : 10;
+const PAGE_SIZE = window.innerWidth <= 700 ? 5 : 10;
 
 @Component({
   selector: 'app-inscripciones-page',
