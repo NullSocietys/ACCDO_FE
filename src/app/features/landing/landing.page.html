@@ -1,4 +1,4 @@
-﻿<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <defs>
       <filter id="gooey-dots">
         <feGaussianBlur in="SourceGraphic" stdDeviation="3.2 1" result="blur" />
@@ -52,7 +52,7 @@
               <img src="carrusel-img/background7.webp" alt="Galería Chicote de Oro — imagen 7 de 8" width="2000" height="1414" loading="lazy" decoding="async">
             </figure>
             <figure class="carousel-slide">
-              <img src="carr-ousel-img/background8.webp" alt="Galería Chicote de Oro — imagen 8 de 8" width="2000" height="1414" loading="lazy" decoding="async">
+              <img src="carrusel-img/background8.webp" alt="Galería Chicote de Oro — imagen 8 de 8" width="2000" height="1414" loading="lazy" decoding="async">
             </figure>
           </div>
         </div>
@@ -80,7 +80,7 @@
         <div class="hero-bottom">
           <div class="hero-content">
             <div class="hero-content-grid">
-              <div class="hero-media hero-anim">
+              <div class="hero-media hero-anim" aria-hidden="true">
                 <div class="product-stage" data-tilt>
                   <div class="product-stage__glow" aria-hidden="true"></div>
                   <img class="hero-logo" src="logo/logo.webp" alt="" width="960" height="955" fetchpriority="high" decoding="async">
@@ -89,7 +89,10 @@
 
               <div class="hero-text">
                 <h1 class="hero-title hero-anim">
-                  <span class="hero-brand-text">{{ contenido.hero.marcaLinea1 }}<br>{{ contenido.hero.marcaLinea2 }}<span class="hero-brand-sub">{{ contenido.hero.eslogan }}</span></span>
+                  <span class="hero-brand-row">
+                    <img class="hero-brand-mark" src="logo/logo.webp" alt="" width="960" height="955" decoding="async">
+                    <span class="hero-brand-text">{{ contenido.hero.marcaLinea1 }}<br>{{ contenido.hero.marcaLinea2 }}<span class="hero-brand-sub">{{ contenido.hero.eslogan }}</span></span>
+                  </span>
                 </h1>
                 <p class="hero-sub hero-anim">
                   {{ contenido.hero.descripcion }}
@@ -165,11 +168,11 @@
           <div class="prog-wall-wrapper">
             <span id="galeria" class="prog-galeria-anchor" aria-hidden="true"></span>
             <div class="prog-wall" id="progWall">
-              <figure class="prog-shot prog-shot--portrait reveal">
+              <figure class="prog-shot prog-shot--portrait prog-shot--faces reveal">
                 <img src="fotos/unipersonal/unipersonal-M.webp" alt="Unipersonal — camino al escenario" loading="lazy" decoding="async" width="1365" height="2048">
                 <figcaption class="prog-shot__cap"><span>Unipersonal</span></figcaption>
               </figure>
-              <figure class="prog-shot prog-shot--portrait reveal">
+              <figure class="prog-shot prog-shot--portrait prog-shot--faces reveal">
                 <img src="fotos/unipersonal/unipersonal-V1.webp" alt="Unipersonal — presentación en el coliseo" loading="lazy" decoding="async" width="1365" height="2048">
                 <figcaption class="prog-shot__cap"><span>Unipersonal</span></figcaption>
               </figure>
@@ -186,11 +189,11 @@
                 <img src="fotos/parejas/pareja1.webp" alt="Pareja en escenario — categoría libre" loading="lazy" decoding="async" width="2048" height="1365">
                 <figcaption class="prog-shot__cap"><span>Parejas</span></figcaption>
               </figure>
-              <figure class="prog-shot prog-shot--portrait reveal">
+              <figure class="prog-shot prog-shot--portrait prog-shot--faces reveal">
                 <img src="fotos/parejas/pareja2.webp" alt="Pareja — dúo de pasos" loading="lazy" decoding="async" width="1365" height="2048">
                 <figcaption class="prog-shot__cap"><span>Parejas</span></figcaption>
               </figure>
-              <figure class="prog-shot prog-shot--portrait reveal">
+              <figure class="prog-shot prog-shot--portrait prog-shot--faces reveal">
                 <img src="fotos/parejas/pareja3.webp" alt="Pareja — coreografía conjunta" loading="lazy" decoding="async" width="1365" height="2048">
                 <figcaption class="prog-shot__cap"><span>Parejas</span></figcaption>
               </figure>

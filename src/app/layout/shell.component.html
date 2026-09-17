@@ -1,11 +1,33 @@
 <a class="skip-link" href="#main-content">Saltar al contenido</a>
 
 <div class="shell" [class.collapsed]="collapsed()" [class.mobile-open]="mobileOpen()">
+
+  <!-- Botón hamburguesa: SOLO móvil/tablet (≤900px), abre el sidebar -->
+  <button
+    class="mobile-menu-btn"
+    type="button"
+    (click)="mobileOpen.set(true)"
+    aria-label="Abrir menú de navegación"
+    aria-controls="sidebar"
+  >
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </button>
+
   @if (mobileOpen()) {
     <div class="mobile-overlay" (click)="mobileOpen.set(false)" aria-hidden="true"></div>
   }
 
-  <aside class="sidebar" aria-label="Navegación principal">
+  <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
+    <button
+      class="sidebar-close"
+      type="button"
+      (click)="mobileOpen.set(false)"
+      aria-label="Cerrar menú"
+    >
+      <app-icon name="x" [size]="16" />
+    </button>
     <div class="brand">
       <img class="brand-logo" src="logo/logo.webp" alt="" width="40" height="40" />
       <div class="brand-text">

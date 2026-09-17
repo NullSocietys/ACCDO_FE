@@ -731,6 +731,115 @@ a.ccard__row:hover {
   }
 }
 
+/* —— Responsivo del header —— */
+@media (max-width: 1180px) {
+  .site-nav .nav-list {
+    gap: 0.65rem;
+  }
+
+  .site-nav a {
+    font-size: 0.68rem;
+    letter-spacing: 1.1px;
+  }
+}
+
+@media (max-width: 1080px) {
+  :host {
+    --header-h: 110px;
+  }
+
+  .site-header.is-solid {
+    --header-h: 64px;
+  }
+
+  .site-header:not(.is-solid) .brand-logo {
+    height: 46px;
+  }
+
+  .brand-logo {
+    height: 32px;
+  }
+
+  .header-inner {
+    gap: 0.5rem;
+  }
+
+  .header-right {
+    display: contents;
+  }
+
+  .hdr-tools {
+    margin-left: auto;
+  }
+
+  /* Menú hamburguesa visible */
+  .menu-toggle {
+    display: flex;
+    margin-left: 0.25rem;
+  }
+
+  /* Nav se convierte en panel desplegable bajo el header */
+  .site-nav {
+    position: absolute;
+    top: var(--header-h);
+    left: 0;
+    width: 100%;
+    flex: none;
+    background: rgba(10, 10, 10, 0.98);
+    border-bottom: 1px solid var(--border-gold);
+    padding: 1.5rem clamp(1.25rem, 5vw, 2.5rem);
+    transform: translateY(-6px);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.3s ease;
+  }
+
+  .site-nav.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .site-nav .nav-list {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .site-nav a {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 560px) {
+  :host {
+    --header-h: 88px;
+  }
+
+  .site-header.is-solid {
+    --header-h: 58px;
+  }
+
+  .brand-logo {
+    height: 28px;
+  }
+
+  .site-header:not(.is-solid) .brand-logo {
+    height: 36px;
+  }
+
+  .hdr-tools__panel {
+    width: min(250px, calc(100vw - 1.25rem));
+  }
+
+  .hdr-act {
+    height: 2.9rem;
+    font-size: 0.72rem;
+  }
+}
+
 @media (max-width: 400px) {
   .hdr-tools__mail {
     white-space: normal;

@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withPreloading, PreloadAllModules, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 
@@ -18,5 +18,7 @@ export const appConfig: ApplicationConfig = {
         anchorScrolling: 'disabled',
       }),
     ),
+    // Locale peruano: currency 'PEN' con symbol-narrow muestra "S/" y fechas es-PE
+    { provide: LOCALE_ID, useValue: 'es-PE' },
   ],
 };

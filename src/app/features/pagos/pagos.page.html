@@ -15,12 +15,6 @@
         <span class="topbar__sep" aria-hidden="true">/</span>
         <h1 class="topbar__title">Pagos</h1>
       </div>
-      <div class="topbar__right">
-        <span class="ingresos-chip">
-          <app-icon name="wallet" [size]="14" />
-          Ingresos · {{ overview().ingresos | currency:'PEN':'symbol-narrow':'1.0-0' }}
-        </span>
-      </div>
     </div>
 
     <!-- ── KPIs ── -->
@@ -144,7 +138,7 @@
                       [class.trow--confirmado]="pago.estado === 'CONFIRMADO'">
 
                     <!-- Monto -->
-                    <td class="td td--amount">
+                    <td class="td td--amount" data-label="Monto">
                       <span class="pg-monto">
                         {{ pago.monto | currency:'PEN':'symbol-narrow':'1.0-0' }}
                       </span>
@@ -152,35 +146,35 @@
                     </td>
 
                     <!-- Grupo -->
-                    <td class="td td--group">
+                    <td class="td td--group" data-label="Grupo / Código">
                       <span class="pg-nombre">{{ pago.nombreGrupo }}</span>
                       <span class="pg-code">{{ pago.codigo }}</span>
                     </td>
 
                     <!-- Método -->
-                    <td class="td">
+                    <td class="td" data-label="Método">
                       <span class="pg-metodo">{{ statusLabel(pago.metodoPago) }}</span>
                     </td>
 
                     <!-- Modalidad -->
-                    <td class="td">
+                    <td class="td" data-label="Modalidad">
                       <span class="pg-text" [title]="pago.modalidad">{{ pago.modalidad }}</span>
                     </td>
 
                     <!-- Encargado -->
-                    <td class="td">
+                    <td class="td" data-label="Encargado">
                       <span class="pg-text" [title]="pago.responsableNombre">{{ pago.responsableNombre }}</span>
                     </td>
 
                     <!-- Estado -->
-                    <td class="td td--center">
+                    <td class="td td--center" data-label="Estado">
                       <app-badge [tone]="statusTone(pago.estado)" [dot]="pago.estado === 'PENDIENTE'">
                         {{ statusLabel(pago.estado) }}
                       </app-badge>
                     </td>
 
                     <!-- Acciones -->
-                    <td class="td td--actions">
+                    <td class="td td--actions" data-label="Acciones">
                       <app-button variant="outline" size="sm" icon="eye"
                                   (clicked)="viewComprobante(pago)">Ver</app-button>
                       @if (pago.estado === 'PENDIENTE') {

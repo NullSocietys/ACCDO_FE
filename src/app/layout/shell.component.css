@@ -1,10 +1,10 @@
-/* Shell — Minimalism & Swiss Style · Caporales
+﻿/* Shell â€” Minimalism & Swiss Style Â· Caporales
    Clean grid, hairlines, essential type. Single gold accent.
    No shadows, gradients, or decorative chrome. */
 
 /* Tokens dark para componentes compartidos montados desde el shell
    (app-modal de perfil, app-confirm-dialog): sin esto caen al fallback
-   blanco (#fff) porque las páginas definen estos tokens en su propio :host. */
+   blanco (#fff) porque las pÃ¡ginas definen estos tokens en su propio :host. */
 :host {
   --color-background:       #1a1816;
   --color-foreground:       #e7e5e4;
@@ -34,7 +34,7 @@
   grid-template-columns: var(--sidebar-collapsed) minmax(0, 1fr);
 }
 
-/* —— Sidebar —— */
+/* â€”â€” Sidebar â€”â€” */
 .sidebar {
   --sb-ink: #0c0a09;
   --sb-paper: #141312;
@@ -58,7 +58,7 @@
   box-shadow: none;
 }
 
-/* Brand — asymmetric Swiss block */
+/* Brand â€” asymmetric Swiss block */
 .brand {
   display: grid;
   grid-template-columns: calc(var(--sb-unit) * 5) minmax(0, 1fr) auto;
@@ -116,7 +116,7 @@
   gap: 3px;
 }
 
-/* Nav — folio indices, generous but functional */
+/* Nav â€” folio indices, generous but functional */
 .nav {
   display: flex;
   flex-direction: column;
@@ -215,7 +215,7 @@
   font-weight: 700;
 }
 
-/* Footer — quiet, essential */
+/* Footer â€” quiet, essential */
 .sidebar-footer {
   margin: 0;
   padding: calc(var(--sb-unit) * 2) calc(var(--sb-unit) * 2.5);
@@ -305,7 +305,7 @@
   text-overflow: ellipsis;
 }
 
-/* —— Modal de perfil —— */
+/* â€”â€” Modal de perfil â€”â€” */
 .perfil-card {
   display: flex;
   align-items: center;
@@ -367,14 +367,14 @@
   color: #fbbf24;
 }
 
-/* —— Main companion —— */
+/* â€”â€” Main companion â€”â€” */
 .main {
   min-width: 0;
   display: flex;
   flex-direction: column;
   height: 100dvh;
   overflow: hidden;
-  /* Fondo oscuro para que coincida con todas las páginas del panel admin */
+  /* Fondo oscuro para que coincida con todas las pÃ¡ginas del panel admin */
   background: #1a1816;
 }
 
@@ -508,6 +508,15 @@
   display: none;
 }
 
+/* Botones de menÃº mÃ³vil: ocultos en desktop (â‰¤900px los activa la media query) */
+.mobile-menu-btn {
+  display: none;
+}
+
+.sidebar-close {
+  display: none;
+}
+
 .shell.collapsed .brand {
   grid-template-columns: 1fr;
   gap: 16px;
@@ -570,6 +579,58 @@
     grid-template-columns: 1fr;
   }
 
+  /* BotÃ³n hamburguesa: vive en una franja propia (no flota sobre contenido).
+     El .content reserva el alto de esa franja con padding-top. */
+  /* El hamburguesa vive alineado con el tÃ­tulo (misma franja, a la izquierda):
+     el contenido solo lo esquiva por la izquierda con padding-inline. */
+  .mobile-menu-btn {
+    position: fixed;
+    top: 14px;
+    left: 12px;
+    z-index: 38;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    border-radius: 10px;
+    background: rgba(16, 14, 12, 0.92);
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  }
+
+  .mobile-menu-btn .bar {
+    width: 18px;
+    height: 1.5px;
+    background: var(--gold-primary, #fbbf24);
+    border-radius: 1px;
+  }
+
+  .mobile-menu-btn:active {
+    transform: scale(0.94);
+  }
+
+  /* BotÃ³n X dentro del sidebar (visible solo con el panel abierto) */
+  .sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--stone-muted, #a8a29e);
+    cursor: pointer;
+  }
+
   .sidebar {
     position: fixed;
     left: 0;
@@ -596,6 +657,8 @@
   }
 
   .content {
+    /* Sin franja superior: el hamburguesa comparte la fila del tÃ­tulo.
+       El topbar de cada mÃ³dulo esquiva el botÃ³n por la izquierda. */
     padding: 1rem var(--content-gutter) 2rem;
   }
 

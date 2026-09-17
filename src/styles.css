@@ -653,3 +653,290 @@ img {
     flex: none;
   }
 }
+
+/* Móvil (≤900px): el shell reserva una franja superior para el botón
+   hamburguesa del sidebar. Los módulos admin extienden su fondo con
+   margin-top negativo cancelando el padding del shell; aquí se
+   neutraliza solo el margin-top para que nada quede bajo el botón.
+   Margin laterales/inferior se conservan (el efecto full-bleed sigue). */
+@media (max-width: 900px) {
+  .content .route-view > * {
+    margin-top: 0 !important;
+  }
+}
+
+/* Móvil (≤700px): el botón principal de cada topbar ("Nuevo usuario",
+   "Nuevo evento", etc.) queda ARRIBA, al costado del título — compacto,
+   solo ícono, mismo eje que el breadcrumb. */
+@media (max-width: 700px) {
+  .content .topbar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.6rem;
+    /* El :host del módulo anula el padding lateral del content con
+       margins negativos: el topbar recupera su respiro para no
+       cortarse en los bordes del viewport. */
+    padding-inline: 14px !important;
+  }
+
+  /* El breadcrumb arranca después del botón hamburguesa fijo:
+     nunca queda debajo ni detrás de él. */
+  .content .topbar__left {
+    padding-left: 60px;
+    min-width: 0;
+  }
+
+  .content .topbar__left .topbar__title {
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+
+  /* El botón (+) comparte la fila del título, pegado a la derecha */
+  .content .topbar__right {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .content .topbar__right {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .content .topbar__right app-button button,
+  .content .topbar__right button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+
+  .content .topbar__right app-button button app-icon {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .content .topbar__right app-button button app-icon svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  /* ── Reportes: el grupo de exportación no cabe en la fila del título.
+     El topbar pasa a columna: breadcrumb arriba, exportación debajo
+     a full width (el select y el botón reparten el espacio). ── */
+  .content .pg-rep .topbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.6rem;
+  }
+
+  .content .pg-rep .topbar__left {
+    padding-left: 60px;
+  }
+
+  .content .pg-rep .export-group {
+    display: flex !important;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .content .pg-rep .export-group .sel {
+    flex: 1;
+    width: auto !important;
+    min-width: 0;
+  }
+
+  .content .pg-rep .export-group app-button button {
+    height: 34px !important;
+    padding: 0 12px !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+
+  .content .pg-rep .export-group app-button button app-icon {
+    display: flex !important;
+  }
+
+  .content .pg-rep .export-group app-button button app-icon svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+}
+/* Móvil (≤700px): las tablas de Usuarios, Eventos, Inscripciones y Pagos
+   se muestran como listas de cards. Cada td se apila con su etiqueta
+   (data-label) al lado izquierdo. En PC (>=701px) todo intacto. */
+@media (max-width: 700px) {
+  .content .tbl thead {
+    display: none !important;
+  }
+
+  .content .tbl,
+  .content .tbl tbody,
+  .content .tbl .trow,
+  .content .tbl tr {
+    display: block !important;
+    height: auto !important;
+  }
+
+  .content .tbl .trow {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-bottom: 0.9rem;
+    padding: 1rem 1.05rem !important;
+    border: 1px solid rgba(212, 175, 55, 0.16);
+    border-left: 2px solid rgba(212, 175, 55, 0.35);
+    border-radius: 12px;
+    background: var(--color-card, #211f1d);
+  }
+
+  .content .tbl .trow:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Aire entre el header del card listado y la primera card,
+     y espacio mínimo del bloque completo. */
+  .content .tbl tbody {
+    display: block !important;
+    padding: 0.9rem 0.25rem 0.25rem;
+  }
+
+  .content .tbl td {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0 0 !important;
+    border-bottom: none !important;
+    min-height: 30px;
+  }
+
+  /* Separadores sutiles entre campos de la card */
+  .content .tbl td + td {
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding-top: 0.5rem !important;
+  }
+
+  .content .tbl td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--stone-500, #78716c);
+    max-width: 40%;
+  }
+
+  /* Celdas sin etiqueta (#/acciones): contenido a la derecha igual */
+  .content .tbl td.td--n::before,
+  .content .tbl td.td--actions::before {
+    display: none;
+  }
+
+  .content .tbl td.td--actions {
+    justify-content: flex-end;
+  }
+
+  .content .tbl td.td--n {
+    display: none !important;
+  }
+
+  .content .tbl .trow {
+    position: relative;
+  }
+
+  /* Anchos forzados por los grids de cada módulo: liberados en móvil */
+  .content .tbl .trow td,
+  .content .tbl td.td {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* La tabla nunca empuja más allá del viewport (min-width de módulo) */
+  .content .tbl {
+    min-width: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    flex: none !important;
+  }
+
+  .content .tbl .trow {
+    height: auto !important;
+  }
+
+  /* Los wraps de tabla recortan el scroll vertical en desktop: liberados */
+  .content .table-wrap {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .content .table-card {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* La RAÍZ de cada módulo (pg-*) recorta con overflow:hidden su contenido
+     para el layout de escritorio: en móvil liberamos el flujo para que la
+     página entera haga scroll. */
+  .content > * > *,
+  .content .route-view > * > *,
+  .content .pg-eventos,
+  .content .pg-usuarios,
+  .content .pg-insc,
+  .content .pg-inscripciones,
+  .content .pg-pagos,
+  .content .pg-participantes,
+  .content .pg-rep,
+  .content .pg-evt {
+    overflow: visible !important;
+    min-height: auto !important;
+  }
+
+  /* Wizard de inscripción: página completa con scroll de la página entera,
+     sin límite de ancho interno y con respiros compactos. */
+  /* Encabezados de módulos (no-topbar) también esquivan el hamburguesa */
+  .content .wiz-header {
+    padding-left: 62px !important;
+  }
+
+  .content app-inscripcion-wizard-page .wiz-page {
+    overflow: visible !important;
+    min-height: auto !important;
+    max-width: none !important;
+    padding: 0.9rem 0.85rem 1.2rem !important;
+    gap: var(--sp-4, 16px);
+  }
+
+  .content .tbl tbody {
+    height: auto !important;
+  }
+
+  /* El rango de paginación duplica el "1–1 de 1" del header: oculto en móvil */
+  .content app-pagination ::ng-deep .pager__range,
+  .content .pager__range {
+    display: none !important;
+  }
+
+  /* Los td traen fondo propio de la tabla: dentro de la card es transparente */
+  .content .tbl .trow td {
+    background: transparent !important;
+  }
+
+  /* Inners flex de módulos (td--account__inner) fluyen al ancho completo */
+  .content .tbl td > *,
+  .content .tbl td .td--account__inner {
+    max-width: 100%;
+  }
+}

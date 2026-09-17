@@ -181,14 +181,14 @@
                       [class.trow--cancelado]="evento.estado === 'CANCELADO' && evento.activo">
 
                     <!-- Fecha -->
-                    <td class="td td--date" aria-hidden="true">
+                    <td class="td td--date" data-label="Fecha" aria-hidden="true">
                       <span class="ev-day">{{ dayOf(evento.fecha) }}</span>
                       <span class="ev-mon">{{ monthOf(evento.fecha) }}</span>
                       <span class="ev-yr">{{ yearOf(evento.fecha) }}</span>
                     </td>
 
                     <!-- Evento -->
-                    <td class="td td--name">
+                    <td class="td td--name" data-label="Evento">
                       <span class="ev-name">{{ evento.nombre }}</span>
                       @if (evento.descripcion) {
                         <span class="ev-desc">{{ evento.descripcion }}</span>
@@ -196,29 +196,29 @@
                     </td>
 
                     <!-- Sede -->
-                    <td class="td td--sede">
+                    <td class="td td--sede" data-label="Sede">
                       <span class="ev-sede" [title]="evento.lugar">{{ evento.lugar }}</span>
                     </td>
 
                     <!-- Hora -->
-                    <td class="td td--center">
+                    <td class="td td--center" data-label="Hora">
                       <span class="ev-time">{{ evento.hora }}</span>
                     </td>
 
                     <!-- Grupos -->
-                    <td class="td td--center">
+                    <td class="td td--center" data-label="Grupos">
                       <span class="ev-grupos">{{ gruposDe(evento.id) }}</span>
                     </td>
 
                     <!-- Estado -->
-                    <td class="td td--center">
+                    <td class="td td--center" data-label="Estado">
                       <app-badge [tone]="statusTone(evento.estado)" [dot]="false">
                         {{ statusLabel(evento.estado) }}
                       </app-badge>
                     </td>
 
                     <!-- Acciones -->
-                    <td class="td td--actions">
+                    <td class="td td--actions" data-label="Acciones">
                       @if (evento.activo) {
                         <app-button
                           variant="outline"

@@ -335,6 +335,16 @@ button:focus-visible {
   filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.45));
 }
 
+/* Fila logo+slogan del hero: SOLO visible en m�vil (media query 767px).
+   En desktop la marca usa el escudo grande de .hero-media a la izquierda. */
+.hero-brand-row {
+  display: none;
+}
+
+.hero-brand-mark {
+  display: none;
+}
+
 .hero-brand-text {
   font-family: var(--font-body);
   font-size: clamp(1.15rem, 2.2vw, 1.65rem);
@@ -1268,6 +1278,23 @@ button:focus-visible {
   opacity: 0;
 }
 
+/* En pantallas t?ctiles no hay "mouse fuera": el tap dispara :hover y
+   deja la foto a tope con las letras blancas ilegibles. El velo oscuro
+   permanece fijo en touch para que el texto siempre contraste. */
+@media (hover: none), (pointer: coarse) {
+  .rate-item:hover .rate-item__bg {
+    opacity: 0.3;
+  }
+
+  .rate-item--featured:hover .rate-item__bg {
+    opacity: 0.38;
+  }
+
+  .rate-item:hover .rate-item__veil {
+    opacity: 1;
+  }
+}
+
 .rate-item__index,
 .rate-item__body,
 .rate-item__price,
@@ -1798,6 +1825,25 @@ button:focus-visible {
   .costos-foot {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
+    /* Separación real respecto a la última card de tarifa */
+    margin-top: 1.25rem;
+    padding: 0.9rem 0.9rem 1rem;
+  }
+
+  /* Botones del pie compactos: el .btn base (1rem 2rem) es gigante aquí */
+  .costos-foot__actions {
+    gap: 0.55rem;
+  }
+
+  .costos-foot__actions .btn {
+    padding: 0.62rem 1rem;
+    font-size: 0.78rem;
+    min-height: 44px;
+  }
+
+  .costos-pay__v {
+    font-size: 1rem;
   }
 
   .prog-wall {
@@ -1837,23 +1883,54 @@ button:focus-visible {
 
 /* Mobile (< 768px) */
 @media (max-width: 767px) {
+  /* Los dots del carrusel flotan en la base del hero: se reserva espacio
+     justo para ellos sin empujar demasiado los botones. */
+  .hero-overlay {
+    padding-bottom: 56px;
+  }
+
+  .carousel-dots-bottom {
+    bottom: 22px;
+  }
+
   .hero-bottom {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 1.25rem;
   }
 
   .hero-divider {
     display: none;
   }
 
+  /* El logo grande se retira del centro (tapa las caras de las fotos).
+     El escudo pasa a acompa�ar el slogan arriba, compacto. */
   .hero-content-grid {
     grid-template-columns: 1fr;
     text-align: center;
+    gap: 0.75rem;
   }
 
-  .hero-logo {
-    width: clamp(140px, 38vw, 180px);
+  .hero-media {
+    display: none;
   }
+
+  .hero-brand-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-align: left;
+    line-height: 1.1;
+  }
+
+  .hero-brand-mark {
+    display: block;
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+  }
+
 
   .prog-media {
     min-height: 380px;
@@ -1915,6 +1992,12 @@ button:focus-visible {
     pointer-events: none; /* Evitar arrastrar la imagen */
   }
 
+  /* Fotos 1, 2, 6 y 7 de la galeria: la card movil de 260px muestra una
+     franja horizontal de la foto; anclar el recorte arriba para que se
+     vean los rostros y no solo el tronco. */
+  .prog-shot--faces img {
+    object-position: center 18%;
+  }
   /* Controles del carrusel móvil */
   .prog-wall-controls {
     display: flex;
@@ -1993,10 +2076,48 @@ button:focus-visible {
   }
 
   .rate-item--featured {
-    flex-wrap: wrap;
+    /* Pasar de fila ?nica [index|body|price|awards] a layout apilado:
+       nada se aprieta en 320px y el premio tiene su propia l?nea. */
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "ribbon ribbon ribbon"
+      "index  body   price"
+      "awards awards awards";
+    align-items: center;
+    row-gap: 0.7rem;
+    /* La cinta ahora vive en la primera fila: sin padding-top extra */
+    padding-top: 0.9rem;
+  }
+
+  .rate-item--featured .rate-item__index {
+    grid-area: index;
+  }
+
+  .rate-item--featured .rate-item__body {
+    grid-area: body;
+  }
+
+  .rate-item--featured .rate-item__price {
+    grid-area: price;
+  }
+
+  .rate-item--featured .rate-item__ribbon {
+    grid-area: ribbon;
+    justify-self: start;
+  }
+
+  /* La cinta pasa a flujo normal en m?vil (nada de solapes) */
+  .rate-item--featured .rate-item__ribbon {
+    position: static;
+    transform: none;
+    display: inline-flex;
+    width: fit-content;
+    border-radius: 0 0 8px 8px;
   }
 
   .rate-item__awards {
+    grid-area: awards;
     flex-direction: row;
     align-items: baseline;
     gap: 0.5rem;
@@ -2005,6 +2126,55 @@ button:focus-visible {
     padding-top: 0.7rem;
     border-left: none;
     border-top: 1px dashed rgba(212, 175, 55, 0.45);
+  }
+
+  /* Cards normales: en pantallas muy chicas el precio ganaba espacio
+     sobre el nombre ? el n?mero sale debajo del texto (sin pisarse). */
+  .rate-item {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 0.55rem;
+    min-height: 84px;
+    padding: 0.8rem 0.75rem 0.8rem 0.7rem;
+  }
+
+  .rate-item__index {
+    width: 26px;
+    height: 26px;
+    font-size: 0.6rem;
+  }
+
+  .rate-item__body {
+    min-width: 0;
+  }
+
+  .rate-item__name {
+    font-size: 0.84rem;
+    line-height: 1.3;
+  }
+
+  .rate-item__meta {
+    font-size: 0.66rem;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .rate-item__price {
+    min-width: 0;
+  }
+
+  .rate-item__amount {
+    font-size: 1.3rem;
+  }
+
+  .rate-item--featured .rate-item__amount {
+    font-size: 1.5rem;
+  }
+
+  .rate-item__index--big {
+    display: none;
   }
 
   .costos-foot__actions {
@@ -2308,22 +2478,22 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.8rem;
-  padding: 1.5rem 1.4rem;
+  gap: 0.5rem;
+  padding: 1rem 1.1rem;
 }
 
 .times--col .time-lead__label {
-  font-size: 0.72rem;
+  font-size: 0.66rem;
 }
 
 .times--col .time-lead__val {
   text-align: left;
-  font-size: clamp(2.2rem, 3vw, 2.7rem);
+  font-size: clamp(1.35rem, 2.4vw, 1.7rem);
   white-space: nowrap;
 }
 
 .times--col .time-lead__scale {
-  height: 8px;
+  height: 6px;
 }
 
 .times--col .time-lead__chip,
@@ -2774,8 +2944,21 @@ button:focus-visible {
 }
 
 .time-lead__base {
+  /* Mismo estilo chip que __chip: todas las filas de tiempo lucen igual
+     independientemente de si su pie es nota o "+45s". */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  align-self: flex-start;
+  padding: 0.3rem 0.7rem;
+  font-family: var(--font-display);
   font-size: 0.72rem;
-  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--gold-light);
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 999px;
   position: relative;
   z-index: 2;
 }
@@ -4334,8 +4517,32 @@ button:focus-visible {
   .info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .cost-grid,
-  .criteria-grid,
-  .prize-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .criteria-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* Premios: 1 card por fila desde tablet-chica � las 3 casillas de
+     puesto caben c�modas y nada se corta. */
+  .premios-block .prize-grid,
+  .prize-grid { grid-template-columns: 1fr; }
+
+  .prize-card {
+    padding: 0.85rem 0.95rem;
+  }
+
+  .prize-card__name {
+    font-size: 0.95rem;
+  }
+
+  .prize-places {
+    gap: 0.45rem;
+  }
+
+  .prize-place {
+    padding: 0.55rem 0.4rem;
+  }
+
+  .prize-place__val {
+    font-size: 0.95rem;
+  }
 
   .time-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
@@ -4470,5 +4677,16 @@ button:focus-visible {
 @media (max-width: 1023px) {
   .criteria {
     grid-template-columns: 1fr;
+  }
+}
+/* M�vil: la franja Yape + botones apilada (la regla espec�fica
+   .tarifas-block .costos-foot--inline fuerza row en desktop). */
+@media (max-width: 767px) {
+  .tarifas-block .costos-foot--inline {
+    flex-direction: column;
+    align-items: stretch;
+    /* margin-top: auto (empuja al fondo) = 0 real: sin esto la franja
+       queda apegada a la �ltima card. Necesita especificidad >= (0,2,0). */
+    margin-top: 1.25rem;
   }
 }
