@@ -730,6 +730,29 @@ img {
     height: 19px !important;
   }
 
+  /* ── Toolbars de los módulos: recupera padding lateral anulado por el
+     full-bleed del :host y los combos fluyen con el ancho disponible. ── */
+  .content .toolbar {
+    padding-inline: 14px !important;
+  }
+
+  .content .toolbar__filters {
+    flex-wrap: wrap !important;
+    width: 100%;
+  }
+
+  .content .toolbar__filters .sel {
+    width: auto !important;
+    min-width: 120px;
+    flex: 1 1 130px;
+  }
+
+  .content .toolbar__search {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
   /* ── Reportes: el grupo de exportación no cabe en la fila del título.
      El topbar pasa a columna: breadcrumb arriba, exportación debajo
      a full width (el select y el botón reparten el espacio). ── */
