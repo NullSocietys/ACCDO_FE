@@ -19,6 +19,8 @@ const emptyForm = (): Omit<Evento, 'id'> => ({
   descripcion: '',
   fecha: '',
   hora: '',
+  fechaInicioInscripcion: '',
+  fechaFinInscripcion: '',
   lugar: '',
   estado: 'ACTIVO',
   activo: true,
@@ -273,6 +275,20 @@ export class EventosPage {
       e['hora'] = 'La hora es obligatoria.';
     } else if (!/^\d{2}:\d{2}$/.test(d.hora)) {
       e['hora'] = 'Formato de hora no válido (HH:mm).';
+    }
+
+    if (d.fechaInicioInscripcion && !/^\d{4}-\d{2}-\d{2}$/.test(d.fechaInicioInscripcion)) {
+      e['fechaInicioInscripcion'] = 'Formato de fecha no válido.';
+    }
+    if (d.fechaFinInscripcion) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fechaFinInscripcion)) {
+        e['fechaFinInscripcion'] = 'Formato de fecha no válido.';
+      } else if (
+        d.fechaInicioInscripcion &&
+        d.fechaFinInscripcion < d.fechaInicioInscripcion
+      ) {
+        e['fechaFinInscripcion'] = 'La fecha fin debe ser posterior al inicio.';
+      }
     }
 
     if (!d.lugar.trim()) {

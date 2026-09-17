@@ -2,18 +2,15 @@
 
 # ═══════════════════════════════════════════════════════════════
 #  FRONTEND — Chicote de Oro (Angular 22 + Nginx)
-#  Build:  docker build --build-arg API_URL=https://api.tudominio.com -t carloscaycho/chicote-frontend ./ACCDO_FE
+#  Build:  docker build -t carloscaycho/chicote-frontend ./ACCDO_FE
 #  Run:    docker run -p 4200:80 carloscaycho/chicote-frontend
-#  API_URL se inyecta en build-time en environment.ts (scripts/generate-env.mjs).
-#  Para Vercel basta definir API_URL en el dashboard del proyecto.
+#  `npm run build` compila siempre con el entorno de producción
+#  (src/environments/environment.production.ts vía fileReplacements).
 # ═══════════════════════════════════════════════════════════════
 
 ########## Etapa 1 — build Angular ##########
 FROM node:22-alpine AS build
 WORKDIR /app
-
-ARG API_URL
-ENV API_URL=$API_URL
 
 # Cache de dependencias (requiere package-lock.json)
 COPY package.json package-lock.json ./

@@ -1,7 +1,10 @@
-import { Component, inject, OnDestroy, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 
+import { Inscripcion } from '../../core/models';
+import { AuthSessionService } from '../../core/services/auth-session.service';
 import { InscripcionApiService } from '../../core/services/api/inscripcion.api.service';
 import { PagoApiService } from '../../core/services/api/pago.api.service';
 import { ParticipanteApiService } from '../../core/services/api/participante.api.service';
@@ -39,6 +42,7 @@ export class SeguimientoPage implements OnDestroy {
   private readonly inscripcionApi = inject(InscripcionApiService);
   private readonly pagoApi = inject(PagoApiService);
   private readonly participanteApi = inject(ParticipanteApiService);
+  private readonly auth = inject(AuthSessionService);
 
   readonly codigoInput = signal('');
   readonly buscaCodigo = signal('');
@@ -47,6 +51,27 @@ export class SeguimientoPage implements OnDestroy {
   readonly data = signal<SeguimientoData | null>(null);
   /** True si se llegó desde el header de la portada (muestra "Volver al inicio"). */
   readonly desdeHeader = signal(false);
+
+  /** Lista de TODAS las inscripciones del usuario logueado: ya no depende de
+   *  que memorize cada código. */
+  readonly misInscripciones = signal<Inscripcion[]>([]);
+  readonly cargandoMis = signal(false);
+  readonly filtroMis = signal<'TODOS' | 'PENDIENTE' | 'CONFIRMADA' | 'RECHAZADA'>('TODOS');
+  readonly mostrarLista = computed(() => this.auth.isAuthenticated());
+  readonly misFiltradas = computed(() => {
+    const f = this.filtroMis();
+    const lista = this.misInscripciones();
+    return f === 'TODOS' ? lista : lista.filter((i) => i.estado === f);
+  });
+  readonly filtrosMis: ReadonlyArray<{
+    valor: 'TODOS' | 'PENDIENTE' | 'CONFIRMADA' | 'RECHAZADA';
+    label: string;
+  }> = [
+    { valor: 'TODOS', label: 'Todos' },
+    { valor: 'PENDIENTE', label: 'Pendientes' },
+    { valor: 'CONFIRMADA', label: 'Confirmadas' },
+    { valor: 'RECHAZADA', label: 'Rechazadas' },
+  ];
 
   private poll: ReturnType<typeof setInterval> | null = null;
   /** Número de reintentos de polling ya hechos (tope para no consultar por siempre). */
@@ -70,6 +95,10 @@ export class SeguimientoPage implements OnDestroy {
         this.consultar(guardado);
       }
     });
+
+    if (this.auth.isAuthenticated()) {
+      void this.cargarMisInscripciones();
+    }
   }
 
   ngOnDestroy(): void {
@@ -186,6 +215,24 @@ export class SeguimientoPage implements OnDestroy {
 
   buscar(): void {
     this.consultar();
+  }
+
+  /** Carga todas las inscripciones del usuario autenticado. */
+  private async cargarMisInscripciones(): Promise<void> {
+    this.cargandoMis.set(true);
+    try {
+      const lista = await firstValueFrom(this.inscripcionApi.misInscripciones());
+      this.misInscripciones.set(lista);
+    } catch {
+      this.misInscripciones.set([]);
+    } finally {
+      this.cargandoMis.set(false);
+    }
+  }
+
+  /** Abre el detalle de una inscripción desde la lista "Mis inscripciones". */
+  seleccionarMis(codigo: string): void {
+    this.consultar(codigo);
   }
 
   /** Motivo humano del rechazo (observaciones de pagos o de la inscripción). */

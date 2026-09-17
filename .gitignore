@@ -48,6 +48,4 @@ Thumbs.db
 .env.*
 !.env.example
 
-# Generado en build-time (lo crea scripts/generate-env.mjs desde API_URL)
-# Se mantiene versionado con el fallback localhost para `ng serve` local.
-# /src/environments/environment.ts
+.vercel

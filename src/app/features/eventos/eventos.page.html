@@ -76,6 +76,16 @@
               <span class="featured__fact-k">Integrantes</span>
               <span class="featured__fact-v">{{ integrantesDe(ev.id) }}</span>
             </div>
+            @if (ev.fechaInicioInscripcion || ev.fechaFinInscripcion) {
+              <div class="featured__fact featured__fact--full">
+                <span class="featured__fact-k">Inscripciones</span>
+                <span class="featured__fact-v">
+                  @if (ev.fechaInicioInscripcion) { {{ ev.fechaInicioInscripcion }} } @else { — }
+                  <span class="featured__fact-sep">→</span>
+                  @if (ev.fechaFinInscripcion) { {{ ev.fechaFinInscripcion }} } @else { — }
+                </span>
+              </div>
+            }
           </div>
         </div>
         <div class="featured__cta">
@@ -299,6 +309,16 @@
           <label class="mf__label" for="ev-hora">Hora <span class="mf__req">*</span></label>
           <app-input controlId="ev-hora" type="time" [value]="form().hora" [invalid]="!!errores()['hora']" (valueChange)="patch({ hora: $event })" />
           @if (errores()['hora']) { <span class="mf__error">{{ errores()['hora'] }}</span> }
+        </div>
+        <div class="mf">
+          <label class="mf__label" for="ev-fi">Inicio de inscripciones</label>
+          <app-input controlId="ev-fi" type="date" [value]="form().fechaInicioInscripcion" [invalid]="!!errores()['fechaInicioInscripcion']" (valueChange)="patch({ fechaInicioInscripcion: $event })" />
+          @if (errores()['fechaInicioInscripcion']) { <span class="mf__error">{{ errores()['fechaInicioInscripcion'] }}</span> }
+        </div>
+        <div class="mf">
+          <label class="mf__label" for="ev-ff">Fin de inscripciones</label>
+          <app-input controlId="ev-ff" type="date" [value]="form().fechaFinInscripcion" [invalid]="!!errores()['fechaFinInscripcion']" (valueChange)="patch({ fechaFinInscripcion: $event })" />
+          @if (errores()['fechaFinInscripcion']) { <span class="mf__error">{{ errores()['fechaFinInscripcion'] }}</span> }
         </div>
         <div class="mf mf--full">
           <label class="mf__label" for="ev-lugar">Sede <span class="mf__req">*</span></label>

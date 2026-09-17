@@ -160,13 +160,17 @@ export class InscripcionesPage {
     const nombre = this.nuevoNombre().trim();
     const celular = this.nuevoCelular().trim();
     if (!ins || !nombre || this.agregandoParticipante()) return;
-    if (!/^9\d{8}$/.test(celular)) {
+    // El celular es opcional: se valida solo si se ingresó.
+    if (celular && !/^9\d{8}$/.test(celular)) {
       this.toast.error('El celular debe tener 9 dígitos y empezar con 9');
       return;
     }
     this.agregandoParticipante.set(true);
     try {
-      await this.store.addParticipante(ins.id, { nombres: nombre, celular });
+      // Solo se envía el celular si fue llenado; lo demás se skipea.
+      await this.store.addParticipante(ins.id, celular
+        ? { nombres: nombre, celular }
+        : { nombres: nombre });
       this.nuevoNombre.set('');
       this.nuevoCelular.set('');
       this.toast.success('Participante agregado a la nómina');

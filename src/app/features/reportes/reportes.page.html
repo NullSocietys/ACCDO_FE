@@ -36,14 +36,14 @@
     <div class="kpis" aria-label="Resumen">
       <div class="kpi">
         <span class="kpi__label">Integrantes</span>
-        <strong class="kpi__value">{{ integrantes().length }}</strong>
+        <strong class="kpi__value">{{ overview().integrantes }}</strong>
       </div>
       <div class="kpi kpi--success">
-        <span class="kpi__label">Confirmados</span>
-        <strong class="kpi__value">{{ overview().confirmados }}</strong>
+        <span class="kpi__label">Grupos confirmados</span>
+        <strong class="kpi__value">{{ overview().confirmadas }}</strong>
       </div>
       <div class="kpi kpi--warn">
-        <span class="kpi__label">Pendientes</span>
+        <span class="kpi__label">Grupos pendientes</span>
         <strong class="kpi__value">{{ overview().pendientes }}</strong>
       </div>
       <div class="kpi kpi--gold">
@@ -195,193 +195,111 @@
       </div><!-- /table-section -->
     }
 
-    <!-- ════════ VISTA POR MODALIDADES ════════ -->
+    <!-- ════════ VISTA POR MODALIDADES (maestro-detalle) ════════ -->
     @if (vistaActual() === 'modalidades') {
-      <div class="mods-scroll">
-      <div class="section-head">
-        <h2>Reportes por modalidad</h2>
-        <span>{{ reportesModalidad().length }} modalidades en competencia</span>
-      </div>
+      <div class="mods-layout">
 
-      <div class="modalidades-container">
-        @for (reporte of seccionesPaged(); track reporte.modalidad) {
-          <article
-            class="modalidad-section"
-            [class.is-compacted]="modalidadExpandida() && modalidadExpandida() !== reporte.modalidad"
-          >
-            <!-- Encabezado de modalidad -->
-            <div class="modalidad-header">
-              <div class="modalidad-info">
-                <div class="modalidad-badge">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                    <path d="M4 22h16" />
-                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                  </svg>
-                </div>
-                <div class="modalidad-title-block">
-                  <h3 class="modalidad-name">{{ reporte.modalidad }}</h3>
-                  <p class="modalidad-subtitle">
-                    {{ reporte.totalGrupos }} {{ reporte.totalGrupos === 1 ? 'grupo' : 'grupos' }} inscrito{{ reporte.totalGrupos === 1 ? '' : 's' }} 
-                    · {{ reporte.totalParticipantes }} {{ reporte.totalParticipantes === 1 ? 'participante' : 'participantes' }}
-                  </p>
-                </div>
+        <!-- ── Maestro: lista de modalidades ── -->
+        <nav class="mods-nav" aria-label="Modalidades">
+          <div class="mods-nav__head">
+            <span class="mods-nav__title">Modalidades</span>
+            <span class="mods-nav__count">{{ reportesModalidad().length }}</span>
+          </div>
+          @for (reporte of reportesModalidad(); track reporte.modalidad) {
+            <button
+              type="button"
+              class="mods-nav__item"
+              [class.is-active]="modalidadActiva() === reporte.modalidad"
+              (click)="seleccionarModalidad(reporte.modalidad)"
+              [attr.aria-current]="modalidadActiva() === reporte.modalidad ? 'true' : null"
+            >
+              <span class="mods-nav__name">{{ reporte.modalidad }}</span>
+              <span class="mods-nav__meta">
+                {{ reporte.totalGrupos }} {{ reporte.totalGrupos === 1 ? 'grupo' : 'grupos' }}
+                · {{ reporte.totalParticipantes }} {{ reporte.totalParticipantes === 1 ? 'part.' : 'parts.' }}
+              </span>
+              <span class="mods-nav__flags" aria-hidden="true">
+                @if (reporte.confirmados > 0) {
+                  <i class="flag flag--ok">{{ reporte.confirmados }}</i>
+                }
+                @if (reporte.pendientes > 0) {
+                  <i class="flag flag--warn">{{ reporte.pendientes }}</i>
+                }
+              </span>
+            </button>
+          }
+        </nav>
+
+        <!-- ── Detalle: modalidad activa ── -->
+        @if (reporteActivo(); as activo) {
+          <section class="mods-detail">
+            <header class="mods-detail__head">
+              <div>
+                <h2 class="mods-detail__title">{{ activo.modalidad }}</h2>
+                <p class="mods-detail__sub">
+                  {{ activo.totalGrupos }} {{ activo.totalGrupos === 1 ? 'grupo' : 'grupos' }} ·
+                  {{ activo.totalParticipantes }} {{ activo.totalParticipantes === 1 ? 'participante' : 'participantes' }}
+                </p>
               </div>
-              <div class="modalidad-actions">
+              <div class="mods-detail__actions">
                 <app-button
                   variant="primary"
                   size="sm"
                   icon="download"
-                  (clicked)="exportarPdfPorModalidad(reporte)"
+                  (clicked)="exportarPdfPorModalidad(activo)"
                 >
                   Exportar PDF
                 </app-button>
-                <button
-                  class="expand-btn"
-                  type="button"
-                  [class.is-expanded]="modalidadExpandida() === reporte.modalidad"
-                  (click)="toggleModalidad(reporte.modalidad)"
-                  [attr.aria-expanded]="modalidadExpandida() === reporte.modalidad"
-                  [attr.aria-label]="modalidadExpandida() === reporte.modalidad ? 'Ocultar detalles' : 'Ver detalles'"
-                >
-                  {{ modalidadExpandida() === reporte.modalidad ? 'Ocultar' : 'Ver detalles' }}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
               </div>
-            </div>
+            </header>
 
-            <!-- Estadísticas resumidas -->
-            <div class="stats-grid">
-              <div class="stat-box stat-box--primary">
-                <div class="stat-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                </div>
-                <div class="stat-content">
-                  <div class="stat-label">Total Participantes</div>
-                  <div class="stat-number">{{ reporte.totalParticipantes }}</div>
-                  <div class="stat-detail">{{ reporte.totalGrupos }} {{ reporte.totalGrupos === 1 ? 'grupo' : 'grupos' }}</div>
-                </div>
+            <!-- Resumen -->
+            <div class="mods-detail__stats">
+              <div class="stat-box">
+                <span class="stat-label">Participantes</span>
+                <strong class="stat-number">{{ activo.totalParticipantes }}</strong>
               </div>
-
               <div class="stat-box stat-box--success">
-                <div class="stat-icon stat-icon--success">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-                <div class="stat-content">
-                  <div class="stat-label">Confirmados</div>
-                  <div class="stat-number stat-number--success">{{ reporte.confirmados }}</div>
-                  <div class="stat-detail">
-                    {{ reporte.confirmados > 0 ? ((reporte.confirmados / reporte.totalParticipantes) * 100).toFixed(0) : 0 }}% del total
-                  </div>
-                </div>
+                <span class="stat-label">Grupos confirmados</span>
+                <strong class="stat-number">{{ activo.confirmados }}</strong>
               </div>
-
               <div class="stat-box stat-box--warning">
-                <div class="stat-icon stat-icon--warning">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                </div>
-                <div class="stat-content">
-                  <div class="stat-label">Pendientes</div>
-                  <div class="stat-number stat-number--warning">{{ reporte.pendientes }}</div>
-                  <div class="stat-detail">
-                    {{ reporte.pendientes > 0 ? ((reporte.pendientes / reporte.totalParticipantes) * 100).toFixed(0) : 0 }}% del total
-                  </div>
-                </div>
+                <span class="stat-label">Grupos pendientes</span>
+                <strong class="stat-number">{{ activo.pendientes }}</strong>
               </div>
-
               <div class="stat-box stat-box--info">
-                <div class="stat-icon stat-icon--info">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                </div>
-                <div class="stat-content">
-                  <div class="stat-label">Grupos</div>
-                  <div class="stat-number stat-number--info">{{ reporte.totalGrupos }}</div>
-                  <div class="stat-detail">inscritos en la modalidad</div>
-                </div>
+                <span class="stat-label">Grupos</span>
+                <strong class="stat-number">{{ activo.totalGrupos }}</strong>
               </div>
             </div>
 
-            <!-- Lista de participantes expandible -->
-            @if (modalidadExpandida() === reporte.modalidad) {
-              <div class="participants-section">
-                <div class="participants-header">
-                  <h4>Listado de participantes</h4>
-                  <span class="participants-count">{{ reporte.participantes.length }} registrados</span>
-                </div>
-
-                <div class="participants-list">
-                  @for (participante of expandedPaged(); track participante.id; let index = $index) {
-                    <div class="participant-row">
-                      <div class="participant-number">{{ index + 1 }}</div>
-                      <div class="participant-avatar">
-                        {{ participante.iniciales }}
-                      </div>
-                      <div class="participant-info">
-                        <div class="participant-name">{{ participante.nombre }}</div>
-                        <div class="participant-meta">
-                          <span class="meta-item meta-item--dni">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-                            </svg>
-                            {{ participante.celular }}
-                          </span>
-                        </div>
-                      </div>
-                      <div class="participant-group">
-                        <div class="group-name">{{ participante.grupo }}</div>
-                        <div class="group-code">{{ participante.codigo }}</div>
-                      </div>
-                      <div class="participant-status">
-                        <app-badge [tone]="statusTone(participante.estado)" [dot]="true">
-                          {{ statusLabel(participante.estado) }}
-                        </app-badge>
-                      </div>
+            <!-- Grupos con sus participantes: todo visible -->
+            <div class="mods-groups">
+              @for (grupo of gruposActivos(); track grupo.codigo) {
+                <div class="mods-group">
+                  <div class="mods-group__head">
+                    <h4 class="mods-group__name">{{ grupo.nombre }}</h4>
+                    <span class="mods-group__meta">
+                      {{ grupo.participantes.length }} {{ grupo.participantes.length === 1 ? 'integrante' : 'integrantes' }}
+                      · código <b>{{ grupo.codigo }}</b>
+                    </span>
+                  </div>
+                  @for (participante of grupo.participantes; track participante.id) {
+                    <div class="mods-person">
+                      <span class="mods-person__avatar" aria-hidden="true">{{ participante.iniciales }}</span>
+                      <span class="mods-person__name">{{ participante.nombre }}</span>
+                      <span class="mods-person__cel mono">{{ participante.celular }}</span>
+                      <app-badge class="mods-person__status" [tone]="statusTone(participante.estado)" [dot]="true">
+                        {{ statusLabel(participante.estado) }}
+                      </app-badge>
                     </div>
                   }
                 </div>
-
-                <app-pagination
-                  [total]="reporte.participantes.length"
-                  [pageSize]="modalidadPageSize"
-                  [page]="modalidadPage()"
-                  ariaLabel="Paginación de participantes por modalidad"
-                  (pageChange)="modalidadPage.set($event)"
-                />
-              </div>
-            }
-          </article>
+              }
+            </div>
+          </section>
         }
-      </div>
-
-      <app-pagination
-        class="mods-pager"
-        [total]="reportesModalidad().length"
-        [pageSize]="seccionesPageSize"
-        [page]="seccionesPage()"
-        ariaLabel="Paginación de modalidades"
-        (pageChange)="seccionesPage.set($event)"
-      />
-      </div><!-- /mods-scroll -->
+      </div><!-- /mods-layout -->
     }
   }
   }

@@ -118,7 +118,7 @@ export const CONTENIDO_LANDING = {
         nombre: 'Macho Caporal',
         detalle: 'Individual · 2–3 min en escena',
         precio: '70',
-        foto: 'fotos/unipersonal/unipersonal-M.png',
+        foto: 'fotos/unipersonal/unipersonal-M.webp',
       },
       {
         numero: '02',
@@ -126,7 +126,7 @@ export const CONTENIDO_LANDING = {
         nombre: 'Caporalita de Oro',
         detalle: 'Individual · 2–3 min en escena',
         precio: '70',
-        foto: 'fotos/unipersonal/unipersonal-V1.png',
+        foto: 'fotos/unipersonal/unipersonal-V1.webp',
       },
       {
         numero: '03',
@@ -134,7 +134,7 @@ export const CONTENIDO_LANDING = {
         nombre: 'Libre',
         detalle: '2 bailarines · 3 min + 45 s entrada',
         precio: '80',
-        foto: 'fotos/parejas/pareja1.png',
+        foto: 'fotos/parejas/pareja1.webp',
       },
       {
         numero: '04',
@@ -142,7 +142,7 @@ export const CONTENIDO_LANDING = {
         nombre: 'Machos y Caporalitas',
         detalle: '2 bailarines · 3 min + 45 s entrada',
         precio: '80',
-        foto: 'fotos/parejas/pareja3.png',
+        foto: 'fotos/parejas/pareja3.webp',
       },
       {
         numero: '05',
@@ -150,7 +150,7 @@ export const CONTENIDO_LANDING = {
         nombre: 'Machos y Caporalitas',
         detalle: 'Grupo · 5 min + 45 s entrada',
         precio: '100',
-        foto: 'fotos/ballets/ballet2.png',
+        foto: 'fotos/ballets/ballet2.webp',
       },
       {
         numero: '06',
@@ -158,7 +158,7 @@ export const CONTENIDO_LANDING = {
         nombre: 'Ballet — 5 min en escena',
         detalle: '5 min + 45 s entrada · Trofeo + diploma',
         precio: '170',
-        foto: 'fotos/ballets/ballet4.png',
+        foto: 'fotos/ballets/ballet4.webp',
         destacada: true,
         cinta: 'La gran apuesta',
         premioMayor: 'S/ 2,500',

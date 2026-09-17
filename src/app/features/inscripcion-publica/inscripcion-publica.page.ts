@@ -341,15 +341,22 @@ export class InscripcionPublicaPage implements OnInit {
     return e;
   });
 
+  /** Filas que realmente se envían al backend: las que tienen al menos
+   *  un dato (nombre o celular). Las totalmente vacías se skipean. */
+  readonly nominaEnviar = computed(() =>
+    this.participantes().filter((p) => p.nombres.trim().length >= 2 || p.celular.trim().length > 0),
+  );
+
   readonly participanteErrores = computed<Errores[]>(() => {
     const list = this.participantes();
-    return list.map((p) => {
+    return list.map((p, i) => {
       const e: Errores = {};
       if (this.intento() !== 3) return e;
+      // Fila totalmente vacía = skipeada: se descarta al enviar, sin error.
+      if (!p.nombres.trim() && !p.celular.trim()) return e;
       if (p.nombres.trim().length < 2) e['nombres'] = 'Obligatorio (mínimo 2 caracteres).';
-      if (!p.celular.trim()) {
-        e['celular'] = 'El celular es obligatorio (9 dígitos, empieza con 9).';
-      } else if (!this.telRe.test(p.celular)) {
+      // El celular es opcional: solo se valida si se ingresó.
+      if (p.celular.trim() && !this.telRe.test(p.celular)) {
         e['celular'] = 'Debe tener 9 dígitos y empezar con 9.';
       }
       return e;
@@ -360,19 +367,20 @@ export class InscripcionPublicaPage implements OnInit {
     if (this.intento() !== 3) return '';
     const min = this.minIntegrantes();
     const max = this.maxIntegrantes();
-    const n = this.participantes().length;
+    // Solo cuentan las filas con datos (las vacías se skipean al enviar).
+    const n = this.nominaEnviar().length;
     if (n < min || n > max) {
       if (min === max) {
         return `Esta modalidad requiere exactamente ${min} ${min === 1 ? 'integrante' : 'integrantes'} (tienes ${n}).`;
       }
       return `Esta modalidad requiere entre ${min} y ${max} integrantes (tienes ${n}).`;
     }
-    // La nómina es obligatoria: cada fila debe estar completa.
-    const incompleta = this.participantes().some(
-      (p) => p.nombres.trim().length < 2 || !this.telRe.test(p.celular.trim()),
+    // Cada fila enviada necesita nombre; el celular es opcional.
+    const incompleta = this.nominaEnviar().some(
+      (p) => p.nombres.trim().length < 2 || (p.celular.trim() && !this.telRe.test(p.celular.trim())),
     );
     if (incompleta) {
-      return 'Completa el nombre y celular de cada participante para continuar.';
+      return 'Completa el nombre de cada participante para continuar (el celular es opcional).';
     }
     return '';
   });
@@ -434,14 +442,11 @@ export class InscripcionPublicaPage implements OnInit {
           // "Necesitas una sesión activa" (usuarioId vacío tras recargar).
           void this.bootstrapSesion();
         },
-        error: (err) => {
-          if (/no encontrada|no encontramos/i.test((err as Error).message)) {
-            this.descartarRegistroGuardado();
-          } else {
-            // Backend caído u otro error: conservar la pantalla guardada.
-            this.restaurarExito(codigo);
-            void this.bootstrapSesion();
-          }
+        error: () => {
+          // El backend no confirmó la inscripción (borrada, 404, BD caída,
+          // sin red, etc.). No mostramos datos en caché: limpiamos el registro
+          // guardado y volvemos al formulario en vez de un "Confirmada" fantasma.
+          this.descartarRegistroGuardado();
         },
       });
       return;
@@ -948,14 +953,14 @@ export class InscripcionPublicaPage implements OnInit {
     this.contactoSincronizado = true;
   }
 
-  /** La nómina está completa: toda fila válida y cantidad dentro del rango. */
+  /** La nómina está completa: las filas enviadas (skipeando las vacías)
+   *  válidas y la cantidad dentro del rango de la modalidad. */
   readonly nominaCompleta = computed(() => {
-    const lista = this.participantes();
-    if (lista.length === 0) return false;
+    const lista = this.nominaEnviar();
     const enRango =
       lista.length >= this.minIntegrantes() && lista.length <= this.maxIntegrantes();
     const todasValidas = lista.every(
-      (p) => p.nombres.trim().length >= 2 && this.telRe.test(p.celular.trim()),
+      (p) => p.nombres.trim().length >= 2 && (!p.celular.trim() || this.telRe.test(p.celular.trim())),
     );
     return enRango && todasValidas;
   });
@@ -976,9 +981,9 @@ export class InscripcionPublicaPage implements OnInit {
           eventoId: g.eventoId,
           categoriaId: cat.id,
           observaciones: '',
-          participantes: this.participantes().map((p) => ({
+          participantes: this.nominaEnviar().map((p) => ({
             nombres: p.nombres.trim(),
-            celular: p.celular.trim(),
+            ...(p.celular.trim() ? { celular: p.celular.trim() } : {}),
           })),
         }),
       );
@@ -1106,11 +1111,11 @@ export class InscripcionPublicaPage implements OnInit {
             .crear({
             eventoId: g.eventoId,
             categoriaId: categoria.id,
-            cantidadParticipantes: this.participantes().length,
+            cantidadParticipantes: this.nominaEnviar().length,
             observaciones: '',
-            participantes: this.participantes().map((p) => ({
+            participantes: this.nominaEnviar().map((p) => ({
               nombres: p.nombres.trim(),
-              celular: p.celular.trim(),
+              ...(p.celular.trim() ? { celular: p.celular.trim() } : {}),
             })),
           })
           .subscribe({ next: resolve, error: reject }),
@@ -1516,7 +1521,7 @@ export class InscripcionPublicaPage implements OnInit {
         metodoPago: 'YAPE',
         numeroOperacion: this.numeroOperacion() || '—',
         monto: `S/ ${this.monto().toFixed(2)}`,
-        integrantes: this.participantes().map((p) => ({
+        integrantes: this.nominaEnviar().map((p) => ({
           nombres: p.nombres.trim(),
           celular: p.celular.trim(),
         })),

@@ -11,6 +11,10 @@ export interface Evento {
   fecha: string;
   /** HH:mm */
   hora: string;
+  /** ISO YYYY-MM-DD — inicio de inscripciones */
+  fechaInicioInscripcion: string;
+  /** ISO YYYY-MM-DD — fin de inscripciones */
+  fechaFinInscripcion: string;
   lugar: string;
   estado: EventoEstado;
   activo: boolean;

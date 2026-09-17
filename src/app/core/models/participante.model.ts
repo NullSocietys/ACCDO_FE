@@ -7,8 +7,8 @@ export interface Participante {
   inscripcionId: string;
   /** Nombre completo del integrante */
   nombres: string;
-  /** Celular (9 dígitos, empieza con 9) */
-  celular: string;
+  /** Celular opcional (9 dígitos, empieza con 9); puede venir null del API */
+  celular: string | null;
   /** @deprecated Campos legacy; pueden venir null desde el API */
   apellidos?: string | null;
   dni?: string | null;
@@ -21,7 +21,8 @@ export interface Participante {
 /** POST /api/inscripciones/{inscripcionId}/participantes · anidado en InscripcionRequest */
 export interface ParticipanteRequest {
   nombres: string;
-  celular: string;
+  /** Opcional: se omite si va vacío (permitir skipear datos). */
+  celular?: string;
 }
 
 export interface ParticipanteView extends Participante {

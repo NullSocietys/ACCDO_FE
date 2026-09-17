@@ -498,7 +498,145 @@
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 18px;
-}.ipo-footer {
+}
+
+/* ============ MIS INSCRIPCIONES ============ */
+.ipo-mis { margin-bottom: 18px; }
+
+.ipo-mis-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.ipo-mis-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ipo-mis-filtros {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ipo-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted, #d3d3d3);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.ipo-chip:hover {
+  border-color: rgba(212, 175, 55, 0.5);
+  color: #fff;
+}
+
+.ipo-chip.is-active {
+  background: linear-gradient(135deg, var(--gold-light, #fbe8a6), var(--gold-primary, #d4af37));
+  color: #1a1502;
+  border-color: transparent;
+}
+
+.ipo-mis-loading {
+  padding: 10px 0;
+}
+
+.ipo-mis-empty {
+  margin: 0;
+  color: var(--text-muted, #d3d3d3);
+  font-size: 14px;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.ipo-mis-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.ipo-mis-item { margin: 0; }
+
+.ipo-mis-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.ipo-mis-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.ipo-mis-item.is-active .ipo-mis-btn {
+  border-color: var(--gold-primary, #d4af37);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.ipo-mis-codigo {
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 96px;
+}
+
+.ipo-mis-grupo {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ipo-mis-estado {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.ipo-mis-estado--pendiente {
+  background: rgba(212, 175, 55, 0.14);
+  color: var(--gold-primary, #d4af37);
+}
+
+.ipo-mis-estado--confirmada {
+  background: rgba(76, 200, 120, 0.14);
+  color: #4cc878;
+}
+
+.ipo-mis-estado--rechazada {
+  background: rgba(224, 100, 100, 0.14);
+  color: #e06464;
+}
+
+.ipo-footer {
   flex-shrink: 0;
   text-align: center;
   padding: 14px 0 16px;

@@ -368,7 +368,8 @@ export class InscripcionWizardPage {
         if (vacia) return;
         if (!p.nombre.trim() || p.nombre.trim().length < 2) {
           porFila[i] = 'El nombre es obligatorio (mínimo 2 caracteres).';
-        } else if (!/^9\d{8}$/.test(p.celular)) {
+        } else if (p.celular.trim() && !/^9\d{8}$/.test(p.celular.trim())) {
+          // El celular es opcional: solo se valida si se ingresó.
           porFila[i] = 'Celular: 9 dígitos y debe empezar con 9.';
         }
       });
@@ -419,7 +420,8 @@ export class InscripcionWizardPage {
             .filter((p) => p.nombre.trim() || p.celular.trim())
             .map((p) => ({
               nombres: p.nombre.trim(),
-              celular: p.celular.trim(),
+              // Solo se envía el celular si fue llenado; lo demás se skipea.
+              ...(p.celular.trim() ? { celular: p.celular.trim() } : {}),
             })),
         },
         {

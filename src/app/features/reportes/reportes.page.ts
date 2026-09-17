@@ -24,6 +24,12 @@ interface IntegranteRow {
   estado: string;
 }
 
+interface GrupoReporte {
+  codigo: string;
+  nombre: string;
+  participantes: IntegranteRow[];
+}
+
 interface ReporteModalidad {
   modalidad: string;
   totalParticipantes: number;
@@ -31,6 +37,7 @@ interface ReporteModalidad {
   confirmados: number;
   pendientes: number;
   participantes: IntegranteRow[];
+  grupos: GrupoReporte[];
 }
 
 @Component({
@@ -61,20 +68,21 @@ export class ReportesPage {
   readonly cargando = signal(true);
   readonly vistaActual = signal<'general' | 'modalidades'>('general');
   readonly exportEstado = signal('CONFIRMADA');
-  readonly modalidadExpandida = signal<string | null>(null);
-  readonly modalidadPageSize = 8;
-  readonly modalidadPage = signal(1);
-  readonly seccionesPageSize = 4;
-  readonly seccionesPage = signal(1);
 
-  /** KPIs del resumen (patrón usuarios). */
+  /** KPIs del resumen. Los estados pertenecen a la INSCRIPCI�N (el grupo):
+   *  una inscripci�n de ballet con 10 integrantes cuenta como 1 confirmada. */
   readonly overview = computed(() => {
-    const list = this.integrantes();
+    const inscripciones = this.store.inscripcionesView();
+    const integrantes = this.integrantes();
     return {
-      confirmados: list.filter((r) => r.estado === 'CONFIRMADA').length,
-      pendientes: list.filter((r) => r.estado === 'PENDIENTE').length,
-      grupos: new Set(list.map((r) => r.codigo)).size,
-      modalidades: new Set(list.map((r) => r.modalidad)).size,
+      integrantes: integrantes.length,
+      // Agrupaciones (inscripciones) por estado � lo que se paga y confirma.
+      confirmadas: inscripciones.filter((i) => i.estado === 'CONFIRMADA').length,
+      pendientes: inscripciones.filter((i) => i.estado === 'PENDIENTE').length,
+      rechazadas: inscripciones.filter((i) => i.estado === 'RECHAZADA').length,
+      // Los Ch entre grupos y modalidades se calculan sobre integrantes activos.
+      grupos: new Set(integrantes.map((r) => r.codigo)).size,
+      modalidades: new Set(integrantes.map((r) => r.modalidad)).size,
     };
   });
 
@@ -148,21 +156,38 @@ export class ReportesPage {
     return `${from}–${to} de ${total}`;
   });
 
-  readonly seccionesPaged = computed(() => {
-    const start = (this.seccionesPage() - 1) * this.seccionesPageSize;
-    return this.reportesModalidad().slice(start, start + this.seccionesPageSize);
+  readonly seccionesPaged = computed(() => this.reportesModalidad());
+
+  /** Modalidad activa en la vista maestro-detalle. */
+  readonly modalidadActiva = signal<string | null>(null);
+
+  /** Selecciona la primera modalidad por defecto. */
+  readonly efectoSeleccion = effect(() => {
+    const mods = this.reportesModalidad();
+    if (mods.length === 0) {
+      untracked(() => this.modalidadActiva.set(null));
+      return;
+    }
+    const activa = this.modalidadActiva();
+    if (!activa || !mods.some((m) => m.modalidad === activa)) {
+      untracked(() => this.modalidadActiva.set(mods[0].modalidad));
+    }
   });
 
-  readonly expanded = computed((): ReporteModalidad | null => {
-    const mod = this.modalidadExpandida();
-    return mod ? this.reportesModalidad().find((r) => r.modalidad === mod) ?? null : null;
+  /** Reporte completo de la modalidad activa: todos los grupos y participantes. */
+  readonly reporteActivo = computed((): ReporteModalidad | null => {
+    const activa = this.modalidadActiva();
+    return activa ? this.reportesModalidad().find((r) => r.modalidad === activa) ?? null : null;
   });
 
-  readonly expandedPaged = computed((): IntegranteRow[] => {
-    const r = this.expanded();
-    if (!r) return [];
-    const start = (this.modalidadPage() - 1) * this.modalidadPageSize;
-    return r.participantes.slice(start, start + this.modalidadPageSize);
+  seleccionarModalidad(modalidad: string): void {
+    this.modalidadActiva.set(modalidad);
+  }
+
+  /** Todos los grupos de la modalidad activa con sus participantes (sin paginar). */
+  readonly gruposActivos = computed((): GrupoReporte[] => {
+    const r = this.reporteActivo();
+    return r?.grupos ?? [];
   });
 
   readonly reportesModalidad = computed((): ReporteModalidad[] => {
@@ -174,8 +199,30 @@ export class ReportesPage {
     return modalidadesUnicas.map((modalidad) => {
       const participantes = all.filter((r) => r.modalidad === modalidad);
       const grupos = new Set(participantes.map((r) => r.codigo)).size;
-      const confirmados = participantes.filter((r) => r.estado === 'CONFIRMADA').length;
-      const pendientes = participantes.filter((r) => r.estado === 'PENDIENTE').length;
+      // El estado pertenece a la INSCRIPCI�N (grupo): se cuentan grupos �nicos
+      // con ese estado, no integrantes. Un ballet confirmado de 10 = 1 grupo.
+      const codigosConfirmados = new Set(
+        participantes.filter((r) => r.estado === 'CONFIRMADA').map((r) => r.codigo),
+      ).size;
+      const codigosPendientes = new Set(
+        participantes.filter((r) => r.estado === 'PENDIENTE').map((r) => r.codigo),
+      ).size;
+      const confirmados = codigosConfirmados;
+      const pendientes = codigosPendientes;
+
+      const gruposMap = new Map<string, IntegranteRow[]>();
+      for (const p of participantes) {
+        const lista = gruposMap.get(p.codigo) ?? [];
+        lista.push(p);
+        gruposMap.set(p.codigo, lista);
+      }
+      const gruposReporte: GrupoReporte[] = [...gruposMap.entries()]
+        .map(([codigo, parts]) => ({
+          codigo,
+          nombre: parts[0]?.grupo ?? codigo,
+          participantes: [...parts].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
+        }))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
 
       return {
         modalidad,
@@ -186,6 +233,7 @@ export class ReportesPage {
         participantes: participantes.sort((a, b) =>
           a.grupo.localeCompare(b.grupo, 'es') || a.nombre.localeCompare(b.nombre, 'es'),
         ),
+        grupos: gruposReporte,
       };
     });
   });
@@ -211,36 +259,22 @@ export class ReportesPage {
 
   cambiarVista(vista: 'general' | 'modalidades'): void {
     this.vistaActual.set(vista);
-    if (vista === 'general') {
-      this.modalidadExpandida.set(null);
-    }
-    this.modalidadPage.set(1);
-    this.seccionesPage.set(1);
-  }
-
-  toggleModalidad(modalidad: string): void {
-    const yaAbierta = this.modalidadExpandida() === modalidad;
-    this.modalidadExpandida.set(yaAbierta ? null : modalidad);
-    this.modalidadPage.set(1);
-    if (yaAbierta) return;
-    // Lleva la sección expandida a la vista para que la lista sea visible de inmediato.
-    window.setTimeout(() => {
-      document
-        .querySelector('.modalidad-section:not(.is-compacted)')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 50);
   }
 
   exportarPdfPorModalidad(reporte: ReporteModalidad): void {
+    const estado = this.exportEstado();
     const filas = reporte.participantes.filter((r) => this.porExportEstado(r));
-    if (filas.length === 0) return;
-    const estado = this.exportEstado()
-      ? ` · Estado: ${this.statusLabel(this.exportEstado())}`
-      : '';
+    if (filas.length === 0) {
+      this.avisoSinDatos(estado);
+      return;
+    }
+    const notaEstado = estado ? ` � Estado: ${this.statusLabel(estado)}` : '';
     void this.exportarPdfTitulo(
       'Reporte por modalidad',
       filas,
-      `${this.notaModalidad(reporte.modalidad)}${estado}`,
+      `${this.notaModalidad(reporte.modalidad)}${notaEstado}`,
+      false,
+      true,
     );
   }
 
@@ -249,18 +283,26 @@ export class ReportesPage {
   exportarPdfModalidad(): void {
     const mod = this.modalidadPdf();
     if (!mod) return;
+    const estado = this.exportEstado();
     const rows = this.integrantes().filter(
       (r) => r.modalidad === mod && this.porExportEstado(r),
     );
-    if (rows.length === 0) return;
-    const estado = this.exportEstado()
-      ? ` · Estado: ${this.statusLabel(this.exportEstado())}`
-      : '';
-    void this.exportarPdfTitulo('Reporte por modalidad', rows, `${this.notaModalidad(mod)}${estado}`);
+    if (rows.length === 0) {
+      this.avisoSinDatos(estado);
+      return;
+    }
+    const estadoNota = estado ? ` � Estado: ${this.statusLabel(estado)}` : '';
+    void this.exportarPdfTitulo('Reporte por modalidad', rows, `${this.notaModalidad(mod)}${estadoNota}`);
   }
 
   private porExportEstado(r: IntegranteRow): boolean {
     return !this.exportEstado() || r.estado === this.exportEstado();
+  }
+
+  /** Aviso cuando el estado elegido no tiene datos para exportar. */
+  private avisoSinDatos(estado: string): void {
+    const etiqueta = estado ? this.statusLabel(estado).toLowerCase() : 'el estado seleccionado';
+    this.toast.info('No hay datos en este estado', `No hay integrantes ${etiqueta} para exportar.`);
   }
 
   private notaModalidad(mod: string): string {
@@ -268,17 +310,24 @@ export class ReportesPage {
   }
 
   exportarPdf(): void {
-    const rows = this.filtered().filter((r) => this.porExportEstado(r));
-    if (rows.length === 0) return;
+    // Exporta sobre TODOS los integrantes (no sobre el filtro de la tabla),
+    // respetando �nicamente el selector de estado del export. As� "Solo
+    // confirmados" descarga todos los confirmados, no solo los filtrados en pantalla.
+    const estado = this.exportEstado();
+    const rows = this.integrantes().filter((r) => this.porExportEstado(r));
+    if (rows.length === 0) {
+      this.avisoSinDatos(estado);
+      return;
+    }
 
     const titulo = 'Reporte general de integrantes';
 
     const partes: string[] = [];
     if (this.modalidadFilter()) partes.push(this.notaModalidad(this.modalidadFilter()));
     if (this.estadoFilter()) partes.push(`Estado: ${this.statusLabel(this.estadoFilter())}`);
-    if (this.search()) partes.push(`Búsqueda: ${this.search()}`);
-    if (this.exportEstado()) partes.push(`Estado: ${this.statusLabel(this.exportEstado())}`);
-    const nota = partes.join(' · ');
+    if (this.search()) partes.push(`B�squeda: ${this.search()}`);
+    if (estado) partes.push(`Estado: ${this.statusLabel(estado)}`);
+    const nota = partes.join(' � ');
 
     void this.exportarPdfTitulo(titulo, rows, nota, true);
   }
@@ -288,6 +337,7 @@ export class ReportesPage {
     rows: IntegranteRow[],
     nota: string,
     agruparPorModalidad = false,
+    agruparPorGrupo = false,
   ): Promise<void> {
     const hoy = new Date().toLocaleDateString('es-PE', {
       day: '2-digit',
@@ -306,7 +356,7 @@ export class ReportesPage {
     let logoW = 17.6;
     let logoH = logoW;
     try {
-      const logoUrl = new URL('logo/LogoV1.png', document.baseURI).href;
+      const logoUrl = new URL('logo/LogoV1.webp', document.baseURI).href;
       const blob = await fetch(logoUrl).then((r) => r.blob());
       const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -361,11 +411,13 @@ export class ReportesPage {
     doc.setLineWidth(1);
     doc.line(margin, margin + 17, pageW - margin, margin + 17);
 
-    const head = agruparPorModalidad
+    const head = agruparPorGrupo
       ? ['#', 'Integrante', 'Celular', 'Grupo', 'Código', 'Estado']
-      : ['#', 'Integrante', 'Celular', 'Grupo', 'Modalidad', 'Código', 'Estado'];
+      : agruparPorModalidad
+        ? ['#', 'Integrante', 'Celular', 'Grupo', 'Código', 'Estado']
+        : ['#', 'Integrante', 'Celular', 'Grupo', 'Modalidad', 'Código', 'Estado'];
 
-    const body = this.filasPdf(rows, agruparPorModalidad);
+    const body = this.filasPdf(rows, agruparPorModalidad, agruparPorGrupo);
 
     autoTable(doc, {
       startY: margin + 21,
@@ -376,7 +428,8 @@ export class ReportesPage {
       styles: {
         font: 'helvetica',
         fontSize: 8.5,
-        cellPadding: 2.2,
+        cellPadding: 2.8,
+        valign: 'middle',
         textColor: [28, 25, 23],
         lineColor: [214, 211, 209],
         lineWidth: 0.15,
@@ -386,14 +439,17 @@ export class ReportesPage {
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         fontSize: 8,
-        cellPadding: 2.6,
+        cellPadding: 3,
       },
       alternateRowStyles: { fillColor: [250, 250, 249] },
+      // Anchos fijos: la columna Integrante pierde ~1/4 de su espacio y se
+      // redistribuye a Grupo/C�digo/Estado para que las dem�s respiren.
       columnStyles: {
         0: { cellWidth: 9, halign: 'center' },
-        2: { cellWidth: 20, halign: 'center' },
-        3: { cellWidth: 10, halign: 'center' },
-        4: { cellWidth: 13, halign: 'center' },
+        2: { cellWidth: 24, halign: 'center' },
+        3: { cellWidth: 52, halign: 'left', valign: 'middle' },
+        4: { cellWidth: 26, halign: 'center' },
+        5: { cellWidth: 30, halign: 'center', valign: 'middle' },
       },
       didDrawPage: (data) => {
         doc.setFont('helvetica', 'normal');
@@ -413,11 +469,47 @@ export class ReportesPage {
     this.toast.success('PDF descargado');
   }
 
-  private filasPdf(rows: IntegranteRow[], agruparPorModalidad: boolean): RowInput[] {
+  private filasPdf(
+    rows: IntegranteRow[],
+    agruparPorModalidad: boolean,
+    agruparPorGrupo = false,
+  ): RowInput[] {
     const body: RowInput[] = [];
     let n = 0;
 
-    if (agruparPorModalidad) {
+    if (agruparPorGrupo) {
+      const porGrupo = new Map<string, IntegranteRow[]>();
+      for (const r of rows) {
+        const lista = porGrupo.get(r.codigo) ?? [];
+        lista.push(r);
+        porGrupo.set(r.codigo, lista);
+      }
+
+      for (const codigo of [...porGrupo.keys()].sort((a, b) => {
+        const na = porGrupo.get(a)![0]?.grupo ?? a;
+        const nb = porGrupo.get(b)![0]?.grupo ?? b;
+        return na.localeCompare(nb, 'es');
+      })) {
+        const lista = porGrupo.get(codigo)!;
+        const nombreGrupo = lista[0]?.grupo ?? codigo;
+        body.push([
+          {
+            content: `${nombreGrupo} — ${lista.length} ${lista.length === 1 ? 'integrante' : 'integrantes'} · código ${codigo}`,
+            colSpan: 6,
+            styles: {
+              fillColor: [176, 141, 60],
+              textColor: [255, 255, 255],
+              fontStyle: 'bold',
+              fontSize: 8.5,
+            },
+          } satisfies CellInput,
+        ]);
+        for (const r of lista) {
+          n += 1;
+          body.push(this.filaPdf(n, r, false));
+        }
+      }
+    } else if (agruparPorModalidad) {
       const porModalidad = new Map<string, IntegranteRow[]>();
       for (const r of rows) {
         const lista = porModalidad.get(r.modalidad) ?? [];
@@ -431,7 +523,7 @@ export class ReportesPage {
         body.push([
           {
             content: `${mod} — ${lista.length} integrantes · ${gruposMod} grupos`,
-            colSpan: 8,
+            colSpan: 6,
             styles: {
               fillColor: [176, 141, 60],
               textColor: [255, 255, 255],

@@ -33,7 +33,7 @@ export async function descargarComprobantePdf(data: ComprobantePdfData): Promise
   let logoW = 17.6;
   let logoH = logoW;
   try {
-    const logoUrl = new URL('logo/LogoV1.png', document.baseURI).href;
+    const logoUrl = new URL('logo/LogoV1.webp', document.baseURI).href;
     const blob = await fetch(logoUrl).then((r) => r.blob());
     const dataUrl = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();

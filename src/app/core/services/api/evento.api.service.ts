@@ -13,6 +13,8 @@ export class EventoApiService extends ApiBaseService {
     descripcion: (e.descripcion as string) ?? '',
     fecha: this.toDate(e.fecha),
     hora: this.toTime(e.hora),
+    fechaInicioInscripcion: this.toDate(e.fechaInicioInscripcion),
+    fechaFinInscripcion: this.toDate(e.fechaFinInscripcion),
     lugar: (e.lugar as string) ?? '',
     estado: e.estado as Evento['estado'],
     activo: e.activo as boolean,

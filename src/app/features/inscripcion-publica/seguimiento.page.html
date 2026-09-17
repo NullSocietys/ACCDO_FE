@@ -27,6 +27,50 @@
       </div>
     </div>
 
+    <!-- ============ MIS INSCRIPCIONES (usuario logueado) ============ -->
+    @if (mostrarLista()) {
+      <div class="ipo-card ipo-card--compact ipo-mis">
+        <div class="ipo-mis-head">
+          <h2 class="ipo-mis-title">Mis inscripciones</h2>
+          <div class="ipo-mis-filtros">
+            @for (f of filtrosMis; track f.valor) {
+              <button type="button"
+                class="ipo-chip"
+                [class.is-active]="filtroMis() === f.valor"
+                (click)="filtroMis.set(f.valor)">{{ f.label }}</button>
+            }
+          </div>
+        </div>
+
+        @if (cargandoMis()) {
+          <div class="ipo-center ipo-mis-loading">
+            <span class="ipo-spinner" aria-hidden="true"></span>
+            <p>Cargando tus inscripciones…</p>
+          </div>
+        } @else if (misFiltradas().length === 0) {
+          <p class="ipo-mis-empty">
+            @if (misInscripciones().length === 0) {
+              Aún no tienes inscripciones registradas con esta cuenta.
+            } @else {
+              No tienes inscripciones en esta categoría.
+            }
+          </p>
+        } @else {
+          <ul class="ipo-mis-list">
+            @for (ins of misFiltradas(); track ins.id) {
+              <li class="ipo-mis-item" [class.is-active]="buscaCodigo() === ins.codigo">
+                <button type="button" class="ipo-mis-btn" (click)="seleccionarMis(ins.codigo)">
+                  <span class="ipo-mis-codigo ipo-mono">{{ ins.codigo }}</span>
+                  <span class="ipo-mis-grupo">{{ ins.nombreGrupo }}</span>
+                  <span class="ipo-mis-estado ipo-mis-estado--{{ ins.estado.toLowerCase() }}">{{ ins.estado }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
     <!-- ============ RESULTADO ============ -->
     @if (loading()) {
       <div class="ipo-card ipo-card--compact ipo-center">

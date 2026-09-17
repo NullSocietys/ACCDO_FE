@@ -1,5 +1,4 @@
-// Generado en build-time desde la variable API_URL (scripts/generate-env.mjs).
-// Vercel: defínela en el dashboard. Docker: --build-arg API_URL=...
+// Entorno de DESARROLLO (usado por `ng serve` y builds en modo development).
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:8080',

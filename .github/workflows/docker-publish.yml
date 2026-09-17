@@ -1,0 +1,36 @@
+name: Build y push — Frontend (Docker Hub)
+
+# Se construye y publica la imagen en cada push a main.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: frontend-docker
+  cancel-in-progress: true
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login a Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build y push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            carloscaycho/chicote-frontend:latest
+            carloscaycho/chicote-frontend:${{ github.sha }}
+
+      - name: Resumen
+        run: echo "Imagen publicada -> carloscaycho/chicote-frontend:latest (${GITHUB_SHA::7})"
