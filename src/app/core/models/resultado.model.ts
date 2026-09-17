@@ -21,6 +21,7 @@ export interface ResultadoRequest {
 /** Vista denormalizada para UI (joins en cliente). */
 export interface ResultadoView extends Resultado {
   nombreGrupo: string;
+  categoriaId: string;
   categoriaNombre: string;
   eventoId: string;
   eventoNombre: string;

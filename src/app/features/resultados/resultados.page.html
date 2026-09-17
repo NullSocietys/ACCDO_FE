@@ -46,6 +46,19 @@
         }
       </select>
     </div>
+      <div class="field" style="max-width: 420px; margin-top: 12px">
+      <label for="res-modalidad">Modalidad</label>
+      <select autocomplete="off"
+        id="res-modalidad"
+        class="ui-select"
+        [ngModel]="modalidadId()"
+        (ngModelChange)="modalidadId.set($event)"
+      >
+        @for (mod of modalidadesDelEvento(); track mod.id) {
+          <option [value]="mod.id">{{ mod.nombre }}</option>
+        }
+      </select>
+    </div>
   </app-card>
 
   @if (filtered().length === 0) {

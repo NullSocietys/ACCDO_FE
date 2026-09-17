@@ -575,6 +575,7 @@ export class DataStoreService {
     return {
       ...r,
       nombreGrupo: view.nombreGrupo,
+      categoriaId: view.categoriaId,
       categoriaNombre: view.categoriaNombre,
       eventoId: view.eventoId,
       eventoNombre: view.eventoNombre,

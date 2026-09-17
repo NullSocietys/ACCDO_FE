@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Resultado } from '../../core/models';
 import { DataStoreService } from '../../core/services/data-store.service';
@@ -42,9 +42,20 @@ export class ResultadosPage {
   });
 
   readonly eventoId = signal('');
+  /** Modalidad seleccionada: los ganadores se registran/mostran por modalidad. */
+  readonly modalidadId = signal('');
   readonly modalOpen = signal(false);
   /** Esqueleto de carga inicial (igual que el dashboard). */
   readonly cargando = signal(true);
+
+  /** Modalidades (categorías) presentes en las inscripciones confirmadas del evento. */
+  readonly modalidadesDelEvento = computed(() => {
+    const cats = this.store.categorias();
+    const ids = new Set(
+      this.inscripcionesConfirmadas().map((i) => i.categoriaId),
+    );
+    return cats.filter((c) => ids.has(c.id));
+  });
 
   constructor() {
     window.setTimeout(() => this.cargando.set(false), 500);
@@ -57,10 +68,21 @@ export class ResultadosPage {
       }
     });
 
-    // Al cambiar de evento, reinicia la paginación del resto.
+    // Al cambiar de evento, reinicia modalidad y paginación.
     effect(() => {
       this.eventoId();
-      this.restoPage.set(1);
+      untracked(() => {
+        this.modalidadId.set('');
+        this.restoPage.set(1);
+      });
+    });
+
+    // Selecciona la primera modalidad disponible del evento.
+    effect(() => {
+      const mods = this.modalidadesDelEvento();
+      if (mods.length && !this.modalidadId()) {
+        untracked(() => this.modalidadId.set(mods[0].id));
+      }
     });
   }
 
@@ -74,10 +96,17 @@ export class ResultadosPage {
   readonly errores = signal<Record<string, string>>({});
 
   /** Solo inscripciones CONFIRMADAS del evento: solo ellas pueden ganar. */
-  readonly inscripcionesDelEvento = computed(() =>
+  readonly inscripcionesConfirmadas = computed(() =>
     this.store
       .inscripcionesView()
       .filter((i) => i.eventoId === this.eventoId() && i.estado === 'CONFIRMADA'),
+  );
+
+  /** Inscripciones confirmadas DE LA MODALIDAD seleccionada. */
+  readonly inscripcionesDelEvento = computed(() =>
+    this.inscripcionesConfirmadas().filter(
+      (i) => !this.modalidadId() || i.categoriaId == this.modalidadId(),
+    ),
   );
 
   /** Labels legibles para el combo con buscador. */
@@ -103,7 +132,11 @@ export class ResultadosPage {
   readonly filtered = computed(() =>
     this.store
       .resultadosView()
-      .filter((r) => r.eventoId === this.eventoId())
+      .filter(
+        (r) =>
+          r.eventoId === this.eventoId() &&
+          (!this.modalidadId() || r.categoriaId === this.modalidadId()),
+      )
       .sort((a, b) => a.puesto - b.puesto),
   );
 
