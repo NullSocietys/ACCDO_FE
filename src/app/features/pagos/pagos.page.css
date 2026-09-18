@@ -236,6 +236,12 @@
 .td--center{text-align:center}
 .td--actions{text-align:right;white-space:nowrap}
 
+/* ── WA-LINK: WhatsApp directo al responsable desde la cola de pagos ── */
+.wa-link{display:inline-grid;place-items:center;width:28px;height:28px;margin-left:4px;border-radius:var(--r-sm);color:#25d366;vertical-align:middle;transition:background var(--t-fast),filter var(--t-fast)}
+.wa-link:hover{background:color-mix(in srgb,#25d366 14%,transparent);filter:brightness(1.12)}
+.wa-link:focus-visible{outline:2px solid #25d366;outline-offset:2px}
+.wa-link svg{display:block}
+
 /* ================================================================
    BOTONES
    ================================================================ */
@@ -349,6 +355,47 @@ app-modal.pago-modal ::ng-deep .dialog .footer{flex-shrink:0;border-top:1px soli
 .msheet-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;width:100%}
 .msheet-actions ::ng-deep app-button button{height:32px;padding:0 var(--sp-3);border:1px solid var(--border-strong);border-radius:var(--r-sm);background:transparent;color:var(--stone-muted);font-size:.8125rem;font-weight:500;cursor:pointer}
 .msheet-actions ::ng-deep app-button button:hover{background:var(--ink-2);color:var(--stone-text)}
+
+/* ── ACCIÓN MASIVA: verificar varios pagos pendientes a la vez ── */
+.masivo-bar{display:flex;align-items:center;gap:10px;padding:8px var(--sp-3);margin-bottom:var(--sp-2);border:1px solid var(--gold);border-left:3px solid var(--gold);border-radius:var(--r-sm);background:var(--gold-glow,rgba(212,175,55,.08));flex-wrap:wrap}
+.masivo-bar strong{font-size:.9375rem;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+.masivo-bar > span{font-size:.75rem;color:var(--stone-muted)}
+.masivo-sep{flex:1;min-width:12px}
+.masivo-bar ::ng-deep app-button button{height:30px;padding:0 var(--sp-3);border:1px solid var(--border-strong);border-radius:var(--r-sm);background:transparent;color:var(--stone-muted);font-size:.75rem;font-weight:600;cursor:pointer}
+.masivo-bar ::ng-deep app-button button:hover{border-color:var(--gold);color:var(--gold)}
+.masivo-bar ::ng-deep app-button button:disabled{opacity:.55;cursor:not-allowed}
+.row-check{appearance:none;width:16px;height:16px;border:1px solid var(--border-strong);border-radius:4px;background:var(--ink-2);cursor:pointer;position:relative;transition:background var(--t-fast),border-color var(--t-fast)}
+.row-check:checked{background:var(--gold);border-color:var(--gold)}
+.row-check:checked::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:800;color:#17130a}
+.row-check:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.td--check{width:34px;text-align:center}
+.th--check{width:34px}
+
+/* ── MODAL DE RECHAZO: modal con motivo (reemplaza window.prompt) ── */
+.pago-rechazo-modal ::ng-deep .dialog .body{padding:12px 14px}
+.pago-rechazo-modal ::ng-deep .dialog .footer{padding:10px 14px 12px}
+.rechazo-datos-list{display:flex;gap:16px;margin:0 0 12px;padding:0;list-style:none}
+.rechazo-datos-list div{display:flex;flex-direction:column;gap:2px}
+.rechazo-datos-list dt{font-size:.625rem;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--stone-quiet);font-family:var(--font-mono)}
+.rechazo-datos-list dd{margin:0;font-size:.875rem;font-weight:600;color:var(--stone-text)}
+.rechazo-datos-list .mono{font-family:var(--font-mono)}
+.rechazo-campo{display:flex;flex-direction:column;gap:6px}
+.rechazo-campo label{font-size:.72rem;font-weight:650;letter-spacing:.08em;text-transform:uppercase;color:var(--stone-muted)}
+.rechazo-campo textarea{appearance:none;border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--ink-2);color:var(--stone-text);font-size:.8125rem;line-height:1.5;padding:8px 10px;resize:vertical;transition:border-color var(--t-fast)}
+.rechazo-campo textarea:focus{outline:none;border-color:var(--gold)}
+.rechazo-campo.is-invalid textarea{border-color:var(--danger)}
+.rechazo-campo.is-invalid textarea:focus{border-color:var(--danger)}
+.rechazo-error{font-size:.6875rem;font-weight:700;color:var(--danger)}
+.rechazo-quick{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px}
+.rechazo-quick-k{font-size:.625rem;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--stone-quiet);font-family:var(--font-mono)}
+.rechazo-quick-btn{appearance:none;border:1px dashed var(--border-strong);border-radius:999px;background:transparent;color:var(--stone-muted);font-size:.6875rem;padding:4px 10px;cursor:pointer;transition:border-color var(--t-fast),color var(--t-fast)}
+.rechazo-quick-btn:hover{border-color:var(--gold);border-style:solid;color:var(--gold)}
+.rechazo-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;width:100%}
+.pago-rechazo-modal ::ng-deep app-button button{height:32px;padding:0 var(--sp-3);border:1px solid var(--border-strong);border-radius:var(--r-sm);background:transparent;color:var(--stone-muted);font-size:.8125rem;font-weight:500;cursor:pointer}
+.pago-rechazo-modal ::ng-deep app-button button:hover{background:var(--ink-2);color:var(--stone-text)}
+.pago-rechazo-modal ::ng-deep app-button button[style*="danger"], .pago-rechazo-modal ::ng-deep app-button button[data-tone="danger"]{border-color:var(--danger);color:var(--danger)}
+.pago-rechazo-modal ::ng-deep app-button button[style*="danger"]:hover, .pago-rechazo-modal ::ng-deep app-button button[data-tone="danger"]:hover{background:var(--danger-glow, rgba(224,91,91,.12))}
+.pago-rechazo-modal ::ng-deep app-button button:disabled{opacity:.55;cursor:not-allowed}
 
 /* ================================================================
    RESPONSIVE

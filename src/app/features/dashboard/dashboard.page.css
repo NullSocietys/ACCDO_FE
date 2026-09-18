@@ -202,6 +202,18 @@
   font-weight: 650;
 }
 
+.strip__monto {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  font-weight: 650;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .strip__link {
   font-size: 12.5px;
   font-weight: 650;
@@ -695,7 +707,7 @@
     grid-template-columns: auto minmax(0, 1fr);
   }
 
-  .strip__link {
+.strip__link {
     grid-column: 2;
   }
 

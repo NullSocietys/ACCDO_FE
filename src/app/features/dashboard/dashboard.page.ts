@@ -29,18 +29,21 @@ export class DashboardPage {
   readonly overview = computed(() => {
     const ins = this.store.inscripcionesView().filter((i) => i.estado !== 'RECHAZADA');
     const pagos = this.store.pagosView();
-    const pendientes = pagos.filter((p) => p.estado === 'PENDIENTE').length;
+    const pendientes = pagos.filter((p) => p.estado === 'PENDIENTE');
     const confirmados = pagos.filter((p) => p.estado === 'CONFIRMADO');
     const ingresos = confirmados.reduce((sum, p) => sum + p.monto, 0);
     const activos = this.store.eventos().filter((e) => e.estado === 'ACTIVO').length;
     return {
       grupos: ins.length,
-      pendientes,
+      pendientes: pendientes.length,
+      montoPendiente: pendientes.reduce((sum, p) => sum + p.monto, 0),
       confirmados: confirmados.length,
       ingresos,
       activos,
     };
   });
+
+  readonly montoPendiente = computed(() => this.overview().montoPendiente);
 
   readonly featured = computed(() => {
     const activos = this.store.eventos().filter((e) => e.estado === 'ACTIVO' && e.activo);

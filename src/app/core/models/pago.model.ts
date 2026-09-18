@@ -40,5 +40,7 @@ export interface PagoView extends Pago {
   codigo: string;
   nombreGrupo: string;
   responsableNombre: string;
+  /** Teléfono del responsable (WhatsApp directo desde la cola de pagos). */
+  responsableTelefono: string;
   modalidad: string;
 }

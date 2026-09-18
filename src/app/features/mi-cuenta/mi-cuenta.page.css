@@ -42,6 +42,21 @@ main.ipo-main {
   white-space: nowrap;
 }
 
+/* Móvil: la tabla desborda → scroll horizontal dentro de la card,
+   nunca empuja el viewport */
+@media (max-width: 640px) {
+  .ipo-card {
+    overflow-x: auto;
+    padding-inline: 10px;
+    scrollbar-width: thin;
+  }
+
+  .mc-table th:nth-child(2),
+  .mc-table td:nth-child(2) {
+    display: none; /* Modalidad es redundante en móvil */
+  }
+}
+
 .mc-table th {
   font-size: 0.72rem;
   text-transform: uppercase;

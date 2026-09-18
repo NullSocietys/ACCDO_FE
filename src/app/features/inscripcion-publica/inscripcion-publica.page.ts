@@ -892,6 +892,11 @@ export class InscripcionPublicaPage implements OnInit {
       if (!(await this.asegurarAgrupacion())) return;
     } else if (n === 2) {
       if (Object.keys(this.grupoErrores()).length > 0) return;
+      // Prevalidación server-side al entrar a la modalidad: el backend
+      // verifica evento activo, categoría activa y tope por modalidad.
+      // No valida grupo/DNI duplicado aún: eso se hace en 3→4 cuando la
+      // nómina ya está completa (evita falsos positivos con nómina vacía).
+      if (this.agrupacion() && !(await this.prevalidarTransition({ conNomina: false }))) return;
     } else if (n === 3) {
       const tieneErrores = this.participanteErrores().some(
         (er) => Object.keys(er).length > 0,
@@ -967,13 +972,23 @@ export class InscripcionPublicaPage implements OnInit {
 
   /**
    * Llama al endpoint de prevalidación del backend con los datos actuales.
-   * Se ejecuta al pasar del paso 2 al 3: detecta duplicados de grupo/DNI
-   * ANTES del pago. La nómina es obligatoria para poder avanzar.
+   * Se ejecuta al pasar del paso 3 al 4: detecta duplicados de grupo/DNI
+   * ANTES del pago con la nómina ya completa.
    */
   private async prevalidarAntesDePago(): Promise<boolean> {
+    return this.prevalidarTransition({ conNomina: true });
+  }
+
+  /**
+   * Prevalidación compartida de transiciones del wizard. El backend es la
+   * fuente de verdad: evento activo, categoría activa, tope de modalidad y
+   * (con nómina) duplicados de grupo/DNI.
+   */
+  private async prevalidarTransition(opts: { conNomina: boolean }): Promise<boolean> {
     const g = this.grupo();
     const cat = this.categoriaSeleccionada();
-    if (!cat || !this.nominaCompleta()) return true;
+    if (!cat) return true;
+    if (opts.conNomina && !this.nominaCompleta()) return true;
     this.saving.set(true);
     try {
       await firstValueFrom(
@@ -981,10 +996,14 @@ export class InscripcionPublicaPage implements OnInit {
           eventoId: g.eventoId,
           categoriaId: cat.id,
           observaciones: '',
-          participantes: this.nominaEnviar().map((p) => ({
-            nombres: p.nombres.trim(),
-            ...(p.celular.trim() ? { celular: p.celular.trim() } : {}),
-          })),
+          // Sin nómina el backend igual valida evento/categoría/encargado-base;
+          // se envía vacía para no chocar con el tope de la modalidad.
+          participantes: opts.conNomina
+            ? this.nominaEnviar().map((p) => ({
+                nombres: p.nombres.trim(),
+                ...(p.celular.trim() ? { celular: p.celular.trim() } : {}),
+              }))
+            : [],
         }),
       );
       return true;

@@ -549,6 +549,7 @@ export class DataStoreService {
       codigo: view?.codigo ?? '—',
       nombreGrupo: view?.nombreGrupo ?? '—',
       responsableNombre: view?.responsableNombre ?? '—',
+      responsableTelefono: view?.responsableTelefono ?? '',
       modalidad: view?.categoriaNombre ?? '—',
     };
   }

@@ -84,6 +84,14 @@
               >
                 Panel organización
               </button>
+              <a
+                class="hdr-act hdr-act--secondary"
+                role="menuitem"
+                routerLink="/admin/pagos"
+                (click)="cerrarPanel(); closeMenu()"
+              >
+                Verificar pagos
+              </a>
             } @else {
               <button
                 type="button"
@@ -93,6 +101,14 @@
               >
                 Inscribirse
               </button>
+              <a
+                class="hdr-act hdr-act--secondary"
+                role="menuitem"
+                routerLink="/mi-cuenta"
+                (click)="cerrarPanel(); closeMenu()"
+              >
+                Mis inscripciones
+              </a>
             }
 
             <button

@@ -11,11 +11,14 @@ import { ParticipanteApiService } from '../../core/services/api/participante.api
 import { SiteHeaderComponent } from '../../shared/ui/site-header/site-header.component';
 
 interface SeguimientoPago {
+  id?: string;
   monto: number;
   metodoPago: string;
   numeroOperacion: string;
   estado: string;
   observaciones?: string | null;
+  /** true si el pago no tiene voucher adjunto (el cliente puede reenviarlo). */
+  sinComprobante?: boolean;
   createdAt: string;
 }
 
@@ -137,11 +140,13 @@ export class SeguimientoPage implements OnDestroy {
               observaciones: inscripcion.observaciones,
               participantes: [],
               pagos: pagos.map((p) => ({
+                id: p.id,
                 monto: p.monto,
                 metodoPago: p.metodoPago,
                 numeroOperacion: p.numeroOperacion,
                 estado: p.estado,
                 observaciones: p.observaciones,
+                sinComprobante: !p.comprobante,
                 createdAt: p.createdAt,
               })),
             });
@@ -244,5 +249,40 @@ export class SeguimientoPage implements OnDestroy {
     );
     if (dePago) return dePago.observaciones!.trim();
     return (d.observaciones ?? '').trim();
+  }
+
+  /* ── REENVÍO DE VOUCHER: el cliente repara un pago sin comprobante ── */
+
+  readonly reenviando = signal('');
+  readonly reenvioError = signal('');
+  readonly reenvioOk = signal('');
+
+  onVoucherChange(event: Event, pago: SeguimientoPago): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || !pago.id) return;
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      this.reenvioError.set('Solo fotos (JPG/PNG) o PDF.');
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      this.reenvioError.set('El archivo supera los 8 MB.');
+      return;
+    }
+    this.reenvioError.set('');
+    this.reenvioOk.set('');
+    this.reenviando.set(pago.id);
+    this.pagoApi.adjuntarComprobante(pago.id, file).subscribe({
+      next: () => {
+        this.reenviando.set('');
+        this.reenvioOk.set('Voucher enviado. La organización lo revisará en breve.');
+        this.consultar(this.buscaCodigo());
+      },
+      error: (err: Error) => {
+        this.reenviando.set('');
+        this.reenvioError.set(err?.message || 'No se pudo subir el voucher. Intenta de nuevo.');
+      },
+    });
   }
 }

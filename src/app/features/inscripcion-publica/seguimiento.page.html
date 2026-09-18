@@ -19,6 +19,8 @@
     <div class="ipo-card ipo-card--compact">
       <div class="ipo-search">
         <input type="text" placeholder="Ej: CHO2026-001"
+          aria-label="Código de inscripción"
+          autocapitalize="characters" autocorrect="off" spellcheck="false"
           [ngModel]="codigoInput()" (ngModelChange)="codigoInput.set($event)"
           (keyup.enter)="buscar()">
         <button type="button" class="ipo-btn ipo-btn--gold" (click)="buscar()" [disabled]="loading()">
@@ -188,8 +190,28 @@
                         {{ pago.estado }}
                       </span>
                     </div>
+
+                    @if (pago.estado === 'PENDIENTE' && pago.sinComprobante) {
+                      <div class="ipo-voucher-reenvio" role="group" aria-label="Reenviar comprobante">
+                        <p class="ipo-voucher-reenvio__msg">
+                          Falta adjuntar el voucher de este pago.
+                        </p>
+                        <label class="ipo-voucher-reenvio__btn">
+                          <input type="file" accept="image/*,.pdf"
+                            [disabled]="reenviando() !== ''"
+                            (change)="onVoucherChange($event, pago)" />
+                          {{ reenviando() === pago.id ? 'Enviando…' : 'Adjuntar voucher' }}
+                        </label>
+                      </div>
+                    }
                   }
                 </div>
+                @if (reenvioOk()) {
+                  <p class="ipo-voucher-ok" role="status">{{ reenvioOk() }}</p>
+                }
+                @if (reenvioError()) {
+                  <p class="ipo-voucher-err" role="alert">{{ reenvioError() }}</p>
+                }
               </div>
             }
           </div>

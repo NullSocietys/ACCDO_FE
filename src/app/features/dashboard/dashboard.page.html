@@ -46,8 +46,13 @@
         <p>
           <strong>{{ overview().pendientes }} comprobantes</strong>
           esperan verificación en caja.
+          @if (montoPendiente() > 0) {
+            <span class="strip__monto">por {{ montoPendiente() | currency: 'PEN':'symbol-narrow':'1.0-0' }}</span>
+          }
         </p>
-        <a routerLink="/admin/pagos" class="strip__link">Ir a pagos →</a>
+        <a routerLink="/admin/pagos" [queryParams]="{ filtro: 'PENDIENTE' }" class="strip__link">
+          Abrir cola →
+        </a>
       </aside>
     }
 

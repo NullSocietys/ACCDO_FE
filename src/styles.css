@@ -910,10 +910,17 @@ img {
     height: auto !important;
   }
 
-  /* Los wraps de tabla recortan el scroll vertical en desktop: liberados */
+  /* Los wraps de tabla recortan el scroll vertical en desktop: liberados.
+     EXCEPCIÓN — app-bases-page usa .table-wrap/.data-table para tablas
+     reales (costos, premios) que necesitan scroll horizontal en móvil. */
   .content .table-wrap {
     overflow: visible !important;
     height: auto !important;
+  }
+
+  .content app-bases-page .table-wrap {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
   }
 
   .content .table-card {

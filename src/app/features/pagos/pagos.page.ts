@@ -1,6 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, computed, effect, inject, OnDestroy, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Pago, PagoEstado, PagoView, InscripcionView } from '../../core/models';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { DataStoreService } from '../../core/services/data-store.service';
@@ -62,6 +63,7 @@ export class PagosPage implements OnDestroy {
   private readonly confirm = inject(ConfirmService);
   private readonly pagoApi = inject(PagoApiService);
   private readonly http = inject(HttpClient);
+  private readonly route = inject(ActivatedRoute);
 
   readonly statusTone = statusTone;
   readonly statusLabel = statusLabel;
@@ -81,6 +83,35 @@ export class PagosPage implements OnDestroy {
   readonly subiendo = signal(false);
   readonly voucherPendiente = signal<File | null>(null);
   readonly voucherError = signal('');
+
+  constructor() {
+    // Deep-link del dashboard: /admin/pagos?filtro=PENDIENTE abre la cola.
+    const filtro = this.route.snapshot.queryParamMap.get('filtro');
+    if (filtro === 'PENDIENTE' || filtro === 'CONFIRMADO' || filtro === 'RECHAZADO') {
+      this.estadoFiltro.set(filtro);
+    }
+    window.setTimeout(() => this.cargando.set(false), 500);
+    effect(() => {
+      this.busqueda();
+      this.estadoFiltro();
+      untracked(() => this.page.set(1));
+    });
+  }
+
+  /** WhatsApp del responsable para un pago pendiente/rechazado. */
+  waHref(pago: PagoView): string {
+    const tel = pago.responsableTelefono?.replace(/\D/g, '') ?? '';
+    const texto = encodeURIComponent(
+      `Hola ${pago.responsableNombre}! Revisamos la inscripción ${pago.codigo} ` +
+        `de «${pago.nombreGrupo}» en el VII Concurso Nacional de Caporales 2026. ` +
+        `El pago de S/ ${pago.monto} (Op. ${pago.numeroOperacion || 'sin número'}) está ` +
+        `${pago.estado === 'PENDIENTE' ? 'pendiente de verificación' : 'rechazado'}. ` +
+        `¿Podemos ayudarte con algo?`,
+    );
+    return tel
+      ? `https://wa.me/51${tel}?text=${texto}`
+      : `https://wa.me/51926266295?text=${texto}`;
+  }
 
   readonly filtros: { key: EstadoFiltro; label: string }[] = [
     { key: 'todos', label: 'Todos' },
@@ -131,9 +162,7 @@ export class PagosPage implements OnDestroy {
    *  Página llena → la card usa flex:1 y llena el alto disponible.
    *  Página parcial → la card mide lo justo (altura natural).
    */
-  readonly isFullPage = computed(() => this.paged().length >= this.pageSize);
-
-  readonly rangeLabel = computed(() => {
+  readonly isFullPage = computed(() => this.paged().length >= this.pageSize);  readonly rangeLabel = computed(() => {
     const total = this.filtered().length;
     if (total === 0) return '0 resultados';
     const from = (this.page() - 1) * this.pageSize + 1;
@@ -170,15 +199,6 @@ export class PagosPage implements OnDestroy {
         .filter(Boolean)
         .join(' / ') || '—'
     );
-  }
-
-  constructor() {
-    window.setTimeout(() => this.cargando.set(false), 500);
-    effect(() => {
-      this.busqueda();
-      this.estadoFiltro();
-      untracked(() => this.page.set(1));
-    });
   }
 
   cuentaEstado(key: EstadoFiltro): number {
@@ -326,6 +346,102 @@ export class PagosPage implements OnDestroy {
     this.voucherError.set('');
   }
 
+  /* ── MODAL DE RECHAZO: estado del confirm con motivo ── */
+
+  readonly modalRechazoAbierto = signal(false);
+  readonly pagoRechazo = signal<PagoView | null>(null);
+  readonly motivoRechazo = signal('');
+  readonly errorMotivo = signal('');
+  readonly procesando = signal(false);
+
+  readonly motivosFrecuentes: readonly string[] = [
+    'Comprobante ilegible o incompleto',
+    'El nombre no coincide con el titular del pago',
+    'El monto abonado no coincide con el total',
+    'La operación de Yape no corresponde a la fecha del evento',
+  ];
+
+  abrirModalRechazo(pago: PagoView): void {
+    this.pagoRechazo.set(pago);
+    this.motivoRechazo.set('');
+    this.errorMotivo.set('');
+    this.modalRechazoAbierto.set(true);
+  }
+
+  cancelarRechazo(): void {
+    this.modalRechazoAbierto.set(false);
+    this.pagoRechazo.set(null);
+    this.motivoRechazo.set('');
+    this.errorMotivo.set('');
+  }
+
+  async confirmarRechazo(): Promise<void> {
+    const pago = this.pagoRechazo();
+    if (!pago) return;
+    const motivo = this.motivoRechazo().trim();
+    if (!motivo) {
+      this.errorMotivo.set('Indica el motivo: el responsable lo verá en su seguimiento.');
+      return;
+    }
+    this.procesando.set(true);
+    try {
+      await this.store.rechazarPago(pago.id, motivo);
+      if (this.selected()?.id === pago.id) {
+        this.selected.set({ ...pago, estado: 'RECHAZADO' });
+      }
+      this.cancelarRechazo();
+      this.toast.warning('Pago e inscripción rechazados', pago.codigo);
+    } catch (err) {
+      this.errorMotivo.set((err as Error).message || 'No se pudo rechazar el pago.');
+    } finally {
+      this.procesando.set(false);
+    }
+  }
+
+  /** Atajo: el ícono ✕ de la fila abre el mismo modal del footer. */
+  reject(pago: PagoView): void {
+    this.abrirModalRechazo(pago);
+  }
+
+  /* ── ACCIONES MASIVAS: aprobar varios pagos pendientes a la vez ── */
+
+  seleccionados = signal<Set<string>>(new Set());
+  procesandoMasivo = signal(false);
+
+  toggleMasivo(id: string): void {
+    const next = new Set(this.seleccionados());
+    next.has(id) ? next.delete(id) : next.add(id);
+    this.seleccionados.set(next);
+  }
+
+  limpiarMasivo(): void {
+    this.seleccionados.set(new Set());
+  }
+
+  async aprobarSeleccionados(): Promise<void> {
+    const ids = [...this.seleccionados()].filter((id) =>
+      this.store.pagosView().some((p) => p.id === id && p.estado === 'PENDIENTE'),
+    );
+    if (!ids.length) return;
+    this.procesandoMasivo.set(true);
+    let ok = 0;
+    for (const id of ids) {
+      try {
+        await this.store.confirmarPago(id);
+        ok++;
+      } catch {
+        /* sigue con el siguiente; al final se resumen */
+      }
+    }
+    this.limpiarMasivo();
+    this.procesandoMasivo.set(false);
+    if (ok === ids.length) {
+      this.toast.success(`${ok} pago(s) verificados`);
+    } else {
+      this.toast.warning(`${ok} de ${ids.length} verificados`, 'Revisa los que quedaron pendientes');
+    }
+  }
+
   async accept(pago: PagoView): Promise<void> {
     const ok = await this.confirm.ask({
       title: 'Aceptar pago',
@@ -341,35 +457,6 @@ export class PagosPage implements OnDestroy {
       this.toast.success('Pago confirmado', pago.codigo);
     } catch (err) {
       this.toast.error('No se pudo confirmar', (err as Error).message);
-    }
-  }
-
-  async reject(pago: PagoView): Promise<void> {
-    const motivoInput = window.prompt(
-      `Motivo del rechazo del pago de «${pago.nombreGrupo}» (el responsable lo verá en el seguimiento):`,
-      'Comprobante ilegible o incompleto',
-    );
-    if (motivoInput === null) return;
-    const motivo = motivoInput.trim();
-    if (!motivo) {
-      this.toast.error('Debes indicar un motivo para rechazar el pago');
-      return;
-    }
-    const ok = await this.confirm.ask({
-      title: 'Rechazar pago',
-      description: `Se rechazará el pago y la inscripción «${pago.nombreGrupo}» (${pago.codigo}).`,
-      confirmLabel: 'Rechazar',
-      tone: 'danger',
-    });
-    if (!ok) return;
-    try {
-      await this.store.rechazarPago(pago.id, motivo);
-      if (this.selected()?.id === pago.id) {
-        this.selected.set({ ...pago, estado: 'RECHAZADO' });
-      }
-      this.toast.warning('Pago e inscripción rechazados', pago.codigo);
-    } catch (err) {
-      this.toast.error('No se pudo rechazar', (err as Error).message);
     }
   }
 }

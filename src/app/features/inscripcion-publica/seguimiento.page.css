@@ -162,6 +162,7 @@
 .ipo-search input:focus {
   outline: none;
   border-color: var(--gold-primary, #d4af37);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.22);
 }
 
 .ipo-search input::placeholder {
@@ -477,6 +478,63 @@
   color: #e06464;
 }
 
+/* ── REENVÍO DE VOUCHER: pago pendiente sin comprobante ── */
+.ipo-voucher-reenvio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: -4px 0 0;
+  padding: 10px 12px;
+  border: 1px dashed rgba(212, 175, 55, 0.45);
+  border-radius: 12px;
+  background: rgba(212, 175, 55, 0.06);
+}
+
+.ipo-voucher-reenvio__msg {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--gold-light, #fbe8a6);
+}
+
+.ipo-voucher-reenvio__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--gold-light, #fbe8a6), var(--gold-primary, #d4af37));
+  color: #1a1502;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s;
+}
+
+.ipo-voucher-reenvio__btn:hover {
+  filter: brightness(1.08);
+}
+
+.ipo-voucher-reenvio__btn input[type="file"] {
+  display: none;
+}
+
+.ipo-voucher-ok {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #4cc878;
+}
+
+.ipo-voucher-err {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #e06464;
+}
+
 .ipo-hint {
   font-size: 12.5px;
   color: var(--text-muted, #d3d3d3);
@@ -646,6 +704,119 @@
   background: rgba(8, 8, 8, 0.85);
 }
 
+/* ============ RESPONSIVE ============ */
 @media (max-width: 860px) {
   :host { --header-h: 64px; }
+
+  .ipo-main {
+    padding: calc(var(--header-h) + 18px) 0 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ipo-container {
+    width: calc(100% - 28px);
+  }
+
+  .ipo-head {
+    margin-bottom: 18px;
+  }
+
+  .ipo-sub {
+    font-size: 14px;
+    max-width: 100%;
+  }
+
+  /* Buscador apilado: input y botón a ancho completo */
+  .ipo-search {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .ipo-search input {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px; /* evita zoom automático en iOS */
+    min-width: 0;
+  }
+
+  .ipo-search .ipo-btn {
+    width: 100%;
+  }
+
+  /* Resultado: filas del resumen sin desbordar */
+  .ipo-resumen {
+    padding: 4px 14px;
+  }
+
+  .ipo-resumen__row {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    font-size: 13.5px;
+  }
+
+  .ipo-resumen__row strong {
+    text-align: right;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  /* Pagos: badge puede envolver bajo el monto */
+  .ipo-pago {
+    flex-wrap: wrap;
+    padding: 11px 13px;
+  }
+
+  /* Botones de resultado a ancho completo */
+  .ipo-actions .ipo-btn,
+  .ipo-status--error .ipo-btn {
+    width: 100%;
+  }
+
+  .ipo-nomina__list {
+    padding-left: 18px;
+  }
+
+  .ipo-mis-item {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 480px) {
+  .ipo-card--compact {
+    padding: 15px;
+  }
+
+  .ipo-container {
+    width: calc(100% - 20px);
+  }
+
+  /* Códigos largos (CHO2026-001) nunca rompen la card */
+  .ipo-mono {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .ipo-mis-codigo {
+    min-width: 0;
+  }
+
+  /* Lista "Mis inscripciones": código y estado flujo flexible */
+  .ipo-mis-btn {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 11px 12px;
+  }
+
+  .ipo-mis-grupo {
+    flex-basis: 100%;
+    order: 3;
+    white-space: normal;
+    line-height: 1.35;
+  }
+
+  .ipo-footer {
+    padding: 12px 10px 14px;
+    font-size: 11.5px;
+  }
 }

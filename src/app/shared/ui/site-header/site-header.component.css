@@ -708,13 +708,20 @@ a.ccard__row:hover {
     overflow-y: auto;
   }
 
+  /* Retrato compacto: banda horizontal en vez de bloque, para que
+     TODO el contenido del modal entre sin scroll interno. */
   .ccard__portrait {
-    min-height: 200px;
+    height: 130px;
+    min-height: 0;
   }
 
   .ccard__portrait img {
-    position: relative;
-    min-height: 200px;
+    position: absolute;
+    inset: 0;
+    min-height: 0;
+    height: 100%;
+    width: 100%;
+    object-position: center 22%;
   }
 
   .ccard__portrait::after {
@@ -722,12 +729,67 @@ a.ccard__row:hover {
       linear-gradient(to top, rgba(10, 9, 8, 0.9) 0%, rgba(10, 9, 8, 0.1) 50%, transparent 70%);
   }
 
+  .ccard__id {
+    bottom: 0.6rem;
+  }
+
+  .ccard__id strong {
+    font-size: 1rem;
+  }
+
   .ccard__body {
-    padding: 1.25rem 1.1rem 1.1rem;
+    padding: 1rem 1rem 0.95rem;
   }
 
   .ccard__title {
-    margin-bottom: 0.9rem;
+    margin: 0.35rem 0 0.75rem;
+    font-size: 1.15rem;
+  }
+
+  /* Datos apilados: 1 columna más compacta que 2×2 en pantallas angostas */
+  .ccard__grid {
+    gap: 0.45rem;
+  }
+
+  .ccard__row {
+    padding: 0.55rem 0.65rem;
+  }
+
+  .ccard__actions {
+    margin-top: 0.75rem;
+  }
+
+  .ccard__whats {
+    padding: 0.6rem 0.85rem;
+    font-size: 0.78rem;
+  }
+
+  .ccard__fb {
+    width: 44px;
+  }
+}
+
+/* Pantallas muy cortas (landscape móvil): modal entero sin scroll */
+@media (max-width: 640px) and (max-height: 620px) {
+  .ccard {
+    max-height: min(94dvh, 540px);
+  }
+
+  .ccard__portrait {
+    min-height: 96px;
+  }
+
+  .ccard__portrait img {
+    min-height: 96px;
+  }
+
+  .ccard__body {
+    padding: 0.8rem 0.9rem 0.8rem;
+  }
+
+  .ccard__title {
+    font-size: 1.05rem;
+    margin: 0.25rem 0 0.55rem;
   }
 }
 
